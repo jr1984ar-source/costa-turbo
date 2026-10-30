@@ -404,7 +404,7 @@ const JJ_ITEMS=[
 ];
 const ZONES=[
  {name:'EL PUERTO',obj:'time',goal:'Llega a la meta antes de que se acabe el tiempo.',len:15000,riv:5,bar:'jj',theme:'port',tod:'morning',skill:.84,pace:205},
- {name:'LA CALA',obj:'slalom',goal:'Pasa por dentro de todas las boyas. Cada una que falles te quita 3 segundos.',len:13000,riv:0,bar:'roxy',theme:'cove',tod:'noon',pace:200},
+ {name:'LA CALA',obj:'slalom',goal:'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.',len:11000,riv:0,bar:'roxy',theme:'cove',tod:'noon',pace:170},
  {name:'GRAN CARRERA',obj:'race3',goal:'Termina entre los 3 primeros.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9},
  {name:'PERSECUCIÓN',obj:'chase',goal:'Llega a la meta sin que la policía te pille 3 veces.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'afternoon'},
  {name:'OLAS GIGANTES',obj:'jumps',goal:'Haz 6 saltos en las olas y llega antes de que se acabe el tiempo.',len:15000,riv:0,bar:'jj',theme:'beach',tod:'sunset',pace:200},
@@ -688,7 +688,7 @@ function buildZone(zi,lap){
  const wPat=Z.obj==='slalom'?{coins:3,ramp:1,rocks:1.5,boat:1,yacht:.6,kayak:.6,patrol:.4}:Z.obj==='jumps'?{coins:3,ramp:4,rocks:1.5,boat:1,yacht:.8,kayak:.6,patrol:.7}:Z.obj==='chase'?{coins:3,ramp:1.4,rocks:2,boat:1.4,yacht:.7,kayak:.7,patrol:.4}:{coins:3.5,ramp:1.5,rocks:1.6,boat:1.2,yacht:.8,kayak:.8,patrol:1};
  const pick=()=>{let s=0;for(const k in wPat)s+=wPat[k];let x=r()*s;for(const k in wPat){x-=wPat[k];if(x<=0)return k;}return 'coins';};
  let lastYacht=-2000,u=560,gateSide=0;
- if(Z.obj==='slalom'){for(let gu=700;gu<len-300;gu+=420){if(!free(gu))continue;const L=zone.shore(-gu)+50,R=WG-50;gateSide^=1;const gx=gateSide?lerp(L,R,.28+r()*.12):lerp(L,R,.62+r()*.12);add({t:'gate',x:gx,y:-gu,w:84,done:0});zone.gatesTotal++;}}
+ if(Z.obj==='slalom'){for(let gu=700;gu<len-300;gu+=520){if(!free(gu))continue;const L=zone.shore(-gu)+50,R=WG-50;gateSide^=1;const gx=gateSide?lerp(L,R,.36+r()*.08):lerp(L,R,.56+r()*.08);add({t:'gate',x:gx,y:-gu,w:108,done:0});zone.gatesTotal++;}}
  while(u<len-300){
   if(!free(u)){u+=160;continue;}
   const L=zone.shore(-u)+36,R=WG-24;let k=pick();if(k==='yacht'&&u-lastYacht<1500)k='coins';
@@ -899,7 +899,7 @@ function update(dt){
    if(o.t==='coin'){if(!o.got&&c.isP&&!G.demo&&Math.hypot(o.x-c.x,o.y-c.y)<17){o.got=1;G.money+=25;G.score+=25;G.zoneCoins++;Snd.coin();}continue;}
    if(o.t==='can'||o.t==='fuel'){if(!o.got&&c.isP&&!G.demo&&Math.hypot(o.x-c.x,o.y-c.y)<18){o.got=1;Snd.pickup();if(o.t==='can'){if(G.turbo<5)G.turbo++;turboUI();msg('¡REFRESCO!','+1 TURBO','var(--cyan)');}else{G.fuel=Math.min(100,G.fuel+30);msg('¡GASOLINA!','+30 %','var(--lime)');}}continue;}
    if(o.t==='ramp'){if(c.prevY>o.y&&c.y<=o.y&&Math.abs(c.x-o.x)<o.w/2&&c.air<=0&&c.v>110&&c.crash<=0){startJump(c);if(c.isP&&!G.demo){const b=100+Math.round(c.v/4);G.score+=b;pop(c.x,c.y-40,'¡SALTO! +'+b,'#ffc93c');}}continue;}
-   if(o.t==='gate'){if(c.isP&&!G.demo&&!o.done&&c.prevY>o.y&&c.y<=o.y){o.done=1;if(Math.abs(c.x-o.x)<o.w/2){G.gates++;G.score+=50;Snd.gate();pop(c.x,c.y-36,'¡BIEN! +50','#7be35a');}else{G.time=Math.max(0,G.time-3);Snd.miss();msg('BOYA FALLADA','−3 s','var(--red)');}}
+   if(o.t==='gate'){if(c.isP&&!G.demo&&!o.done&&c.prevY>o.y&&c.y<=o.y){o.done=1;if(Math.abs(c.x-o.x)<o.w/2){G.gates++;G.score+=50;Snd.gate();pop(c.x,c.y-36,'¡BIEN! +50','#7be35a');}else{G.time=Math.max(0,G.time-1);Snd.miss();msg('BOYA FALLADA','−1 s','var(--red)');}}
     if(Math.hypot(c.x-(o.x-o.w/2),c.y-o.y)<15||Math.hypot(c.x-(o.x+o.w/2),c.y-o.y)<15){c.v*=1-2*dt;}continue;}
    if(o.t==='check'){if(c.isP&&!G.demo&&!o.done&&c.y<=o.y){o.done=1;const add=Math.round(Zn.len/3/(Zn.Z.pace||200))+3;G.time+=add;Snd.check();msg('CONTROL','+'+add+' SEGUNDOS','var(--lime)');}continue;}
    if(o.t==='finish'){if(!c.fin&&c.y<=o.y){c.fin=1;c.finT=G.elapsed;G.finishOrder.push(c);if(c.isP&&!G.demo)finishZone();}continue;}
