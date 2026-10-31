@@ -1056,7 +1056,7 @@ function startZone(){
  G.police=[];G.parts_fx=[];G.pops=[];G.pitSlots=0;G.jumps=0;G.gates=0;G.catches=0;G.barUsed=false;G.finishOrder=[];G.elapsed=0;G.zoneCoins=0;G.regenT=0;G.chaseT=0;
  G.time=Z.obj==='time'||Z.obj==='slalom'||Z.obj==='jumps'?Math.round(Zn.len/3/(Z.pace||200))+9+(Z.giant?6:0):0;
  if(Z.obj==='chase'){for(let i=0;i<2;i++)G.police.push({x:WG*(.4+i*.3),y:420+i*120,h:0,v:0,mode:'chase',t:1e9,cool:2+i,lights:0});}
- camTop=G.P.y-VH*.7;camX=-(VW-WG)/2;if(camX>0)camX=0;
+ camTop=G.P.y-VH*.73;camX=-(VW-WG)/2;if(camX>0)camX=0;
  SP.jetP=sprite(32,68,g=>drawJet(g,playerSk()));
  buildTrack();
 }
@@ -1205,7 +1205,7 @@ function update(dt){
  }
  if(G.demo){for(const c of crafts()){if(c.fin||c.y<Zn.finishY+400){restartDemo();return;}}}
  // camera
- const target=P.y-VH*.7;camTop+=(target-camTop)*Math.min(1,dt*8);
+ const target=P.y-VH*.73;camTop+=(target-camTop)*Math.min(1,dt*8);
  if(Math.abs(target-camTop)>VH)camTop=target;
  camX=VW>WG?-(VW-WG)/2:0;
  audioTick(dt);
@@ -1386,7 +1386,7 @@ const screens=[...document.querySelectorAll('.screen')];
 const NOPADS=['scrJJ','scrRoxy','scrPaint','scrPilot','scrShop','scrFree'];
 function show(id){screens.forEach(s=>s.hidden=s.id!==id);$('#app').classList.toggle('nopads',!!id);
  const el=id&&document.getElementById(id);if(el){el.scrollTop=0;requestAnimationFrame(()=>{el.style.opacity='.995';requestAnimationFrame(()=>{el.style.opacity='';});});}}
-function demoStart(){G.demo=true;G.zi=0;G.lap=0;G.parts={};G.zone=buildZone(0,0);chunks=new Map();const pool=MOTOS.slice(0,6);G.P=craft(pool[0],WG*.5,0,true);G.P.st=stats(pool[0],{});G.rivals=pool.slice(1).map((m,i)=>{const c=craft(m,WG*(.3+i*.12),-60-i*40,false);c.skill=.9;return c;});G.police=[];G.parts_fx=[];G.pops=[];camTop=G.P.y-VH*.7;G.pitSlots=0;G.mode='demo';}
+function demoStart(){G.demo=true;G.zi=0;G.lap=0;G.parts={};G.zone=buildZone(0,0);chunks=new Map();const pool=MOTOS.slice(0,6);G.P=craft(pool[0],WG*.5,0,true);G.P.st=stats(pool[0],{});G.rivals=pool.slice(1).map((m,i)=>{const c=craft(m,WG*(.3+i*.12),-60-i*40,false);c.skill=.9;return c;});G.police=[];G.parts_fx=[];G.pops=[];camTop=G.P.y-VH*.73;G.pitSlots=0;G.mode='demo';}
 function restartDemo(){demoStart();}
 function goTitle(){G._champOn=false;G._champDone=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();show('scrTitle');renderUser();Music.play('menu');wake(false);}
 function toTitle(){if(G.mode!=='demo'){goTitle();return;}show('scrTitle');renderUser();}
@@ -1801,7 +1801,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&(G.mode===
 
 /* ================= BUCLE ================= */
 function resize(){const r=stage.getBoundingClientRect();if(r.width<10||r.height<10)return;DPR=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
- S=Math.min(r.width/WG,r.height/560);VW=r.width/S;VH=r.height/S;K=S*DPR;buildSprites();chunks=new Map();nightC=null;camX=VW>WG?-(VW-WG)/2:0;if(G.P)camTop=G.P.y-VH*.7;}
+ S=Math.min(r.width/WG,r.height/560);VW=r.width/S;VH=r.height/S;K=S*DPR;buildSprites();chunks=new Map();nightC=null;camX=VW>WG?-(VW-WG)/2:0;if(G.P)camTop=G.P.y-VH*.73;}
 let last=performance.now();
 function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now;
  if(G.mode==='play'||G.mode==='count'||G.mode==='demo'){try{update(dt);}catch(err){console.error(err);}if(G.mode==='play'||G.mode==='count')hudTick();}
