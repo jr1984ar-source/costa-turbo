@@ -250,6 +250,10 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
 .screen:not(.bar)>:last-child{margin-bottom:auto}
 @media (max-height:760px){.logo .l1{font-size:clamp(34px,10vw,56px)}.logo .l2{font-size:clamp(50px,16vw,90px)}.tagline{font-size:15px;margin-top:2px}}
 @media (orientation:landscape) and (max-height:560px){.logo .l1{font-size:32px}.logo .l2{font-size:52px}.tagline{font-size:13px;margin:0}.av{padding:4px}.av canvas{width:min(44px,100%)}.screen{gap:8px}}
+.head .btn.sm{padding:8px 10px;font-size:13px}
+.head h2.h{flex:1;min-width:0;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(20px,6vw,30px)}
+.head .sp{flex:1}
+.hm{display:inline-flex;align-items:center;gap:4px}.hm-i{width:14px;height:14px;flex:none}
 /* usuario */
 .ucard{width:min(100%,320px);display:flex;align-items:center;gap:10px;padding:8px 10px;text-align:left}
 .ucard canvas{width:44px;height:44px;border-radius:50%;flex:none;border:2px solid var(--orange)}
@@ -327,14 +331,14 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrPilot" class="screen" hidden>
-      <div class="head"><button class="btn ghost sm" id="aBack" style="flex:none">‹ VOLVER</button><h2 class="h">TU PILOTO</h2><span style="width:70px"></span></div>
+      <div class="head"><button class="btn ghost sm" id="aBack" style="flex:none">‹ ATRÁS</button><h2 class="h">TU PILOTO</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <div class="avs" id="avGrid"></div>
       <div class="pname"><label for="aName">TU NOMBRE</label><input id="aName" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="Escribe tu nombre"></div>
       <div class="menu"><button class="btn p" id="aGo">SIGUIENTE: ELEGIR MOTO</button></div>
     </section>
 
     <section id="scrGarage" class="screen" hidden>
-      <div class="head"><button class="btn ghost sm" id="gBack" style="flex:none">‹ VOLVER</button><h2 class="h">ELIGE TU MOTO</h2><span style="width:70px"></span></div>
+      <div class="head"><button class="btn ghost sm" id="gBack" style="flex:none">‹ ATRÁS</button><h2 class="h">ELIGE TU MOTO</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <div class="garage">
         <button class="nav" id="gPrev" aria-label="Moto anterior"><svg viewBox="0 0 16 16"><path d="M11 2 4 8l7 6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <div class="gcard" id="gCard">
@@ -350,7 +354,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrPaint" class="screen" hidden>
-      <div class="head"><button class="btn ghost sm" id="pBack" style="flex:none">‹ VOLVER</button><h2 class="h">PINTURA</h2><span style="width:70px"></span></div>
+      <div class="head"><button class="btn ghost sm" id="pBack" style="flex:none">‹ ATRÁS</button><h2 class="h">PINTURA</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <div class="gmoto pprev"><canvas id="pCv" width="580" height="240"></canvas></div>
       <div class="pname"><label for="pName">NOMBRE DE LA MOTO</label><input id="pName" maxlength="12" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done" placeholder="Escribe un nombre"></div>
       <div class="prows" id="pRows"></div>
@@ -358,13 +362,14 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrFree" class="screen" hidden>
-      <div class="head"><button class="btn ghost sm" id="fBack" style="flex:none">‹ VOLVER</button><h2 class="h">CARRERA LIBRE</h2><span style="width:70px"></span></div>
+      <div class="head"><button class="btn ghost sm" id="fBack" style="flex:none">‹ ATRÁS</button><h2 class="h">CARRERA LIBRE</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <p class="sub">Elige pantalla. Lo que ganes va a tu monedero.</p>
       <div class="fgrid" id="fGrid"></div>
     </section>
 
     <section id="scrShop" class="screen" hidden>
-      <div class="head"><button class="btn ghost sm" id="sBack" style="flex:none">‹ VOLVER</button><h2 class="h">TALLER</h2><div class="cash"><i class="coin"></i><span class="cashv">0</span></div></div>
+      <div class="head"><button class="btn ghost sm" id="sBack" style="flex:none">‹ ATRÁS</button><h2 class="h">TALLER</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
+      <div class="cash"><i class="coin"></i><span class="cashv">0</span>&nbsp;PTA</div>
       <div class="garage">
         <button class="nav" id="sPrev" aria-label="Moto anterior"><svg viewBox="0 0 16 16"><path d="M11 2 4 8l7 6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         <div class="gmoto spv" id="sPv"><canvas id="sCv" width="580" height="240"></canvas><div class="lockov" id="sLock" hidden><svg class="lk-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2.5" y="7" width="11" height="8" rx="2" fill="currentColor"/></svg></div></div>
@@ -377,10 +382,11 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrMap" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="mBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <canvas id="mapCv" width="880" height="495"></canvas>
       <div class="prog" id="mProg"></div>
       <div class="mcard panel"><small id="mZoneN"></small><h2 id="mZoneName"></h2><p id="mGoal"></p><div class="minfo" id="mInfo"></div></div>
-      <div class="menu"><button class="btn p" id="mGo">¡AL AGUA!</button><button class="btn ghost" id="mBack" style="width:100%" hidden>‹ OTRA PANTALLA</button></div>
+      <div class="menu"><button class="btn p" id="mGo">¡AL AGUA!</button></div>
     </section>
 
     <section id="scrJJ" class="screen bar" hidden>
@@ -402,6 +408,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrResult" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="rBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <h2 class="h" id="rTitle"></h2>
       <p class="sub" id="rSub"></p>
       <div class="rlist" id="rList"></div>
@@ -409,6 +416,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrPause" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="psBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <h2 class="h">PAUSA</h2>
       <div class="menu">
         <button class="btn p" id="pResume">CONTINUAR</button>
@@ -418,6 +426,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrOver" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="oBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <h2 class="h" id="oTitle">FIN DE LA PARTIDA</h2>
       <div class="big" id="oScore">0</div>
       <p class="sub" id="oInfo"></p>
@@ -429,6 +438,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     </section>
 
     <section id="scrRank" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="rkBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <h2 class="h">TOP 10</h2>
       <p class="sub" id="rankSrc">Guardado en este móvil</p>
       <ol class="rank" id="rankList"></ol>
@@ -1326,14 +1336,14 @@ function show(id){screens.forEach(s=>s.hidden=s.id!==id);$('#app').classList.tog
  const el=id&&document.getElementById(id);if(el){el.scrollTop=0;requestAnimationFrame(()=>{el.style.opacity='.995';requestAnimationFrame(()=>{el.style.opacity='';});});}}
 function demoStart(){G.demo=true;G.zi=0;G.lap=0;G.parts={};G.zone=buildZone(0,0);chunks=new Map();const pool=MOTOS.slice(0,6);G.P=craft(pool[0],WG*.5,0,true);G.P.st=stats(pool[0],{});G.rivals=pool.slice(1).map((m,i)=>{const c=craft(m,WG*(.3+i*.12),-60-i*40,false);c.skill=.9;return c;});G.police=[];G.parts_fx=[];G.pops=[];camTop=G.P.y-VH*.7;G.pitSlots=0;G.mode='demo';}
 function restartDemo(){demoStart();}
-function goTitle(){Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();show('scrTitle');renderUser();Music.play('menu');wake(false);}
+function goTitle(){G._champOn=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();show('scrTitle');renderUser();Music.play('menu');wake(false);}
 function toTitle(){if(G.mode!=='demo'){goTitle();return;}show('scrTitle');renderUser();}
 function renderUser(){drawPortrait($('#uAv'),AVATARS[G.avatar|0]||AVATARS[0]);$('#uName').textContent=pilotName();$('#uCash').textContent=pts(G.money);$('#uProg').textContent='Campeonato '+best+'/'+ZONES.length;}
 function goGarage(){show('scrGarage');renderGarage();Music.play('menu');}
 function goPilot(){show('scrPilot');renderPilot();Music.play('menu');}
 function renderPilot(){const grid=$('#avGrid');grid.textContent='';AVATARS.forEach((a,i)=>{const b=document.createElement('button');b.className='av'+(i===G.avatar?' on':'');const cv=document.createElement('canvas');cv.width=136;cv.height=136;drawPortrait(cv,a);const sp=document.createElement('span');sp.textContent=a.name;b.append(cv,sp);
  b.addEventListener('click',()=>{G.avatar=i;Snd.click();grid.querySelectorAll('.av').forEach((x,j)=>x.classList.toggle('on',j===i));});grid.append(b);});$('#aName').value=G.pname||'';}
-function newGame(){G.free=false;G.demo=false;G.zi=0;G.lap=0;G.lives=3;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
+function newGame(){G._champOn=true;G.free=false;G.demo=false;G.zi=0;G.lap=0;G.lives=3;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
 function startFree(zi){G.free=true;G.demo=false;G.zi=zi;G.lap=0;G.lives=3;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
 function goFree(){G.free=true;if(G.mode!=='demo'){Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();wake(false);}show('scrFree');renderFree();Music.play('menu');}
 function renderFree(){const F=$('#fGrid');F.textContent='';ZONES.forEach((Z,i)=>{const b=document.createElement('button');b.className='fz';b.setAttribute('aria-label','Zona '+(i+1)+' '+Z.name);const c=document.createElement('canvas');c.width=400;c.height=225;b.append(c);drawCover(c,i);b.addEventListener('click',()=>{Snd.click();startFree(i);});F.append(b);});
@@ -1367,7 +1377,7 @@ function showResult(title,sub,lines,next,delay){setTimeout(()=>{$('#hud').hidden
  for(const[a,b]of lines){const d=document.createElement('div');d.className='rl';const s=document.createElement('span');s.textContent=a;const v=document.createElement('b');v.textContent=b;d.append(s,v);L.append(d);}
  const t=document.createElement('div');t.className='rl tot';t.innerHTML='<span>TOTAL</span>';const tb=document.createElement('b');tb.textContent=pts(G.score)+' PUNTOS';t.append(tb);L.append(t);
  G._next=next;show('scrResult');Snd.engineStop();},delay||0);}
-function gameOver(){G.mode='over';Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;Music.play('menu');wake(false);saveWallet();
+function gameOver(){G.mode='over';G._champOn=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;Music.play('menu');wake(false);saveWallet();
  if(G.free){showResult('¡SIN VIDAS!','Se acabó esta carrera libre. Las pesetas que has ganado se quedan en tu monedero.',[['Zona',(G.zi+1)+' · '+G.zone.Z.name],['Monedero',pts(G.money)+' PTA']],()=>goFree());return;}
  $('#oScore').textContent=pts(G.score);$('#oInfo').textContent='Llegaste a la zona '+(G.zi+1)+' ('+G.zone.Z.name+')'+(G.lap?' de la vuelta '+(G.lap+1):'')+' con '+MOTOS[G.moto].name+'.';
  const f=$('#nameForm');f.hidden=!qualifies(G.score);if(!f.hidden)$('#nameIn').value=G.pname||store.get('ct_name','');show('scrOver');}
@@ -1467,7 +1477,7 @@ function drawPortrait(cvs,m){const g=cvs.getContext('2d'),f=m.face,W=cvs.width;g
  g.restore();}
 
 /* ---- garaje y mapa ---- */
-function renderGarage(){const m=MOTOS[G.moto],ms=motoState(m),[mpr,mneed]=SHOP[m.id]||[0,0];$('#gCard').style.setProperty('--sc',m.ui);$('#gPv').classList.toggle('lk',ms!=='own');$('#gLock').hidden=ms==='own';$('#gGo').textContent=ms==='own'?(G.free?'ELEGIR Y VER PANTALLAS':'ELEGIR ESTA MOTO'):'IR AL TALLER';
+function renderGarage(){const m=MOTOS[G.moto],ms=motoState(m),[mpr,mneed]=SHOP[m.id]||[0,0];$('#gCard').style.setProperty('--sc',m.ui);$('#gPv').classList.toggle('lk',ms!=='own');$('#gLock').hidden=ms==='own';$('#gGo').textContent=ms==='own'?(G.free?'ELEGIR Y VER PANTALLAS':G._champOn?'SEGUIR CON ESTA MOTO':'ELEGIR ESTA MOTO'):'IR AL TALLER';
  drawPortrait($('#gPilot'),AVATARS[G.avatar|0]||AVATARS[0]);$('#gPilotName').textContent=pilotName();$('#gBio').textContent=MOTO_DESC[m.id]||'';$('#gName').textContent=motoName(m);$('#gColors').textContent=ms==='buy'?'En el taller: '+pts(mpr)+' PTA':ms==='lock'?'Se desbloquea en la zona '+mneed:paintOf(m).colors?'Pintura personalizada':m.colors;
  const gc=$('#gMoto'),g=gc.getContext('2d');g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,290,120);g.save();g.translate(2,4);g.scale(.836,.836);drawJetProfile(g,sideOf(m));g.restore();
  const S2=$('#gStats');S2.textContent='';for(const[k,l]of[['vel','VELOCIDAD'],['ace','ACELERACIÓN'],['giro','GIRO'],['turbo','TURBO']]){const row=document.createElement('div');row.className='st';const a=document.createElement('span');a.textContent=l;const b=document.createElement('i');for(let j=0;j<5;j++){const x=document.createElement('b');if(j<m.st[k])x.className='on';b.append(x);}row.append(a,b);S2.append(row);}
@@ -1479,7 +1489,7 @@ function renderMap(retry){const Z=ZONES[G.zi];$('#mZoneN').textContent=(retry?'O
  tag(Z.bar==='jj'?"Bar JJ's a mitad de zona":Z.bar==='roxy'?'Bar Roxy a mitad de zona':Z.boss?'Sin bar: depósito lleno para la final':'Sin bar: sales con el depósito al 85 %');if(Z.piri)tag('Piri-Piri: vida y turbos','gold');
  const c=$('#mapCv');drawCover(c,G.zi);fontsOK.then(()=>{if(!$('#scrMap').hidden)drawCover(c,G.zi);});
  const P=$('#mProg');P.hidden=!!G.free;P.textContent='';if(!G.free)ZONES.forEach((_,i)=>{const sp=document.createElement('span');sp.textContent=i+1;if(i<G.zi)sp.className='ok';else if(i===G.zi)sp.className='on';P.append(sp);});
- $('#mBack').hidden=!G.free;}
+ }
 
 /* ================= PORTADAS ================= */
 const rgbaH=(h,a)=>{const n=parseInt(h.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`;};
@@ -1630,8 +1640,8 @@ function renderRank(){const ol=$('#rankList'),list=rankList();ol.textContent='';
 /* ================= BOTONES ================= */
 function labels(){const a='SONIDO: '+(Snd.on?'SÍ':'NO'),b='MÚSICA: '+(Snd.musOn?'SÍ':'NO');['#bSnd','#pSnd'].forEach(s=>$(s).textContent=a);['#bMus','#pMus'].forEach(s=>$(s).textContent=b);}
 const on=(id,fn)=>$(id).addEventListener('click',e=>{e.preventDefault();Snd.init();fn();});
-on('#bPlay',()=>{Snd.click();G.free=false;goPilot();});
-on('#aBack',()=>{Snd.click();goTitle();});
+on('#bPlay',()=>{Snd.click();G.free=false;G._champOn=false;goPilot();});
+on('#aBack',()=>{goHome();});
 on('#aGo',()=>{store.set('ct_av',G.avatar);store.set('ct_pname',G.pname);if(G.pname)store.set('ct_name',G.pname);Snd.click();goGarage();});
 $('#aName').addEventListener('input',e=>{G.pname=e.target.value.toUpperCase().replace(/[^A-Z0-9ÁÉÍÓÚÜÑ .\-_]/g,'').trim().slice(0,12);});on('#bRank',()=>{Snd.click();show('scrRank');renderRank();});on('#rkBack',()=>{Snd.click();goTitle();});
 on('#bSnd',()=>Snd.setOn(!Snd.on));on('#bMus',()=>{Snd.setMus(!Snd.musOn);if(Snd.musOn)Music.play('menu');});on('#pSnd',()=>Snd.setOn(!Snd.on));on('#pMus',()=>Snd.setMus(!Snd.musOn));
@@ -1650,7 +1660,7 @@ on('#gPaint',()=>{Snd.click();goShop('garage');});
 on('#pBack',()=>{Snd.click();backShop();});
 on('#pReset',()=>{const m=paintM();G._draft=Object.assign(defaultPaint(m),{name:G._draft.name});Snd.click();paintRows();paintPreview();});
 on('#pSave',()=>{const m=paintM(),ch=paintChanged();if(ch&&G.money<PAINT_PRICE)return;if(ch){G.money-=PAINT_PRICE;saveWallet();}paintStore[m.id]=Object.assign({},G._draft);store.set('ct_paint',paintStore);SP.jet[m.id]=sprite(32,68,g=>drawJet(g,skOf(m)));SP.jetP=sprite(32,68,g=>drawJet(g,playerSk()));Snd.cash();backShop();});on('#gPrev',()=>changeMoto(-1));on('#gNext',()=>changeMoto(1));
-on('#gGo',()=>{Snd.click();const m=MOTOS[G.moto];if(!owns(m)){goShop('garage');return;}store.set('ct_moto',G.moto);if(G.free)goFree();else newGame();});
+on('#gGo',()=>{Snd.click();const m=MOTOS[G.moto];if(!owns(m)){goShop('garage');return;}store.set('ct_moto',G.moto);if(G.free)goFree();else if(G._champOn){G.parts=partsOf(MOTOS[G.moto]);goMap();}else newGame();});
 /* ---- taller ---- */
 let shopI=0,shopFrom='title';
 function goShop(from){shopFrom=from||'title';shopI=G.moto;show('scrShop');renderShop();Music.play('menu');}
@@ -1678,13 +1688,18 @@ on('#sBack',()=>{Snd.click();if(shopFrom==='garage')goGarage();else toTitle();})
 on('#bShop',()=>{Snd.click();goShop('title');});
 on('#bFree',()=>{Snd.click();G.free=true;goPilot();});
 on('#fBack',()=>{Snd.click();goTitle();});
-on('#mBack',()=>{Snd.click();goFree();});
+on('#mBk',()=>{Snd.click();if(G.free)goFree();else goGarage();});
+on('#rBk',()=>{Snd.click();const n=G._next;G._next=null;n&&n();});
+on('#psBk',()=>resume());on('#oBk',()=>{Snd.click();goTitle();});on('#rkBk',()=>{Snd.click();goTitle();});
+function midChamp(){return !!G._champOn&&!G.free&&(G.zi>0||G.lap>0)&&G.mode!=='over';}
+function goHome(){if(midChamp()&&!confirm('¿Volver al inicio? Dejas el campeonato a medias.'))return;Snd.click();goTitle();}
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-home]');if(!b)return;e.preventDefault();Snd.init();goHome();});
 on('#mGo',()=>startRace());on('#btnPause',()=>togglePause());on('#pResume',()=>resume());on('#pQuit',()=>goTitle());
 on('#jjOut',()=>closeBar());on('#rxOut',()=>closeBar());
 on('#rxBuy',()=>{const p=PARTS[G._sel],lv=Math.min(3,G.parts[p.id]|0);if(lv>=3||best<PART_NEED[lv])return;const pr=p.price[lv];if(G.money<pr)return;G.money-=pr;G.parts[p.id]=lv+1;saveParts();saveWallet();G.P.st=stats(MOTOS[G.moto],G.parts);Snd.cash();msg('¡'+p.name.toUpperCase()+'!','Nivel '+(lv+1),'var(--lime)');renderRoxy();});
 on('#rxFuel',()=>{if(G.money<300||G.fuel>=99)return;G.money-=300;saveWallet();G.fuel=100;Snd.cash();renderRoxy();});
 on('#rGo',()=>{Snd.click();const n=G._next;G._next=null;n&&n();});
-on('#oAgain',()=>{Snd.click();G.free=false;goPilot();});on('#oMenu',()=>{Snd.click();goTitle();});
+on('#oAgain',()=>{Snd.click();G.free=false;G._champOn=false;goPilot();});on('#oMenu',()=>{Snd.click();goTitle();});
 const fsOK=!!(document.fullscreenEnabled||document.webkitFullscreenEnabled);$('#bFull').hidden=!fsOK;
 function goFull(){const el=document.documentElement;try{const r=(el.requestFullscreen||el.webkitRequestFullscreen).call(el);if(r&&r.catch)r.catch(()=>{});}catch(_){}}
 function tryFull(){if(fsOK&&!(document.fullscreenElement||document.webkitFullscreenElement)&&matchMedia('(pointer: coarse)').matches)goFull();}
