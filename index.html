@@ -512,9 +512,9 @@ const PARTS=[
  {id:'aletas',name:'Aletas',ef:'Gira mejor',price:[1200,2200,3500]}
 ];
 const LOCK_SVG='<svg class="lk-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2.5" y="7" width="11" height="8" rx="2" fill="currentColor"/></svg>';
-const SHOP={brava:[0,0],oceano:[0,0],solar:[0,0],avispa:[2500,0],marea:[3500,2],inferno:[5000,3],veneno:[6500,5],sombra:[9000,7]};
+const SHOP={brava:[0,0],oceano:[0,0],solar:[0,0],inferno:[0,0],marea:[0,0],veneno:[0,0],avispa:[2500,0],sombra:[9000,7]};
 const PART_NEED=[0,2,5],PAINT_PRICE=200,SWATCH_PRO=['#e0b13a','#c9ced6','#ff2bd6','#00e0b0'],PRO_NEED=4;
-let ownList=store.get('ct_own',null);if(!Array.isArray(ownList))ownList=Object.keys(SHOP).filter(k=>!SHOP[k][0]);
+let ownList=store.get('ct_own',null);if(!Array.isArray(ownList))ownList=[];for(const k in SHOP)if(!SHOP[k][0]&&!ownList.includes(k))ownList.push(k);
 const owns=m=>ownList.includes(m.id);
 let best=Math.max(0,Math.min(10,store.get('ct_best',0)|0));
 let partsStore=store.get('ct_parts',{});if(!partsStore||typeof partsStore!=='object')partsStore={};
