@@ -543,7 +543,7 @@ let partsStore=store.get('ct_parts',{});if(!partsStore||typeof partsStore!=='obj
 function partsOf(m){return partsStore[m.id]||(partsStore[m.id]={});}
 function saveParts(){store.set('ct_parts',partsStore);}
 function motoState(m){if(owns(m))return 'own';const n=(SHOP[m.id]||[0,0])[1];return best<n?'lock':'buy';}
-function unlocksBetween(a,b){const u=[];for(const m of MOTOS){const[pr,n]=SHOP[m.id]||[0,0];if(pr&&n>a&&n<=b)u.push('moto '+m.name);}PART_NEED.forEach((n,i)=>{if(i&&n>a&&n<=b)u.push('piezas nivel '+(i+1));});if(PRO_NEED>a&&PRO_NEED<=b)u.push('colores especiales');return u;}
+function unlocksBetween(a,b){const u=[];for(const m of MOTOS){const[pr,n]=SHOP[m.id]||[0,0];if(pr&&n>a&&n<=b)u.push('moto '+m.name);}PART_NEED.forEach((n,i)=>{if(i&&n>a&&n<=b)u.push('piezas Stage '+(i+1));});if(PRO_NEED>a&&PRO_NEED<=b)u.push('colores especiales');return u;}
 const SWATCHES=['#f4f5f7','#b8c0cc','#3a3e46','#16181d','#e3202b','#ff7a1a','#ffd21a','#7be35a','#1f9e52','#19c3c9','#1e5eff','#13285e','#7b3fe4','#ff3f8e'];
 const PAINT_PARTS=[['hull','CASCO'],['deck','LATERALES'],['hood','CAPÓ'],['stripe','RAYAS'],['seat','ASIENTO']];
 let paintStore=store.get('ct_paint',{});if(!paintStore||typeof paintStore!=='object')paintStore={};
@@ -1470,9 +1470,9 @@ function renderJJ(){cashUI();const L=$('#jjList');L.textContent='';
   d.append(info,b);L.append(d);}}
 function renderRoxy(){cashUI();const Gd=$('#rxGrid');Gd.textContent='';
  PARTS.forEach((p,i)=>{const lv=Math.min(3,G.parts[p.id]|0),next=lv<3?p.price[lv]:0,lk=lv<3&&best<PART_NEED[lv];const d=document.createElement('button');d.className='card'+(i===G._sel?' sel':'')+(lv<3&&!lk&&G.money<next?' poor':'');d.append(iconCanvas(ICONS[p.id]));const info=document.createElement('div');
-  info.innerHTML=`<div class="nm"></div><div class="ef"></div><div class="lv lv3">${[0,1,2].map(k=>`<i class="${k<lv?'on':''}"></i>`).join('')}<em>NIVEL ${lv}/3</em></div>`+(lv>=3?'<span class="ok">NIVEL MÁXIMO</span>':lk?`<div class="pr lkt">${LOCK_SVG} ZONA ${PART_NEED[lv]}</div>`:`<div class="pr">${pts(next)} PTA</div>`);
+  info.innerHTML=`<div class="nm"></div><div class="ef"></div><div class="lv lv3">${[0,1,2].map(k=>`<i class="${k<lv?'on':''}"></i>`).join('')}<em>STAGE ${lv}/3</em></div>`+(lv>=3?'<span class="ok">STAGE 3 · MÁX</span>':lk?`<div class="pr lkt">${LOCK_SVG} ZONA ${PART_NEED[lv]}</div>`:`<div class="pr">${pts(next)} PTA</div>`);
   info.querySelector('.nm').textContent=p.name;info.querySelector('.ef').textContent=p.ef;d.append(info);d.addEventListener('click',()=>{G._sel=i;Snd.click();renderRoxy();});Gd.append(d);});
- const p=PARTS[G._sel],lv=Math.min(3,G.parts[p.id]|0),b=$('#rxBuy');if(lv>=3){b.textContent='NIVEL MÁXIMO';b.disabled=true;}else if(best<PART_NEED[lv]){b.innerHTML=LOCK_SVG+' SUPERA LA ZONA '+PART_NEED[lv];b.disabled=true;}else{const pr=p.price[lv];b.textContent=(lv?'NIVEL '+(lv+1)+' · ':'COMPRAR · ')+pts(pr);b.disabled=G.money<pr;}
+ const p=PARTS[G._sel],lv=Math.min(3,G.parts[p.id]|0),b=$('#rxBuy');if(lv>=3){b.textContent='STAGE 3 · MÁX';b.disabled=true;}else if(best<PART_NEED[lv]){b.innerHTML=LOCK_SVG+' SUPERA LA ZONA '+PART_NEED[lv];b.disabled=true;}else{const pr=p.price[lv];b.textContent=(lv?'STAGE '+(lv+1)+' · ':'COMPRAR · ')+pts(pr);b.disabled=G.money<pr;}
  const f=$('#rxFuel');f.textContent=G.fuel>=99?'DEPÓSITO LLENO':'GASOLINA · 300';f.disabled=G.fuel>=99||G.money<300;}
 
 /* ---- dibujos de los bares (vista frontal) ---- */
@@ -1732,7 +1732,7 @@ function renderShop(){const m=MOTOS[shopI],st=motoState(m),[price,need]=SHOP[m.i
  const D=$('#sDots');D.textContent='';MOTOS.forEach((_,i)=>{const sp=document.createElement('span');if(i===shopI)sp.className='on';D.append(sp);});
  const L=$('#sList');L.textContent='';
  if(st==='own'){const parts=partsOf(m);PARTS.forEach(p=>{const lv=Math.min(3,parts[p.id]|0),nd=PART_NEED[lv],lk=lv<3&&best<nd,pr=lv<3?p.price[lv]:0;const row=document.createElement('div');row.className='prt';row.append(iconCanvas(ICONS[p.id]));
-   const inf=document.createElement('div');inf.innerHTML=`<div class="nm"></div><div class="ef"></div><div class="lv">${[0,1,2].map(k=>`<i class="${k<lv?'on':''}"></i>`).join('')}</div>`;inf.querySelector('.nm').textContent=p.name+' · nivel '+lv+'/3';inf.querySelector('.ef').textContent=p.ef;row.append(inf);
+   const inf=document.createElement('div');inf.innerHTML=`<div class="nm"></div><div class="ef"></div><div class="lv">${[0,1,2].map(k=>`<i class="${k<lv?'on':''}"></i>`).join('')}</div>`;inf.querySelector('.nm').textContent=p.name+' · Stage '+lv+'/3';inf.querySelector('.ef').textContent=p.ef;row.append(inf);
    const b=document.createElement('button');b.className='btn'+(lv>=3?' max':lk?'':' p');
    if(lv>=3){b.textContent='MÁXIMO';b.disabled=true;}else if(lk){b.innerHTML=LOCK_SVG+' ZONA '+nd;b.disabled=true;}else{b.textContent=pts(pr);b.disabled=G.money<pr;}
    b.addEventListener('click',()=>{if(lv>=3||lk||G.money<pr)return;G.money-=pr;parts[p.id]=lv+1;saveParts();saveWallet();Snd.cash();renderShop();});row.append(b);L.append(row);});}
@@ -1756,7 +1756,7 @@ function goHome(){if(midChamp()&&!confirm('¿Volver al inicio? Dejas el campeona
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-home]');if(!b)return;e.preventDefault();Snd.init();goHome();});
 on('#mGo',()=>startRace());on('#btnPause',()=>togglePause());on('#pResume',()=>resume());on('#pQuit',()=>goTitle());
 on('#jjOut',()=>closeBar());on('#rxOut',()=>closeBar());
-on('#rxBuy',()=>{const p=PARTS[G._sel],lv=Math.min(3,G.parts[p.id]|0);if(lv>=3||best<PART_NEED[lv])return;const pr=p.price[lv];if(G.money<pr)return;G.money-=pr;G.parts[p.id]=lv+1;saveParts();saveWallet();G.P.st=stats(MOTOS[G.moto],G.parts);Snd.cash();msg('¡'+p.name.toUpperCase()+'!','Nivel '+(lv+1),'var(--lime)');renderRoxy();});
+on('#rxBuy',()=>{const p=PARTS[G._sel],lv=Math.min(3,G.parts[p.id]|0);if(lv>=3||best<PART_NEED[lv])return;const pr=p.price[lv];if(G.money<pr)return;G.money-=pr;G.parts[p.id]=lv+1;saveParts();saveWallet();G.P.st=stats(MOTOS[G.moto],G.parts);Snd.cash();msg('¡'+p.name.toUpperCase()+'!','Stage '+(lv+1),'var(--lime)');renderRoxy();});
 on('#rxFuel',()=>{if(G.money<300||G.fuel>=99)return;G.money-=300;saveWallet();G.fuel=100;Snd.cash();renderRoxy();});
 on('#rGo',()=>{Snd.click();const n=G._next;G._next=null;n&&n();});
 on('#oAgain',()=>{Snd.click();G.free=false;G._champOn=false;goPilot();});on('#oMenu',()=>{Snd.click();goTitle();});
