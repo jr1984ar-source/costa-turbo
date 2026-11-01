@@ -1196,7 +1196,8 @@ function startZone(){
  if(Z.riv){const rr=rng(Zn.seed+3);let pool=MOTOS.filter((m,i)=>i!==G.moto&&!m.riva).map(m=>[rr(),m]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]).slice(0,Z.riv);if(Z.boss)pool[Z.riv-1]=SHARK;
   const grid=[[.32,-150],[.72,-110],[.48,-70],[.8,-30],[.3,10]];
   pool.slice(0,Z.riv).forEach((mm,i)=>{const c=craft(mm,WG*grid[i][0],grid[i][1],false);c.skill=(Z.skill||.9)*(mm===SHARK?1.08:1)*(1+G.lap*.04)*(1+zi*.005)*(.97+i*.012);G.rivals.push(c);});
-  G.P.y=40;G.P.x=WG*.56;}
+  G.P.y=40;G.P.x=WG*.56;
+  const lvl=Math.max(1,Math.min(5,Math.ceil((zi+1)*5/ZONES.length))),k=.86+lvl*.024;for(const c of G.rivals){c.st.maxV=Math.max(c.st.maxV,G.P.st.maxV*k/(c.skill||.9));c.st.acc=Math.max(c.st.acc,G.P.st.acc*(k-.06));c.st.turn=Math.max(c.st.turn,G.P.st.turn*(k-.1));}}
  G.ghostRec=[];G._gAcc=0;G.ghost=G.free?store.get('ct_ghost2_'+ZONES[zi].name,null):null;if(G.ghost&&!Array.isArray(G.ghost.p))G.ghost=null;G._pens=0;G._crashes=0;G._newMed=[];
  G.police=[];G.parts_fx=[];G.pops=[];G.pitSlots=0;G.jumps=0;G.gates=0;G.catches=0;G.barUsed=false;G.finishOrder=[];G.elapsed=0;G.zoneCoins=0;G.regenT=0;G.chaseT=0;
  G.time=Z.obj==='time'||Z.obj==='slalom'||Z.obj==='jumps'?Math.round(Zn.len/3/((Z.pace||200)*(1+zi*.008)))+9+(Z.giant?6:0):0;
@@ -2103,7 +2104,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=34;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=35;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
