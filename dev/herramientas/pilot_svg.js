@@ -9,13 +9,14 @@ function pilotSVG(o, uid) {
   const id = (n) => n + uid;
   const OL = 'stroke="rgba(8,12,22,.6)" stroke-width="2.2" stroke-linejoin="round"';
   const cyl = (n, c, k) => `<linearGradient id="${id(n)}" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="${D(c, .45 * k)}"/><stop offset=".3" stop-color="${L(c, .16 * k)}"/><stop offset=".55" stop-color="${c}"/><stop offset="1" stop-color="${D(c, .5 * k)}"/></linearGradient>`;
-  const suitC = S.c || '#1d2027', suitA = S.a || '#3a3f4a';
+  const BARE = o.bare || null;
+  const suitC = BARE ? BARE.skin : (S.c || '#1d2027'), suitA = BARE ? BARE.skin : (S.a || '#3a3f4a');
   const helmC = H.c, helmC2 = H.c2 || '#ffffff', chrome = H.pat === 'chrome', full = H.st === 'full';
   const vestC = V.c, vestC2 = V.c2 || '#ffffff', vestTxt = lum(vestC) > .62 ? '#15171c' : '#ffffff';
 
   // ---------- defs ----------
   let defs = `<defs>
-  ${cyl('leg', suitC, 1)}${cyl('arm', suitC, 1)}${cyl('pad', D(suitC, .25), 1)}
+  ${cyl('leg', suitC, BARE ? .55 : 1)}${cyl('arm', suitC, BARE ? .55 : 1)}${cyl('pad', D(suitC, .25), 1)}${BARE ? cyl('sh', BARE.shorts, 1) + cyl('ly', BARE.lycra, 1) : ''}
   <radialGradient id="${id('vest')}" cx=".38" cy=".25" r=".85"><stop offset="0" stop-color="${L(vestC, .28)}"/><stop offset=".55" stop-color="${vestC}"/><stop offset="1" stop-color="${D(vestC, .42)}"/></radialGradient>
   <linearGradient id="${id('vside')}" x1="0" x2="1"><stop offset="0" stop-color="${D(vestC2, .35)}"/><stop offset="1" stop-color="${vestC2}"/></linearGradient>
   ${chrome
@@ -44,6 +45,16 @@ function pilotSVG(o, uid) {
   const legR = 'M202,312 C208,350 210,400 212,446 C214,492 214,540 216,584 L186,584 C184,540 180,500 174,460 C168,420 158,380 150,352 Z';
   g += `<path d="M92,292 C92,312 96,328 100,338 L150,358 L200,338 C204,328 208,312 208,292 Z" fill="${S.pat ? suitFill : D(suitC, .15)}" ${OL}/>`;
   g += `<path d="${legL}" fill="${suitFill}" ${OL}/><path d="${legR}" fill="${suitFill}" ${OL}/>`;
+  if (BARE) {
+    // bañador hasta encima de la rodilla
+    const shL = 'M92,292 L208,292 C209,330 211,380 212,420 L178,424 C174,400 164,376 150,356 C140,376 128,400 122,424 L88,420 C89,380 91,330 92,292 Z';
+    g += `<path d="${shL}" fill="url(#${id('sh')})" ${OL}/>`;
+    g += `<path d="M90,300 C90,340 89,380 88,418 M210,300 C211,340 211,380 212,418" stroke="${BARE.shorts2}" stroke-width="7" fill="none"/>`;
+    g += `<path d="M88,412 L122,416 M178,416 L212,412" stroke="${D(BARE.shorts, .35)}" stroke-width="3"/><path d="M96,300 h108" stroke="${D(BARE.shorts, .3)}" stroke-width="4"/><path d="M146,302 l4,10 l4,-10" stroke="${L(BARE.shorts, .5)}" stroke-width="2" fill="none"/>`;
+    g += `<path d="M112,330 C110,360 108,390 106,412 M188,330 C190,360 192,390 194,412" stroke="rgba(255,255,255,.18)" stroke-width="6" stroke-linecap="round" fill="none"/>`;
+    // rodillas y espinillas
+    g += `<path d="M98,452 q8 6 18 2 M184,454 q10 4 18 -2" stroke="${D(BARE.skin, .25)}" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M104,480 C102,520 100,550 99,576 M196,480 C198,520 200,550 201,576" stroke="rgba(255,255,255,.18)" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+  } else {
   g += `<g clip-path="url(#${id('lclip')})">
     <path d="M96,318 C90,360 88,410 86,450 C84,500 84,545 83,588" fill="none" stroke="${suitA}" stroke-width="8"/>
     <path d="M204,318 C210,360 212,410 214,450 C216,500 216,545 217,588" fill="none" stroke="${suitA}" stroke-width="8"/>
@@ -51,15 +62,18 @@ function pilotSVG(o, uid) {
     <path d="M130,360 C126,400 120,430 116,456 M170,360 C174,400 180,430 184,456" stroke="rgba(0,0,0,.22)" stroke-width="1.8" fill="none"/>
     <rect x="80" y="296" width="140" height="26" fill="rgba(0,0,0,.28)"/>
   </g>`;
+  }
   // rodilleras
-  for (const [x, r] of [[87, 4], [175, -4]]) {
+  if (!BARE) for (const [x, r] of [[87, 4], [175, -4]]) {
     const kp = D(suitA === '#ffc93c' ? '#2a2d33' : suitA, .35);
     g += `<g transform="rotate(${r} ${x + 19} 460)"><rect x="${x}" y="434" width="38" height="54" rx="15" fill="${kp}" ${OL}/>
     <path d="M${x + 6},449 h26 M${x + 6},460 h26 M${x + 6},471 h26" stroke="rgba(255,255,255,.16)" stroke-width="2.6" stroke-linecap="round"/>
     <rect x="${x + 4}" y="437" width="12" height="47" rx="6" fill="rgba(255,255,255,.1)"/><circle cx="${x + 19}" cy="441" r="2.2" fill="${suitA}"/></g>`;
   }
   // escarpines
-  g += `<path d="M84,580 L115,580 C118,592 120,602 120,612 C120,622 114,628 104,628 L68,628 C60,628 58,620 64,612 C72,602 80,594 84,580 Z" fill="#17191e" ${OL}/>
+  if (BARE) g += `<path d="M86,578 L114,578 C117,592 119,602 119,612 C119,622 113,628 103,628 L70,628 C62,628 60,620 66,612 C74,602 82,594 86,578 Z" fill="url(#${id('leg')})" ${OL}/><path d="M214,578 L186,578 C183,592 181,602 181,612 C181,622 187,628 197,628 L230,628 C238,628 240,620 234,612 C226,602 218,594 214,578 Z" fill="url(#${id('leg')})" ${OL}/>
+  <path d="M68,622 l5,-5 M76,624 l4,-6 M84,625 l3,-6 M232,622 l-5,-5 M224,624 l-4,-6 M216,625 l-3,-6" stroke="${D(BARE.skin, .3)}" stroke-width="1.6" stroke-linecap="round"/>`;
+  else g += `<path d="M84,580 L115,580 C118,592 120,602 120,612 C120,622 114,628 104,628 L68,628 C60,628 58,620 64,612 C72,602 80,594 84,580 Z" fill="#17191e" ${OL}/>
   <path d="M216,580 L185,580 C182,592 180,602 180,612 C180,622 186,628 196,628 L232,628 C240,628 242,620 236,612 C228,602 220,594 216,580 Z" fill="#17191e" ${OL}/>
   <path d="M62,622 h58 M180,622 h58" stroke="#4a505c" stroke-width="5" stroke-linecap="round"/>
   <path d="M84,594 h30 M186,594 h30" stroke="${suitA}" stroke-width="4" stroke-linecap="round"/>
@@ -69,6 +83,11 @@ function pilotSVG(o, uid) {
   const armL = 'M98,136 C84,136 72,144 64,158 C54,176 47,200 43,222 C41,236 44,246 52,254 C62,266 74,278 86,290 L102,276 C92,264 82,250 72,236 C74,214 80,196 90,180 C96,170 102,160 106,150 Z';
   const armR = 'M202,136 C216,136 228,144 236,158 C246,176 253,200 257,222 C259,236 256,246 248,254 C238,266 226,278 214,290 L198,276 C208,264 218,250 228,236 C226,214 220,196 210,180 C204,170 198,160 194,150 Z';
   g += `<path d="${armL}" fill="${armFill}" ${OL}/><path d="${armR}" fill="${armFill}" ${OL}/>`;
+  if (BARE) {
+    g += `<g clip-path="url(#${id('aclip')})"><rect x="30" y="120" width="240" height="84" fill="url(#${id('ly')})"/><path d="M40,200 L110,196 M190,196 L260,200" stroke="${D(BARE.lycra, .4)}" stroke-width="4"/><path d="M60,150 C56,170 54,186 52,198 M240,150 C244,170 246,186 248,198" stroke="rgba(255,255,255,.25)" stroke-width="5" stroke-linecap="round" fill="none"/>
+      <path d="M60,214 C54,230 50,240 48,248 M240,214 C246,230 250,240 252,248" stroke="rgba(255,255,255,.2)" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M48,238 q6 2 10 -2 M252,238 q-6 2 -10 -2" stroke="${D(BARE.skin, .3)}" stroke-width="1.8" fill="none"/></g>`;
+    g += `<path d="M120,118 C130,106 170,106 180,118 L178,134 C168,126 132,126 122,134 Z" fill="${BARE.lycra}" ${OL}/>`;
+  } else {
   g += `<g clip-path="url(#${id('aclip')})">
     <path d="M50,150 C70,132 98,132 110,146 L96,186 C82,174 66,174 50,186 Z M250,150 C230,132 202,132 190,146 L204,186 C218,174 234,174 250,186 Z" fill="${suitA}"/>
     <path d="M60,184 C54,200 50,214 47,228 M240,184 C246,200 250,214 253,228" stroke="rgba(255,255,255,.22)" stroke-width="5" stroke-linecap="round" fill="none"/>
@@ -76,11 +95,12 @@ function pilotSVG(o, uid) {
     <path d="M44,232 q6 -3 12 2 M46,241 q6 -3 12 2 M244,234 q-6 -3 -12 2 M242,243 q-6 -3 -12 2" stroke="rgba(255,255,255,.2)" stroke-width="2" fill="none"/>
     <path d="M74,270 L90,256 L100,266 L84,280 Z M226,270 L210,256 L200,266 L216,280 Z" fill="${suitA}"/>
   </g>`;
+  }
 
   // ---------- chaleco ----------
   const vestP = 'M100,128 C94,132 88,140 86,152 C84,170 84,190 86,215 C88,245 90,275 92,300 C110,306 130,310 150,310 C170,310 190,306 208,300 C210,275 212,245 214,215 C216,190 216,170 214,152 C212,140 206,132 200,128 C192,124 184,124 178,126 C174,140 164,152 150,156 C136,152 126,140 122,126 C116,124 108,124 100,128 Z';
   // cuello del neopreno y del chaleco
-  g += `<path d="M120,118 C130,106 170,106 180,118 L178,134 C168,126 132,126 122,134 Z" fill="${D(vestC, .3)}" ${OL}/>`;
+  if (!BARE) g += `<path d="M120,118 C130,106 170,106 180,118 L178,134 C168,126 132,126 122,134 Z" fill="${D(vestC, .3)}" ${OL}/>`;
   g += `<path d="${vestP}" fill="${V.pat === 'carbon' ? `url(#${id('carb')})` : `url(#${id('vest')})`}" ${OL}/>`;
   g += `<g clip-path="url(#${id('vclip')})">`;
   // laterales de color
