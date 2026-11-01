@@ -520,9 +520,12 @@ const MOTOS=[
  {id:'veneno',name:'VENENO',colors:'Verde y negra',pilot:'Nuria Gil',bio:'Ligera y nerviosa. Sale disparada.',ui:'#62d41c',st:{vel:4,ace:4,giro:3,turbo:2},
   sk:{hull:'#5fd31a',hullD:'#2b7d00',acc:'#111317',seat:'#111317',vest:'#111317',helmet:'#5fd31a',hs:'#111317',arm:'#111317'},
   side:{deck:'#1d1f24',hood:'#62d41c',hull:'#1a1c21',trim:'#0e0f12',seatA:'#2a2d33',seatB:'#8d9199',seatC:'#62d41c',stripe:'#62d41c'},face:{skin:'#d9a07a',hair:'#1b1b1b',style:'bob',vest:'#5fd31a'}},
- {id:'sombra',name:'SOMBRA',colors:'Negra entera',pilot:'Marcos León',bio:'Silencioso y frío. No falla una curva.',ui:'#aab3c0',st:{vel:4,ace:3,giro:3,turbo:3},
+ {id:'sombra',name:'SOMBRA',riva:1,colors:'Negra · Kit Riva Racing',pilot:'Marcos León',bio:'Silencioso y frío. No falla una curva.',ui:'#aab3c0',st:{vel:5,ace:4,giro:4,turbo:4},
   sk:{hull:'#26292f',hullD:'#0c0d10',acc:'#5a5f6a',seat:'#4a4e57',vest:'#111317',helmet:'#26292f',hs:'#8d9199',arm:'#111317'},
-  side:{deck:'#22252b',hood:'#191b20',hull:'#131519',trim:'#0a0b0d',seatA:'#4a4e57',seatB:'#2a2d33',seatC:'#8d9199',stripe:'#4a4e57'},face:{skin:'#d8a27c',hair:'#2a1a12',style:'short',beard:1,vest:'#26292f'}}
+  side:{deck:'#22252b',hood:'#191b20',hull:'#131519',trim:'#0a0b0d',seatA:'#4a4e57',seatB:'#2a2d33',seatC:'#8d9199',stripe:'#4a4e57'},face:{skin:'#d8a27c',hair:'#2a1a12',style:'short',beard:1,vest:'#26292f'}},
+ {id:'gris',name:'TIBURÓN',riva:1,colors:'Gris · Kit Riva Racing',pilot:'El Tiburón',bio:'La moto del jefe de La Final.',ui:'#9fb2c6',st:{vel:5,ace:4,giro:4,turbo:4},
+  sk:{hull:'#8fa3b8',hullD:'#4a5d72',acc:'#e9eef4',seat:'#1b2028',vest:'#1b2028',helmet:'#8fa3b8',hs:'#e9eef4',arm:'#1b2028'},
+  side:{deck:'#a9bccf',hood:'#8094aa',hull:'#4a5d72',trim:'#1b2028',seatA:'#1b2028',seatB:'#2a3240',seatC:'#e9eef4',stripe:'#e9eef4'},fin:1,face:{skin:'#e0b48e',hair:'#2a3240',style:'buzz',glasses:1,vest:'#1b2028'}}
 ];
 const SHARK={id:'tiburon',name:'TIBURÓN',pilot:'El Tiburón',st:{vel:5,ace:4,giro:4,turbo:4},
   sk:{hull:'#8fa3b8',hullD:'#4a5d72',acc:'#e9eef4',seat:'#1b2028',vest:'#1b2028',helmet:'#8fa3b8',hs:'#e9eef4',arm:'#1b2028'}};
@@ -535,7 +538,8 @@ const PARTS=[
  {id:'aletas',name:'Aletas',ef:'Gira mejor',price:[1200,2200,3500]}
 ];
 const LOCK_SVG='<svg class="lk-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 7V5a3.5 3.5 0 0 1 7 0v2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="2.5" y="7" width="11" height="8" rx="2" fill="currentColor"/></svg>';
-const SHOP={brava:[0,0],oceano:[0,0],solar:[0,0],inferno:[0,0],marea:[0,0],veneno:[0,0],avispa:[2500,0],sombra:[9000,7]};
+const SHOP={brava:[0,0],oceano:[0,0],solar:[0,0],inferno:[0,0],marea:[0,0],veneno:[0,0],avispa:[0,0],sombra:[12000,0],gris:[15000,0]};
+const RIVA_KIT={turbo:2,bov:2,escape:2,turbina:2,intercooler:2,aletas:2};
 const PART_NEED=[0,2,5],PAINT_PRICE=200,SWATCH_PRO=['#e0b13a','#c9ced6','#ff2bd6','#00e0b0'],PRO_NEED=4;
 let ownList=store.get('ct_own',null);if(!Array.isArray(ownList))ownList=[];for(const k in SHOP)if(!SHOP[k][0]&&!ownList.includes(k))ownList.push(k);
 const owns=m=>ownList.includes(m.id);
@@ -543,6 +547,8 @@ let best=Math.max(0,Math.min(12,store.get('ct_best',0)|0));
 let partsStore=store.get('ct_parts',{});if(!partsStore||typeof partsStore!=='object')partsStore={};
 function partsOf(m){return partsStore[m.id]||(partsStore[m.id]={});}
 function saveParts(){store.set('ct_parts',partsStore);}
+function rivaKit(m){if(m.riva&&owns(m)){const p=partsOf(m);let ch=false;for(const k in RIVA_KIT)if((p[k]|0)<RIVA_KIT[k]){p[k]=RIVA_KIT[k];ch=true;}if(ch)saveParts();}}
+MOTOS.forEach(rivaKit);
 function motoState(m){if(owns(m))return 'own';const n=(SHOP[m.id]||[0,0])[1];return best<n?'lock':'buy';}
 function unlocksBetween(a,b){const u=[];for(const m of MOTOS){const[pr,n]=SHOP[m.id]||[0,0];if(pr&&n>a&&n<=b)u.push('moto '+m.name);}PART_NEED.forEach((n,i)=>{if(i&&n>a&&n<=b)u.push('piezas Stage '+(i+1));});if(PRO_NEED>a&&PRO_NEED<=b)u.push('colores especiales');return u;}
 const SWATCHES=['#f4f5f7','#b8c0cc','#3a3e46','#16181d','#e3202b','#ff7a1a','#ffd21a','#7be35a','#1f9e52','#19c3c9','#1e5eff','#13285e','#7b3fe4','#ff3f8e'];
@@ -550,7 +556,7 @@ const PAINT_PARTS=[['hull','CASCO'],['deck','LATERALES'],['hood','CAPÓ'],['stri
 let paintStore=store.get('ct_paint',{});if(!paintStore||typeof paintStore!=='object')paintStore={};
 function defaultPaint(m){const s=m.side;return{colors:false,hull:s.hull,deck:s.deck,hood:s.hood,stripe:s.stripe,seat:s.seatA,name:''};}
 function paintOf(m){if(!m.side)return{colors:false,name:''};const p=paintStore[m.id];return p?Object.assign(defaultPaint(m),p):defaultPaint(m);}
-function sideOf(m,p){p=p||paintOf(m);const b=Object.assign({},m.side);if(p.colors)Object.assign(b,{hull:p.hull,deck:p.deck,hood:p.hood,stripe:p.stripe,seatA:p.seat,seatB:p.hood});b.name=p.name||'';return b;}
+function sideOf(m,p){p=p||paintOf(m);const b=Object.assign({},m.side);if(p.colors)Object.assign(b,{hull:p.hull,deck:p.deck,hood:p.hood,stripe:p.stripe,seatA:p.seat,seatB:p.hood});b.name=p.name||'';b.riva=!!m.riva;b.fin=!!m.fin;return b;}
 function skOf(m,p){if(!m.side)return m.sk;p=p||paintOf(m);if(!p.colors)return m.sk;return Object.assign({},m.sk,{hull:p.deck,hullD:mixc(p.deck,'#000000',.35),acc:p.stripe,hood:p.hood,rim:p.hull,seat:p.seat});}
 function motoName(m){return paintOf(m).name||m.name;}
 function playerSk(){const a=AVATARS[G.avatar|0]||AVATARS[0];return Object.assign({},skOf(MOTOS[G.moto|0]),{vest:a.face.vest,arm:a.face.vest,helmet:'#ffffff',hs:a.face.vest});}
@@ -584,7 +590,7 @@ const AVATARS=[
  {id:'nerea',name:'Nerea',face:{skin:'#d9a07a',hair:'#111111',style:'bob',vest:'#ffd21a'}},
  {id:'vega',name:'Vega',face:{skin:'#efbf98',hair:'#b5402a',style:'long',vest:'#7b3fe4'}}
 ];
-const MOTO_DESC={brava:'Equilibrada y fiable.',inferno:'Pura potencia. Acelera como nadie.',avispa:'Agresiva en las curvas. Pica fuerte.',oceano:'La más rápida en recta.',marea:'Gira y salta como nadie.',solar:'Turbo largo y mucha cabeza.',veneno:'Ligera y nerviosa. Sale disparada.',sombra:'Silenciosa y fría en las curvas.'};
+const MOTO_DESC={brava:'Equilibrada y fiable.',inferno:'Pura potencia. Acelera como nadie.',avispa:'Agresiva en las curvas. Pica fuerte.',oceano:'La más rápida en recta.',marea:'Gira y salta como nadie.',solar:'Turbo largo y mucha cabeza.',veneno:'Ligera y nerviosa. Sale disparada.',sombra:'Kit Riva Racing: rápida, fina y fría en las curvas.',gris:'Kit Riva Racing: la moto del Tiburón. La más bestia.'};
 const TOD={
  morning:{deep:'#1384c8',deep2:'#0b5aa8',tint:null},
  noon:{deep:'#109ad6',deep2:'#0a64b8',tint:null},
@@ -797,6 +803,8 @@ function drawJetProfile(g,s){
  g.restore();
  g.strokeStyle='rgba(0,0,0,.35)';g.lineWidth=1;seatP();g.stroke();
  g.strokeStyle=s.trim;g.lineWidth=4;g.lineCap='round';g.beginPath();g.moveTo(84,59);g.bezierCurveTo(66,56,64,38,80,34);g.stroke();
+ if(s.fin){g.save();g.fillStyle='rgba(30,40,55,.9)';g.beginPath();g.moveTo(96,34);g.quadraticCurveTo(108,6,132,-8);g.quadraticCurveTo(124,14,130,34);g.closePath();g.fill();g.fillStyle='rgba(255,255,255,.22)';g.beginPath();g.moveTo(104,30);g.quadraticCurveTo(112,10,126,-2);g.lineTo(118,22);g.closePath();g.fill();g.restore();}
+ if(s.riva){g.save();g.translate(226,89);g.rotate(-.05);g.fillStyle='#e3202b';g.beginPath();g.moveTo(-38,-7);g.lineTo(42,-7);g.lineTo(38,7);g.lineTo(-42,7);g.closePath();g.fill();g.fillStyle='#ffffff';g.font='italic 800 11px "Saira Condensed",sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('RIVA RACING',0,.5);g.restore();}
  // agua
  g.save();hullP();g.clip();g.fillStyle='rgba(20,120,180,.38)';g.fillRect(0,108,350,30);g.restore();
  g.fillStyle='rgba(255,255,255,.88)';for(let i=0;i<20;i++){const x=22+i*15+Math.sin(i*2.3)*4;g.beginPath();g.ellipse(x,109+Math.sin(i)*1.2,4+Math.sin(i*1.7)*2,1.5,0,0,TAU);g.fill();}
@@ -1079,7 +1087,7 @@ function startZone(){
  const zi=G.zi;G.zone=buildZone(zi,G.lap);chunks=new Map();const Zn=G.zone,Z=Zn.Z;
  const m=MOTOS[G.moto];G.P=craft(m,WG*.55,0,true);G.P.st=stats(m,G.parts);
  G.rivals=[];
- if(Z.riv){const rr=rng(Zn.seed+3);let pool=MOTOS.filter((_,i)=>i!==G.moto).map(m=>[rr(),m]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]).slice(0,Z.riv);if(Z.boss)pool[Z.riv-1]=SHARK;
+ if(Z.riv){const rr=rng(Zn.seed+3);let pool=MOTOS.filter((m,i)=>i!==G.moto&&!m.riva).map(m=>[rr(),m]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]).slice(0,Z.riv);if(Z.boss)pool[Z.riv-1]=SHARK;
   const grid=[[.32,-150],[.72,-110],[.48,-70],[.8,-30],[.3,10]];
   pool.slice(0,Z.riv).forEach((mm,i)=>{const c=craft(mm,WG*grid[i][0],grid[i][1],false);c.skill=(Z.skill||.9)*(mm===SHARK?1.08:1)*(1+G.lap*.04)*(.97+i*.012);G.rivals.push(c);});
   G.P.y=40;G.P.x=WG*.56;}
@@ -1593,7 +1601,7 @@ function drawPortrait(cvs,m){const g=cvs.getContext('2d'),f=m.face,W=cvs.width;g
 
 /* ---- garaje y mapa ---- */
 function renderGarage(){const m=MOTOS[G.moto],ms=motoState(m),[mpr,mneed]=SHOP[m.id]||[0,0];$('#gCard').style.setProperty('--sc',m.ui);$('#gPv').classList.toggle('lk',ms!=='own');$('#gLock').hidden=ms==='own';$('#gGo').textContent=ms==='own'?(G.free?'ELEGIR Y VER PANTALLAS':G._champOn?'SEGUIR CON ESTA MOTO':'ELEGIR ESTA MOTO'):'IR AL TALLER';
- drawPortrait($('#gPilot'),AVATARS[G.avatar|0]||AVATARS[0]);$('#gPilotName').textContent=pilotName();$('#gBio').textContent=MOTO_DESC[m.id]||'';$('#gName').textContent=motoName(m);$('#gColors').textContent=ms==='buy'?'En el taller: '+pts(mpr)+' PTA':ms==='lock'?'Se desbloquea en la zona '+mneed:paintOf(m).colors?'Pintura personalizada':m.colors;
+ drawPortrait($('#gPilot'),AVATARS[G.avatar|0]||AVATARS[0]);$('#gPilotName').textContent=pilotName();$('#gBio').textContent=MOTO_DESC[m.id]||'';$('#gName').textContent=motoName(m);$('#gColors').textContent=ms==='buy'?(m.riva?'Kit Riva Racing · ':'')+'En el taller: '+pts(mpr)+' PTA':ms==='lock'?'Se desbloquea en la zona '+mneed:paintOf(m).colors?'Pintura personalizada':m.colors;
  const gc=$('#gMoto'),g=gc.getContext('2d');g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,290,120);g.save();g.translate(2,4);g.scale(.836,.836);drawJetProfile(g,sideOf(m));g.restore();
  const S2=$('#gStats');S2.textContent='';for(const[k,l]of[['vel','VELOCIDAD'],['ace','ACELERACIÓN'],['giro','GIRO'],['turbo','TURBO']]){const row=document.createElement('div');row.className='st';const a=document.createElement('span');a.textContent=l;const b=document.createElement('i');for(let j=0;j<5;j++){const x=document.createElement('b');if(j<m.st[k])x.className='on';b.append(x);}row.append(a,b);S2.append(row);}
  const D=$('#gDots');D.textContent='';MOTOS.forEach((_,i)=>{const s=document.createElement('span');if(i===G.moto)s.className='on';D.append(s);});}
@@ -1805,11 +1813,11 @@ function renderShop(){const m=MOTOS[shopI],st=motoState(m),[price,need]=SHOP[m.i
    if(lv>=3){b.textContent='MÁXIMO';b.disabled=true;}else if(lk){b.innerHTML=LOCK_SVG+' ZONA '+nd;b.disabled=true;}else{b.textContent=pts(pr);b.disabled=G.money<pr;}
    b.addEventListener('click',()=>{if(lv>=3||lk||G.money<pr)return;G.money-=pr;parts[p.id]=lv+1;saveParts();saveWallet();Snd.cash();renderShop();});row.append(b);L.append(row);});}
  else{const S2=document.createElement('div');S2.className='stats';for(const[k,l]of[['vel','VELOCIDAD'],['ace','ACELERACIÓN'],['giro','GIRO'],['turbo','TURBO']]){const row=document.createElement('div');row.className='st';const a=document.createElement('span');a.textContent=l;const bb=document.createElement('i');for(let j=0;j<5;j++){const x=document.createElement('b');if(j<m.st[k])x.className='on';bb.append(x);}row.append(a,bb);S2.append(row);}L.append(S2);
-  const n=document.createElement('p');n.className='snote';n.textContent=st==='lock'?'Bloqueada: supera la zona '+need+' del campeonato y luego cómprala aquí.':'Cómprala para poder correr con ella, pintarla y meterle piezas.';L.append(n);}
+  const n=document.createElement('p');n.className='snote';n.textContent=st==='lock'?'Bloqueada: supera la zona '+need+' del campeonato y luego cómprala aquí.':m.riva?'KIT RIVA RACING: viene con todas las piezas montadas en Stage 2. Cómprala para correr con ella.':'Cómprala para poder correr con ella, pintarla y meterle piezas.';L.append(n);}
  const pb=$('#sPaint');pb.disabled=st!=='own';pb.textContent='PINTAR · '+PAINT_PRICE;
  const mb=$('#sMain');if(st==='own'){mb.textContent=shopI===G.moto?'EN USO':'USAR ESTA MOTO';mb.disabled=shopI===G.moto;}else if(st==='buy'){mb.textContent='COMPRAR · '+pts(price);mb.disabled=G.money<price;}else{mb.innerHTML=LOCK_SVG+' ZONA '+need;mb.disabled=true;}}
 on('#sPrev',()=>{shopI=(shopI-1+MOTOS.length)%MOTOS.length;Snd.click();renderShop();});on('#sNext',()=>{shopI=(shopI+1)%MOTOS.length;Snd.click();renderShop();});
-on('#sMain',()=>{const m=MOTOS[shopI],st=motoState(m);if(st==='own'){G.moto=shopI;store.set('ct_moto',G.moto);SP.jetP=sprite(32,68,g=>drawJet(g,playerSk()));Snd.click();renderShop();return;}if(st!=='buy')return;const pr=SHOP[m.id][0];if(G.money<pr)return;G.money-=pr;ownList.push(m.id);store.set('ct_own',ownList);saveWallet();G.moto=shopI;store.set('ct_moto',G.moto);Snd.cash();renderShop();});
+on('#sMain',()=>{const m=MOTOS[shopI],st=motoState(m);if(st==='own'){G.moto=shopI;store.set('ct_moto',G.moto);SP.jetP=sprite(32,68,g=>drawJet(g,playerSk()));Snd.click();renderShop();return;}if(st!=='buy')return;const pr=SHOP[m.id][0];if(G.money<pr)return;G.money-=pr;ownList.push(m.id);store.set('ct_own',ownList);rivaKit(m);saveWallet();G.moto=shopI;store.set('ct_moto',G.moto);Snd.cash();renderShop();});
 on('#sPaint',()=>{if(!owns(MOTOS[shopI]))return;Snd.click();goPaint();});
 on('#sBack',()=>{Snd.click();if(shopFrom==='garage')goGarage();else toTitle();});
 on('#bShop',()=>{Snd.click();goShop('title');});
