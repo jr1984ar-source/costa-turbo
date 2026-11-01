@@ -16,15 +16,33 @@ SEAT = [(262, 40), (300, 4), (400, 8), (470, 40), (540, 80), (610, 120), (655, 1
 HOOD = [(722, 205), (790, 175), (860, 150), (930, 140), (995, 150), (1040, 220), (1075, 290), (1105, 345), (1135, 395), (1142, 445), (1090, 440), (1020, 405), (950, 365), (880, 320), (820, 290), (760, 255), (725, 235)]
 DET = [[(585, 62), (640, 56), (642, 78), (588, 82)], [(835, 8), (870, 6), (872, 28), (838, 30)],
        [(240, 168), (305, 172), (308, 205), (245, 205)], [(548, 282), (690, 292), (695, 330), (552, 322)]]
+MK = json.load(open('marks3.json')); OX, OY = 24, 69
+line = L < .1
+def grow(hulls, dil, base):
+    out = np.zeros((H, W), bool)
+    for hpts in hulls:
+        p = np.array([[x - OX, y - OY] for x, y in hpts], np.int32)
+        hm = np.zeros((H, W), np.uint8); cv2.fillPoly(hm, [p], 1)
+        lim = cv2.dilate(hm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (dil, dil))) > 0
+        cand = (base & ~line & lim).astype(np.uint8)
+        n, l = cv2.connectedComponents(cand)
+        ids = set(np.unique(l[(hm > 0) & (cand > 0)]).tolist()) - {0}
+        for i in ids:
+            comp = l == i
+            if comp.sum() > 15: out |= comp
+        out |= (hm > 0) & base
+    out = cv2.morphologyEx(out.astype(np.uint8), cv2.MORPH_CLOSE, np.ones((3, 3), np.uint8)) > 0
+    return out & on
+DETM = grow(MK['blue'], 31, dark)
+SEATM = grow(MK['pink'], 61, dark)
+HOODM = grow(MK['yel'], 71, dark)
 lab = np.zeros((H, W), np.uint8)
 lab[dark] = 6
 lab[red & low] = 1
 lab[red & ~low] = 2
-lab[poly(HOOD) & on] = 3
-lab[poly(HOOD) & red] = 2
-lab[poly(HOOD) & dark] = 3
-for d in DET: lab[poly(d) & on] = 4
-lab[poly(SEAT) & dark] = 5
+lab[HOODM | (poly(HOOD) & dark)] = 3
+lab[(poly(SEAT) & dark) | SEATM] = 5
+lab[DETM] = 4
 # contornos negros finos dentro de piezas: se quedan como líneas (factor bajo)
 lab[~on] = 0
 # luz relativa a la mediana de cada pieza
