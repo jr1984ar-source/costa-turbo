@@ -1,0 +1,12 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});const p=await (await b.newContext({viewport:{width:390,height:844}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(500);
+ const s0=await E(()=>__Snd.ctx&&__Snd.ctx.state);
+ await E(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>true});document.dispatchEvent(new Event('visibilitychange'));});await W(300);
+ const s1=await E(()=>__Snd.ctx.state);
+ await E(()=>{Object.defineProperty(document,'hidden',{configurable:true,get:()=>false});document.dispatchEvent(new Event('visibilitychange'));});await W(300);
+ const s2=await E(()=>__Snd.ctx.state);
+ await E(()=>{window.dispatchEvent(new Event('pagehide'));});await W(300);const s3=await E(()=>__Snd.ctx.state);
+ await p.click('#aBack').catch(()=>{});await W(300);const s4=await E(()=>__Snd.ctx.state);
+ console.log(JSON.stringify({s0,s1,s2,s3,s4}),JSON.stringify(errs));await b.close();})();
