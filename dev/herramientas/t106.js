@@ -1,0 +1,13 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:1})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ const circ=process.argv[2],tag=process.argv[3];
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(c=>{__T.newGame();__G.zi=__Z.findIndex(z=>z.circ===c);__goMap();},circ);await W(300);await E(()=>__T.startRace());await W(4000);
+ const pp=(t,c)=>E(([t,c])=>{const P=__G.P;__pop(P.x,P.y-40,t,c);},[t,c]);
+ const sh=async n=>p.screenshot({path:`${tag}-${n}.png`,clip:{x:0,y:250,width:390,height:400}});
+ await pp('¡FUERA DEL CIRCUITO!','#ff4757');await W(250);await pp('¡SALTO! +250','#ffc93c');await W(250);await pp('¡MORTAL! +600','#33d6ff');await W(400);await sh(0);
+ await W(900);await pp('¡FUERA DEL CIRCUITO!','#ff4757');await W(400);await sh(1);
+ await pp('¡GRAN SALTO! +450','#ff6b7d');await W(500);await sh(2);
+ await W(1500);await sh(3);
+ console.log(JSON.stringify(errs));await b.close();})();
