@@ -1,0 +1,12 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ const zi=await E(()=>__Z.findIndex(z=>z.name==='PORTALS'));
+ await E(zi=>{__T.newGame();__G.zi=zi;__goMap();},zi);await W(700);await p.screenshot({path:'v42-map.png'});
+ await E(()=>__T.startRace());await W(3800);
+ const info=await E(()=>{const o=__G.zone.objs.find(o=>o.t==='piri');const P=__G.P;P.x=o.x+20;P.y=o.y+260;P.v=0;return{x:o.x,y:o.y,len:__G.zone.len,n:__G.zone.objs.filter(o=>o.t==='piri').length};});
+ await W(500);await p.screenshot({path:'v42-piri.png'});
+ const got=await E(()=>{const o=__G.zone.objs.find(o=>o.t==='piri');const P=__G.P;const h0=__T.hpTot();P.x=o.rx;P.y=o.y+20;P.v=60;P.h=0;return h0;});await W(600);
+ const after=await E(()=>[__T.hpTot(),__G.turbo,document.querySelector('#msg').textContent]);
+ console.log(JSON.stringify(info),got,JSON.stringify(after),JSON.stringify(errs));await b.close();})();

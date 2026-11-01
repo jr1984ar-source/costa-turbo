@@ -608,19 +608,19 @@ const JJ_ITEMS=[
  {id:'turbo',name:'Refresco turbo',ef:'+1 turbo y +⅓ de corazón',price:500}
 ];
 const ZONES=[
- {name:'EL PUERTO',obj:'time',goal:'Llega a la meta antes de que se acabe el tiempo.',len:15000,riv:5,bar:'jj',theme:'port',tod:'morning',skill:.84,pace:205,piri:1},
+ {name:'EL PUERTO',obj:'time',goal:'Llega a la meta antes de que se acabe el tiempo.',len:15000,riv:5,bar:'jj',theme:'port',tod:'morning',skill:.84,pace:205},
  {name:'LA CALA',obj:'slalom',goal:'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.',len:11000,riv:0,bar:'roxy',theme:'cove',tod:'noon',pace:170},
  {name:'CARRERA AL MAGO',obj:'race3',goal:'Llega a El Mago entre los 3 primeros. La costa queda a la derecha, la isla la puedes rodear por los dos lados y antes de la meta hay muchos barcos fondeados.',len:16000,riv:5,bar:null,theme:'cove',tod:'noon',skill:.88,piri:1,island:1,anchored:1,finish:'EL MAGO',mirror:1},
- {name:'GRAN CARRERA',alt:1,obj:'race3',goal:'Termina entre los 3 primeros.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9,piri:1},
+ {name:'GRAN CARRERA',alt:1,obj:'race3',goal:'Termina entre los 3 primeros.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9},
  {name:'PERSECUCIÓN',obj:'chase',goal:'Llega a la meta sin que la policía te pille 3 veces.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'afternoon'},
- {name:'OLAS GIGANTES',obj:'jumps',giant:1,goal:'Haz 6 saltos y llega a tiempo. Las olas gigantes, cógelas rápido y recto: si vas lento o torcido, vuelcas.',len:15000,riv:0,bar:'jj',theme:'beach',tod:'sunset',pace:200,piri:1},
+ {name:'OLAS GIGANTES',obj:'jumps',giant:1,goal:'Haz 6 saltos y llega a tiempo. Las olas gigantes, cógelas rápido y recto: si vas lento o torcido, vuelcas.',len:15000,riv:0,bar:'jj',theme:'beach',tod:'sunset',pace:200},
  {name:'LAS RAMPAS',obj:'jumps',needJ:10,goal:'Haz 10 saltos de rampa y llega antes de que se acabe el tiempo. Mar abierto, sin costa.',len:15000,riv:0,bar:null,theme:'open',tod:'noon',pace:195,ramps:1},
- {name:'CARRERA ES TRENC',obj:'race2',goal:'Termina entre los 2 primeros. Hay dos pasos estrechos y dos islas, y las chicas de los flotadores te distraen.',len:16000,riv:5,bar:null,theme:'trenc',tod:'tropical',skill:.9,piri:1,islands:2,passes:2,floats:1,finish:'ES TRENC',shallowW:250},
- {name:'CARRERA SAN TELM',obj:'race3',goal:'Termina entre los 3 primeros. Esta vez la costa queda a la derecha: calitas, recovecos y acantilados altísimos.',len:16000,riv:5,bar:null,theme:'tram',tod:'afternoon',skill:.9,piri:1,mirror:1,finish:'SAN TELM'},
+ {name:'CARRERA ES TRENC',obj:'race2',goal:'Termina entre los 2 primeros. Hay dos pasos estrechos y dos islas, y las chicas de los flotadores te distraen.',len:16000,riv:5,bar:null,theme:'trenc',tod:'tropical',skill:.9,islands:2,passes:2,floats:1,finish:'ES TRENC',shallowW:250},
+ {name:'CARRERA SAN TELM',obj:'race3',goal:'Termina entre los 3 primeros. Esta vez la costa queda a la derecha: calitas, recovecos y acantilados altísimos.',len:16000,riv:5,bar:null,theme:'tram',tod:'afternoon',skill:.9,mirror:1,finish:'SAN TELM'},
  {name:'FORMENTOR',obj:'race3',goal:'Termina entre los 3 primeros hasta el faro de Formentor. Acantilados enormes y el islote de Es Colomer, que puedes rodear por los dos lados.',len:16000,riv:5,bar:null,theme:'tram',tod:'golden',skill:.92,island:1,isleTheme:'cove',faro:1,finish:'FARO DE FORMENTOR'},
  {name:'SA CALOBRA',obj:'time',goal:'Cruza el cañón del Torrent de Pareis antes de que se acabe el tiempo. Paredes de roca a los dos lados: no te despistes.',len:13000,riv:0,bar:null,theme:'tram',tod:'noon',pace:185,canyon:1,finish:'SA CALOBRA'},
  {name:'CABRERA',obj:'race3',goal:'Termina entre los 3 primeros por el parque nacional de Cabrera. No entres en las zonas protegidas de boyas amarillas: multa de 500 PTA.',len:16000,riv:5,bar:null,theme:'cove',tod:'afternoon',skill:.9,cab:1,finish:'CABRERA'},
- {name:'PORTALS',obj:'time',goal:'Cruza el puerto de Portals antes de que se acabe el tiempo esquivando los superyates que entran y salen.',len:14000,riv:0,bar:null,theme:'port',tod:'afternoon',pace:195,supers:1,finish:'PORTALS'},
+ {name:'PORTALS',obj:'time',goal:'Cruza el puerto de Portals antes de que se acabe el tiempo esquivando los superyates que entran y salen. A mitad de camino está el Piri-Piri: pasa a su lado y te da vida y turbos.',len:14000,riv:0,bar:null,theme:'port',tod:'afternoon',pace:195,supers:1,piri:1,finish:'PORTALS'},
  {name:'TORMENTA',alt:1,obj:'time',goal:'Cruza la tormenta de noche antes de que se acabe el tiempo.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'night',pace:195},
  {name:'CARRERA DE BOYAS',obj:'race3',goal:'Termina entre los 3 primeros. Slalom de verdad: rodea cada boya por fuera, la naranja por la izquierda y la verde por la derecha. Si fallas, 2 segundos parado.',len:16000,riv:5,bar:null,theme:'open',tod:'afternoon',skill:.9,turns:1},
  {name:'FORMENTERA',obj:'race3',goal:'Termina entre los 3 primeros hasta la punta de Ses Illetes. Agua transparente, muchos barcos fondeados y praderas de posidonia que te frenan. A mitad, el Beso Beach.',len:16000,riv:5,bar:'beso',theme:'form',tod:'tropical',skill:.9,form:1,shallowW:260,finish:'SES ILLETES'},
@@ -2225,7 +2225,7 @@ function drawCover(c,zi){const g=c.getContext('2d'),W=400,H=225,HZ=96,C=COVER[zi
  else if(L==='formentor'){cvRival(g,q,rv(0),140,140,.24,-.05);cvRival(g,q,rv(1),210,154,.28,-.06);hero(295,172,.42,-.15,0);}
  else if(L==='calobra'){for(let i=0;i<3;i++){g.fillStyle='#8d8577';g.beginPath();g.ellipse(170+i*40,HZ+20+i*12,8,4,0,0,TAU);g.fill();}hero(205,170,.4,-.12,0);}
  else if(L==='cabrera'){for(let i=0;i<9;i++){g.fillStyle='#ffd21a';g.beginPath();g.arc(170+i*24,HZ+28+Math.sin(i)*3,2.6+i*.2,0,TAU);g.fill();}cvRival(g,q,rv(0),150,146,.26,-.05);hero(290,172,.42,-.15,0);}
- else if(L==='portals'){cvSuper(g,170,HZ+34,.8);hero(285,172,.42,-.15,0);}
+ else if(L==='portals'){cvPiri(g,352,HZ+16,.62);cvSuper(g,170,HZ+34,.8);hero(285,172,.42,-.15,0);}
  else if(L==='form'){cvRival(g,q,rv(0),120,138,.24,-.05);cvRival(g,q,rv(1),200,152,.28,-.06);hero(290,170,.42,-.15,0);}
  else if(L==='bah'){for(const[x,y,r]of[[80,140,7],[110,150,6],[350,128,5]]){g.fillStyle='#f4a6b8';g.beginPath();g.arc(x,y,r,0,TAU);g.fill();g.beginPath();g.arc(x+r*.9,y-r*.4,r*.6,0,TAU);g.fill();g.strokeStyle='rgba(255,255,255,.7)';g.lineWidth=1.2;g.beginPath();g.ellipse(x,y+2,r*1.8,r*.6,0,0,TAU);g.stroke();}cvRival(g,q,rv(0),190,140,.24,-.05);hero(285,170,.42,-.15,0);}
  else if(L==='aus'){g.save();for(let k=0;k<3;k++){const y0=HZ+30+k*44;gg=g.createLinearGradient(0,y0-20,0,y0+12);gg.addColorStop(0,'#7fe0ec');gg.addColorStop(1,'#1f7fb6');g.fillStyle=gg;g.beginPath();g.moveTo(0,y0+12);g.quadraticCurveTo(200,y0-26-k*6,400,y0+12);g.closePath();g.fill();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=3;g.beginPath();g.moveTo(20,y0+6);g.quadraticCurveTo(200,y0-24-k*6,380,y0+6);g.stroke();}g.restore();
@@ -2392,7 +2392,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=41;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=42;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
