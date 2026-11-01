@@ -1969,7 +1969,11 @@ function drawCover(c,zi){const g=c.getContext('2d'),W=400,H=225,HZ=96,C=COVER[zi
  if(pre){g.font='800 16px "Saira Condensed",sans-serif';g.lineWidth=4;g.strokeStyle='#0a1630';g.strokeText(pre,4,44);g.fillStyle='#33d6ff';g.fillText(pre,4,44);g.font=`800 ${fs}px "Saira Condensed",sans-serif`;}
  g.fillStyle='rgba(0,0,0,.4)';g.fillText(nm,4,y+3);g.lineWidth=6;g.strokeStyle='#0a1630';g.strokeText(nm,2,y);gg=g.createLinearGradient(0,y-fs*.8,0,y);gg.addColorStop(0,'#ffffff');gg.addColorStop(.5,'#ffe08a');gg.addColorStop(1,'#ff8a2a');g.fillStyle=gg;g.fillText(nm,2,y);
  g.font='700 12px "Saira Condensed",sans-serif';const tw=g.measureText(C.tag).width+14;g.fillStyle='rgba(8,22,48,.75)';g.beginPath();g.roundRect(2,y+6,tw,17,8.5);g.fill();g.fillStyle='#33d6ff';g.fillText(C.tag,9,y+18.5);
- g.restore();}
+ g.restore();
+ {const n=ZONES.length,lv=Math.max(1,Math.min(10,Math.round((zi+1)/n*10))),bx=12,by=H-26,sw=13,gap=3;g.save();g.fillStyle='rgba(8,22,48,.78)';g.beginPath();g.roundRect(bx-6,by-15,10*(sw+gap)+70,26,9);g.fill();
+  g.font='800 10px "Saira Condensed",sans-serif';g.textBaseline='middle';g.textAlign='left';g.fillStyle='#ffffff';g.fillText('DIFICULTAD',bx,by-2);
+  for(let i=0;i<10;i++){const x=bx+56+i*(sw+gap),h=4+i*.9;const hue=120-i*12;g.fillStyle=i<lv?`hsl(${hue},85%,55%)`:'rgba(255,255,255,.18)';g.beginPath();g.roundRect(x,by+4-h,sw,h,2);g.fill();}
+  g.restore();}}
 
 /* ---- ranking ---- */
 let db=null,globalScores=null,dbWritable=true,lastHl=null;
@@ -2099,7 +2103,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=32;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=33;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
