@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(()=>{__T.newGame();__G.zi=0;__goMap();});await W(300);await E(()=>__T.startRace());await W(3800);
+ const hit=()=>E(()=>{const P=__G.P,Zn=__G.zone;P.inv=0;P.crash=0;P.v=P.st.maxV*.8;P.h=0;P.va=0;const o={t:'rock',x:P.x,y:P.y-12,rad:10,v:0};const i=Zn.objs.findIndex(q=>q.y>o.y);Zn.objs.splice(i<0?Zn.objs.length:i,0,o);});
+ await hit();await W(150);const a=await E(()=>({hp:__T.hpTot(),blink:[...document.querySelectorAll('#lives i')].map(e=>e.className),pops:__G.pops.map(x=>x.txt),msg:document.querySelector('#msg').hidden?'':document.querySelector('#msg').textContent}));
+ await p.screenshot({path:'v48-blink.png',clip:{x:240,y:60,width:150,height:40}});
+ await W(600);await hit();await W(150);await hit();await W(150);const b2=await E(()=>({hp:__T.hpTot(),blink:[...document.querySelectorAll('#lives i')].map(e=>e.className),pops:__G.pops.map(x=>x.txt),msg:document.querySelector('#msg').hidden?'':document.querySelector('#msg').textContent}));
+ console.log(JSON.stringify({a,b2}),JSON.stringify(errs));await b.close();})();
