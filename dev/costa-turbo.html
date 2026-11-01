@@ -1196,18 +1196,18 @@ function buildZone(zi,lap){
  const wPat=Z.form?{coins:3,boat:2.6,yacht:1.2,rocks:.3,ramp:.8,kayak:.5,posi:2}:Z.bah?{coins:3,pig:2.2,ray:1,nurse:.8,ramp:.9,rocks:.3,yacht:.4}:Z.aus?{coins:3,ramp:6,surfer:2,coral:1.4,croc:.8,rocks:.4}:Z.canyon?{coins:3.4,rocks:.6,ramp:.8,kayak:.8,boat:.4}:Z.cab?{coins:3,rocks:1.4,boat:1,yacht:.5,kayak:.6,ramp:1}:Z.supers?{coins:3,yacht:1.6,boat:1.4,ramp:1,kayak:.5,rocks:.3}:Z.obj==='slalom'?{coins:3,ramp:1,rocks:1.5,boat:1,yacht:.6,kayak:.6,patrol:.4}:Z.obj==='jumps'?{coins:3,ramp:8,rocks:1.5,boat:1,yacht:.8,kayak:.6,patrol:.7}:Z.obj==='chase'?{coins:3,ramp:1.4,rocks:2,boat:1.4,yacht:.7,kayak:.7,patrol:.4}:Z.floats?{coins:3,ramp:1.2,rocks:.6,boat:.6,yacht:1.2,kayak:.5,patrol:.6,float:3.4}:Z.theme==='tram'?{coins:3.4,ramp:1.3,rocks:2.6,boat:1.3,yacht:.6,kayak:1,patrol:.6}:{coins:3.5,ramp:1.5,rocks:1.6,boat:1.2,yacht:.8,kayak:.8,patrol:1};
  const pick=()=>{let s=0;for(const k in wPat)s+=wPat[k];let x=r()*s;for(const k in wPat){x-=wPat[k];if(x<=0)return k;}return 'coins';};
  let lastYacht=-2000,u=560,gateSide=0;
- if(Z.ramps){u=len;let u2=650,pat=0;const SZ={s:{w:80,Lr:36,col:'#ffd21a'},m:{w:100,Lr:52,col:'#ff7a1a'},l:{w:124,Lr:72,col:'#e3202b'}};
-  const ramp=(x,uu,sz)=>add({t:'ramp',x,y:-uu,w:SZ[sz].w,Lr:SZ[sz].Lr,col:SZ[sz].col,sz,kick:1}),air=(x,uu,n,sp)=>{for(let i=0;i<(n||4);i++)add({t:'coin',x,y:-uu-64-i*(sp||28),air:1});};
-  const side=(x,uu,dir,sz)=>{const h=dir*.5;add({t:'cramp',x,y:-uu,h,w:SZ[sz].w,Lr:SZ[sz].Lr,col:SZ[sz].col,sz,kick:1,defl:1});for(let i=0;i<4;i++){const d=84+i*36;add({t:'coin',x:x+Math.sin(h)*d,y:-uu-Math.cos(h)*d,air:1});}},szr=()=>['s','m','l'][(r()*3)|0];
-  while(u2<len-800){const L=zone.shore(-u2)+40,R=WG-40,mid=(L+R)/2,k=pat++%7;
-   if(k===0){const x=[L+66,mid,R-66][(r()*3)|0],sz=szr();ramp(x,u2,sz);air(x,u2,sz==='l'?6:4,sz==='l'?34:28);u2+=sz==='l'?520:430;}
-   else if(k===1){for(let i=0;i<3;i++)ramp(i%2?R-66:L+66,u2+i*260,'s');u2+=880;}
-   else if(k===2){const x=lerp(L+80,R-80,r());ramp(x,u2,'l');add({t:r()<.6?'sail':'motor',x,y:-u2-160,rot:0});air(x,u2+40,5,34);u2+=640;}
-   else if(k===3){const x=lerp(L+70,R-70,r());ramp(x,u2,'m');ramp(x,u2+270,'s');air(x,u2+270,4,28);u2+=650;}
-   else if(k===4){const sw=r()<.5;ramp(sw?R-74:L+70,u2,'s');ramp(sw?L+74:R-74,u2,'l');air(sw?L+74:R-74,u2,5,32);u2+=540;}
-   else if(k===6){ramp(L+70,u2,'m');ramp(R-70,u2+300,'m');ramp(mid,u2+600,'l');air(mid,u2+600,6,34);u2+=1000;}
+ if(Z.ramps){u=len;let u2=650,pat=0;const SZ={s:{w:80,Lr:36,col:'#ffd21a'},m:{w:100,Lr:52,col:'#ff7a1a'},l:{w:124,Lr:72,col:'#e3202b'}},RD=RAMP_D;
+  const gap=sz=>Math.round(RD[sz]*1.3+140);
+  const ramp=(x,uu,sz)=>add({t:'ramp',x,y:-uu,w:SZ[sz].w,Lr:SZ[sz].Lr,col:SZ[sz].col,sz,kick:1}),air=(x,uu,sz)=>{const n=sz==='l'?6:sz==='m'?5:4;for(let i=0;i<n;i++)add({t:'coin',x,y:-uu-RD[sz]*(.2+.6*i/(n-1)),air:1});},szr=()=>['s','m','l'][(r()*3)|0];
+  while(u2<len-900){const L=zone.shore(-u2)+40,R=WG-40,mid=(L+R)/2,k=pat++%7;
+   if(k===0){const x=[L+66,mid,R-66][(r()*3)|0],sz=szr();ramp(x,u2,sz);air(x,u2,sz);u2+=gap(sz);}
+   else if(k===1){let uu=u2;for(let i=0;i<3;i++){const x=i%2?R-66:L+66;ramp(x,uu,'s');air(x,uu,'s');uu+=gap('s');}u2=uu;}
+   else if(k===2){const x=lerp(L+80,R-80,r());ramp(x,u2,'l');add({t:r()<.6?'sail':'motor',x,y:-u2-170,rot:0});air(x,u2,'l');u2+=gap('l');}
+   else if(k===3){const x=lerp(L+70,R-70,r());ramp(x,u2,'m');air(x,u2,'m');const u3=u2+gap('m');ramp(x,u3,'s');air(x,u3,'s');u2=u3+gap('s');}
+   else if(k===4){const sw=r()<.5,xs=sw?R-74:L+70,xl=sw?L+74:R-74;ramp(xs,u2,'s');ramp(xl,u2,'l');air(xl,u2,'l');air(xs,u2,'s');u2+=gap('l');}
+   else if(k===6){ramp(L+70,u2,'m');air(L+70,u2,'m');const u3=u2+gap('m');ramp(R-70,u3,'m');air(R-70,u3,'m');const u4=u3+gap('m');ramp(mid,u4,'l');air(mid,u4,'l');u2=u4+gap('l');}
    else{for(let i=0;i<3;i++)add({t:'rock',x:lerp(L+20,R-20,r()),y:-u2-(r()-.5)*60,rad:10+r()*7,v:(r()*3)|0});const x=lerp(L+60,R-60,r());for(let i=0;i<6;i++)add({t:'coin',x:clamp(x+Math.sin(i*.8)*30,L,R),y:-u2-90-i*28});u2+=400;}
-   if(r()<.14)add({t:'fuel',x:lerp(L+20,R-20,r()),y:-u2+70});u2+=130+r()*90;}
+   if(r()<.14)add({t:'fuel',x:lerp(L+20,R-20,r()),y:-u2+70});u2+=60+r()*80;}
   const mu=len-560;add({t:'ramp',x:WG/2,y:-mu,w:210,kick:1,mega:1});for(let i=0;i<7;i++)add({t:'coin',x:WG/2,y:-mu-90-i*34,air:1});}
  if(Z.turns){u=len;let tu=900,side=r()<.5?-1:1;while(tu<len-520){const L=zone.shore(-tu)+40,R=WG-40,mid=(L+R)/2;side=-side;const x=side<0?lerp(L+70,mid-35,r()):lerp(mid+35,R-70,r());add({t:'tbuoy',x,y:-tu,side});
    for(let i=0;i<4;i++)add({t:'coin',x:clamp(x+side*48,L,R),y:-tu+150-i*30});if(r()<.3)add({t:'rock',x:clamp(x-side*80,L+10,R-10),y:-tu-60,rad:9+r()*5,v:0});if(r()<.1)add({t:'fuel',x:lerp(L+30,R-30,r()),y:-tu+300});tu+=560+r()*160;}}
@@ -1242,6 +1242,8 @@ function buildZone(zi,lap){
  if(Z.obj==='time'||Z.obj==='slalom'||Z.obj==='jumps'){zone.checks=[Math.round(len/3),Math.round(len*2/3)];for(const cu of zone.checks)add({t:'check',y:-cu,done:0});}
  add({t:'finish',y:-len});
  if(!G.free)placeHearts(O,add,seed,len,zone.shore,zone.rwall);
+ {const OB={rock:1,sail:1,motor:1,kayak:1,yacht:1,patrol:1,turtle:1,pig:1,surfer:1,croc:1,coral:1,float:1};
+  for(const rp of O.filter(o=>o.t==='ramp')){const d=rp.mega?820:RAMP_D[rp.sz||'m'],u0=-rp.y,ww=(rp.w||100)/2+70;for(let i=O.length-1;i>=0;i--){const o=O[i];if(!OB[o.t])continue;const du=-o.y-u0;if(du>d*.5&&du<d*1.45&&Math.abs(o.x-rp.x)<ww+(o.t==='yacht'?40:0))O.splice(i,1);}}}
  // remove objects colliding with checks/finish band
  zone.objs=O.filter(o=>o.t==='check'||o.t==='finish'||!O.some(c=>(c.t==='check'||c.t==='finish')&&Math.abs(c.y-o.y)<50));
  zone.objs.sort((a,b)=>a.y-b.y);zone.gatesTotal=zone.objs.filter(o=>o.t==='gate').length;zone.big=zone.objs.filter(o=>o.t==='island'||o.t==='pass'||o.t==='nozone');
@@ -1463,6 +1465,7 @@ function giantHit(c,o){if(c.air>0||c.z>.5)return;
  if(o&&o.gw&&Math.abs(c.x-o.gx)<=o.gw/2-9){if(c.isP&&!G.demo){const b=300;G.score+=b;Snd.gate();pop(c.x,c.y-46,'¡POR EL HUECO! +'+b,'#7be35a');splash(c.x,c.y,14,120);}return;}
  if(c.v>=c.st.maxV*.72&&Math.abs(c.va)<.42&&!(c.capT>0)&&!(c.stuckT>0)){c.airT=.95+c.v/420;c.air=c.airT;c.trick=0;c._tr=[];c.flipT=0;c.supT=0;Snd.jump();G.jumps++;const b=400+Math.round(c.v);G.score+=b;pop(c.x,c.y-46,'¡OLA GIGANTE! +'+b,'#33d6ff');medal('ola');splash(c.x,c.y,26,170);G.shake=6;}
  else{c.capT=2.8;c.v=0;c.boostT=0;c.driftT=0;c.driftDir=0;c.air=0;c.z=0;Snd.crash();G.shake=12;buzz(160);splash(c.x,c.y,34,180);if(c.isP&&!G.demo&&G.mode==='play'){setHp(hpTot()-2);heartBlink();if(G.lives<=0){G.mode='over';endRace();Snd.fail();setTimeout(gameOver,900);msg('¡SIN CORAZONES!','La ola te ha volcado','var(--red)');}else msg('¡VOLCADO!','Pierdes tiempo y ⅔ de corazón','var(--red)');}else msg('¡VOLCADO!','Pierdes unos segundos','var(--red)');}}
+const RAMP_D={s:330,m:470,l:690};
 function startJump(c){c.airT=.45+c.v/620;c.air=c.airT;c.trick=0;c._tr=[];c.flipT=0;c.supT=0;if(c.isP){Snd.jump();G.jumps++;if(!G.demo){medal('salto');if(bumpStat('jumps')>=50)medal('saltos50');}}}
 function updateCraft(c,dt,ctl){const Zn=G.zone,st=c.st;
  c.prevY=c.y;
@@ -2418,7 +2421,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=52;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=53;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
