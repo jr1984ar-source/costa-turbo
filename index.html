@@ -1384,12 +1384,9 @@ function drawObj(o){const t=G.t;
   const gg=ctx.createLinearGradient(0,-14,0,7);gg.addColorStop(0,'#ffffff');gg.addColorStop(.45,'#c6f3ff');gg.addColorStop(1,'#3ab7e6');ctx.fillStyle=gg;ctx.beginPath();ctx.moveTo(-w/2,4);ctx.quadraticCurveTo(0,-16,w/2,4);ctx.quadraticCurveTo(0,-3,-w/2,4);ctx.fill();
   for(let i=0;i<22;i++){const u=(i/22+t*.15)%1,x=(1-u)*(1-u)*(-w/2)+u*u*(w/2),y=(1-u)*(1-u)*4+2*(1-u)*u*(-16)+u*u*4;ctx.globalAlpha=.8;ctx.drawImage(SP.dot.c,x-3,y-4-Math.sin(i*1.7+t*6)*1.5,6,6);}ctx.globalAlpha=1;ctx.restore();}return;
  case 'tbuoy':{const s=o.side,col=s<0?'#ff7a1a':'#28c25a',dk=s<0?'#b8420a':'#13803a';ctx.save();ctx.translate(o.x,o.y);
-  ctx.globalAlpha=.55;ctx.strokeStyle='#ffffff';ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';const ax=s*48;for(let k=0;k<3;k++){const yy=42-k*16;ctx.beginPath();ctx.moveTo(ax-8,yy+6);ctx.lineTo(ax,yy-2);ctx.lineTo(ax+8,yy+6);ctx.stroke();}ctx.globalAlpha=1;
-  ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.ellipse(0,5,21,8,0,0,TAU);ctx.fill();ctx.fillStyle='rgba(0,20,50,.3)';ctx.beginPath();ctx.ellipse(5,8,15,10,0,0,TAU);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.45)';ctx.beginPath();ctx.ellipse(0,5,21,8,0,0,TAU);ctx.fill();ctx.fillStyle='rgba(0,20,50,.3)';ctx.beginPath();ctx.ellipse(5,8,15,10,0,0,TAU);ctx.fill();
   const gg=ctx.createRadialGradient(-5,-6,2,0,0,16);gg.addColorStop(0,'#ffffff');gg.addColorStop(.25,col);gg.addColorStop(1,dk);ctx.fillStyle=gg;ctx.beginPath();ctx.arc(0,0,14,0,TAU);ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,9,0,TAU);ctx.stroke();
-  ctx.fillStyle=col;ctx.beginPath();ctx.roundRect(-18,-48,36,22,7);ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.stroke();
-  ctx.fillStyle='#ffffff';ctx.beginPath();ctx.moveTo(s*13,-37);ctx.lineTo(s*3,-45);ctx.lineTo(s*3,-40);ctx.lineTo(-s*11,-40);ctx.lineTo(-s*11,-34);ctx.lineTo(s*3,-34);ctx.lineTo(s*3,-29);ctx.closePath();ctx.fill();
-  if(o.ok){ctx.fillStyle='#7be35a';ctx.beginPath();ctx.arc(22,-37,7,0,TAU);ctx.fill();ctx.strokeStyle='#0b2a12';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(18.5,-37);ctx.lineTo(21.5,-34);ctx.lineTo(26,-40);ctx.stroke();}
+    if(o.ok){ctx.fillStyle='#7be35a';ctx.beginPath();ctx.arc(0,-24,7,0,TAU);ctx.fill();ctx.strokeStyle='#0b2a12';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-3.5,-24);ctx.lineTo(-.5,-21);ctx.lineTo(4,-27);ctx.stroke();}
   ctx.restore();}return;
  case 'gate':{const a=o.x-o.w/2,b=o.x+o.w/2;for(let i=0;i<=16;i++){const tt=i/16,x=lerp(a,b,tt),y=o.y+Math.sin(tt*Math.PI)*4;ctx.fillStyle=o.done?'rgba(255,255,255,.4)':i%2?'#ffffff':'#ff4757';ctx.beginPath();ctx.arc(x,y,2,0,TAU);ctx.fill();}
   for(const x of[a,b]){ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x,o.y,10,0,TAU);ctx.stroke();ctx.drawImage(SP.buoy.c,x-9,o.y-9,18,18);}
@@ -1694,7 +1691,7 @@ function cvRampSide(g,x,y,s){g.save();g.translate(x,y);g.scale(s,s);g.fillStyle=
  g.strokeStyle='#2a2f3a';g.lineWidth=2;g.beginPath();g.moveTo(-36,0);g.lineTo(34,-26);g.lineTo(34,0);g.stroke();g.fillStyle='#9aa6b5';g.fillRect(-30,0,60,4);g.restore();}
 function cvTBuoy(g,x,y,s,side){const col=side<0?'#ff7a1a':'#28c25a',dk=side<0?'#b8420a':'#13803a';g.save();g.translate(x,y);g.scale(s,s);g.fillStyle='rgba(255,255,255,.7)';g.beginPath();g.ellipse(0,2,26,5,0,0,TAU);g.fill();
  const gg=g.createLinearGradient(-16,0,16,0);gg.addColorStop(0,dk);gg.addColorStop(.35,col);gg.addColorStop(.6,'#ffffff');gg.addColorStop(1,dk);g.fillStyle=gg;g.beginPath();g.roundRect(-16,-46,32,48,10);g.fill();g.fillStyle='rgba(255,255,255,.85)';g.fillRect(-16,-30,32,7);
- g.fillStyle=col;g.beginPath();g.roundRect(-20,-76,40,24,7);g.fill();g.strokeStyle='#fff';g.lineWidth=2;g.stroke();g.fillStyle='#fff';g.beginPath();g.moveTo(side*15,-64);g.lineTo(side*4,-72);g.lineTo(side*4,-67);g.lineTo(-side*12,-67);g.lineTo(-side*12,-61);g.lineTo(side*4,-61);g.lineTo(side*4,-56);g.closePath();g.fill();g.restore();}
+ g.restore();}
 function drawCover(c,zi){const g=c.getContext('2d'),W=400,H=225,HZ=96,C=COVER[zi],Z=ZONES[zi],q=rng(77+zi*31),T=Date.now()/1000;
  g.setTransform(c.width/W,0,0,c.height/H,0,0);g.clearRect(0,0,W,H);g.lineCap='butt';g.lineJoin='miter';
  let gg=g.createLinearGradient(0,0,0,HZ);gg.addColorStop(0,C.sky[0]);gg.addColorStop(1,C.sky[1]);g.fillStyle=gg;g.fillRect(0,0,W,HZ+1);
