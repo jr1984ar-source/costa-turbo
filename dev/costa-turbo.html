@@ -267,6 +267,19 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
 .trophy{width:84px;height:84px;filter:drop-shadow(0 6px 18px rgba(255,201,60,.55))}
 .crank{margin:0;font-family:var(--cond);font-weight:800;font-size:20px;letter-spacing:.04em;color:var(--lime)}.crank.no{color:var(--dim);font-size:16px}
 .mgrid{width:min(100%,440px);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tgrid{width:min(100%,440px);display:grid;gap:10px}
+.tr{display:grid;grid-template-columns:88px minmax(0,1fr);gap:12px;align-items:center;padding:8px 12px 8px 8px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);text-align:left}
+.tr .ts{width:88px;height:100px;display:flex;align-items:flex-end;justify-content:center;border-radius:10px;background:radial-gradient(ellipse at 50% 35%,rgba(255,255,255,.12),transparent 70%),linear-gradient(180deg,rgba(10,22,48,.35),rgba(10,22,48,.6));box-shadow:inset 0 -9px 0 #6b4526,inset 0 -11px 0 #8a5a33}
+.tr svg{width:74px;height:88px;margin-bottom:4px}
+.tr b{display:block;font-family:var(--cond);font-weight:800;font-size:19px;line-height:1.05}
+.tr small{display:block;font-size:12px;line-height:1.25;color:var(--dim);margin-top:3px}
+.tr .dots{display:block;font-size:11px;letter-spacing:3px;color:var(--orange);margin-top:3px}
+.tr em{display:block;font-style:normal;font-family:var(--cond);font-weight:700;font-size:13px;line-height:1.2;color:var(--gold);margin-top:4px}
+.tr.off{opacity:.6}.tr.off em{color:var(--dim)}
+.tr.cur{opacity:1;border-color:rgba(51,214,255,.55);background:rgba(51,214,255,.08)}.tr.cur em{color:var(--cyan)}
+.tr.on{border-color:rgba(255,201,60,.5);background:rgba(255,201,60,.09)}.tr.on svg{filter:drop-shadow(0 4px 12px rgba(255,220,120,.5))}
+.trophy svg{width:100%;height:100%}
+.ctrof{margin:0;font-family:var(--cond);font-weight:800;font-size:19px;letter-spacing:.03em;color:var(--gold)}
 .md{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;padding:8px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);text-align:left}
 .md svg{width:38px;height:38px}
 .md b{display:block;font-family:var(--cond);font-weight:800;font-size:15px;line-height:1.05}
@@ -274,7 +287,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
 .md em{display:block;font-style:normal;font-family:var(--cond);font-weight:700;font-size:12px;color:var(--gold);margin-top:3px}
 .md.off{opacity:.55}.md.off em{color:var(--dim)}
 .md.on{border-color:rgba(255,201,60,.5);background:rgba(255,201,60,.1)}
-@media (orientation:landscape){.mgrid{grid-template-columns:repeat(3,1fr);width:min(100%,720px)}}
+@media (orientation:landscape){.mgrid{grid-template-columns:repeat(3,1fr);width:min(100%,720px)}.tgrid{grid-template-columns:1fr 1fr;width:min(100%,720px)}}
 /* usuario */
 .ucard{width:min(100%,320px);display:flex;align-items:center;gap:10px;padding:8px 10px;text-align:left}
 .ucard canvas{width:44px;height:44px;border-radius:50%;flex:none;border:2px solid var(--orange)}
@@ -340,11 +353,11 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     <section id="scrTitle" class="screen see">
       <h1 class="logo"><span class="l1">COSTA</span><span class="l2">TURBO</span></h1>
       <p class="tagline">CARRERAS DE MOTOS DE AGUA</p>
-      <div class="ucard panel"><canvas id="uAv" width="96" height="96"></canvas><div class="ui"><b id="uName">PILOTO</b><span><i class="coin"></i><em id="uCash">0</em> PTA · <span id="uProg"></span></span></div><button class="btn p" id="bShop">TALLER</button></div>
+      <div class="ucard panel"><canvas id="uAv" width="96" height="96"></canvas><div class="ui"><b id="uName">PILOTO</b><span><i class="coin"></i><em id="uCash">0</em> PTA · <span id="uProg"></span></span><span id="uTrof"></span></div><button class="btn p" id="bShop">TALLER</button></div>
       <div class="menu">
         <button class="btn p" id="bPlay">CAMPEONATO</button>
         <button class="btn" id="bFree">CARRERA LIBRE</button>
-        <div class="row" style="flex-wrap:nowrap"><button class="btn ghost" id="bRank">RANKING TOP 10</button><button class="btn ghost" id="bMed">MEDALLAS</button></div>
+        <div class="row" style="flex-wrap:nowrap"><button class="btn ghost" id="bRank">RANKING</button><button class="btn ghost" id="bMed">MEDALLAS</button><button class="btn ghost" id="bTrof">TROFEOS</button></div>
         <div class="row"><button class="btn ghost" id="bSnd">SONIDO: SÍ</button><button class="btn ghost" id="bMus">MÚSICA: SÍ</button></div>
         <button class="btn ghost" id="bFull" hidden>PANTALLA COMPLETA</button>
       </div>
@@ -464,14 +477,21 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
       <div class="mgrid" id="mdGrid"></div>
     </section>
 
+    <section id="scrTrof" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="trBk" style="flex:none">‹ ATRÁS</button><h2 class="h">SALA DE TROFEOS</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
+      <p class="sub" id="trSub"></p>
+      <div class="tgrid" id="trGrid"></div>
+    </section>
+
     <section id="scrChamp" class="screen" hidden>
       <div class="head"><button class="btn ghost sm" id="cBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
-      <svg class="trophy" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#ffc93c"/><stop offset="1" stop-color="#c47a12"/></linearGradient></defs><path d="M18 8h28v14c0 9-6 16-14 16s-14-7-14-16z" fill="url(#tg)"/><path d="M18 12H9c0 9 5 14 11 14M46 12h9c0 9-5 14-11 14" fill="none" stroke="#ffc93c" stroke-width="4" stroke-linecap="round"/><rect x="28" y="37" width="8" height="10" fill="#e0a227"/><rect x="20" y="47" width="24" height="8" rx="2" fill="url(#tg)"/><path d="M26 16l3 6 6 1-4 4 1 6-5-3-5 3 1-6-4-4 6-1z" fill="#fff" opacity=".85"/></svg>
+      <div class="trophy" id="cTrof" style="width:96px;height:112px"></div>
       <h2 class="h">¡CAMPEÓN DE LA COSTA!</h2>
       <div class="big" id="cScore">0</div>
       <p class="sub" id="cInfo"></p>
+      <p class="ctrof" id="cTrofTxt"></p>
       <p class="crank" id="cRank"></p>
-      <div class="menu"><button class="btn p" id="cNext">VUELTA 2</button><button class="btn" id="cRk">VER RANKING</button><button class="btn ghost" id="cMenu" style="width:100%">MENÚ</button></div>
+      <div class="menu"><button class="btn p" id="cNext">VUELTA 2</button><button class="btn" id="cTr">SALA DE TROFEOS</button><button class="btn" id="cRk">VER RANKING</button><button class="btn ghost" id="cMenu" style="width:100%">MENÚ</button></div>
     </section>
 
     <section id="scrRank" class="screen" hidden>
@@ -595,6 +615,24 @@ function bumpStat(k,n){statStore[k]=(statStore[k]|0)+(n||1);store.set('ct_stats'
 function medal(id){if(medStore[id]||G.demo)return;const m=MEDALS.find(x=>x.id===id);if(!m)return;medStore[id]=Date.now();store.set('ct_medals',medStore);G.money+=m.r;saveWallet();(G._newMed=G._newMed||[]).push(m);
  if(G.mode==='play'){msg('¡MEDALLA!',m.n+' · +'+pts(m.r)+' PTA','var(--gold)');}try{Snd.check();}catch(_){}}
 function medalLines(lines){for(const m of G._newMed||[])lines.push(['🏅 '+m.n,'+'+pts(m.r)+' PTA']);G._newMed=[];}
+const TROFEOS=[{lv:1,n:'Copa Costa',m:'Bronce'},{lv:2,n:'Copa Mediterráneo',m:'Plata'},{lv:3,n:'Copa Baleares',m:'Oro'},{lv:4,n:'Trofeo Tiburón',m:'Platino'},{lv:5,n:'Trofeo Leyenda',m:'Diamante'}];
+let trofStore=store.get('ct_trof',null);if(!trofStore||typeof trofStore!=='object'){trofStore={};if(medStore.campeon&&store.get('ct_dif',null)==null){trofStore[1]={n:1,best:0,at:medStore.campeon};store.set('ct_dif',2);}store.set('ct_trof',trofStore);}
+function difLv(){return Math.max(1,Math.min(5,store.get('ct_dif',1)|0));}
+function trofCount(){let k=0;for(const t of TROFEOS)if(trofStore[t.lv]&&trofStore[t.lv].n>0)k++;return k;}
+function trofSvg(lv,on,u){const id='tg'+u+lv,L=!on,G2=(a,b,c)=>L?'#5b6578':`url(#${id})`,gr=(a,b,c)=>L?'':`<defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs>`,dk=L?'#4a5366':null;
+ const plinth=`<rect x="14" y="62" width="36" height="12" rx="2" fill="${L?'#2a2f3a':'#5a3a22'}"/><rect x="14" y="62" width="36" height="3" rx="1.5" fill="${L?'#353b48':'#7a5232'}"/><rect x="23" y="66" width="18" height="5" rx="1" fill="${L?'#353b48':'#e8cf9a'}"/>`;
+ let s='';
+ if(lv===1){s=gr('#ffe1c2','#d38b4f','#7f4220')+`<path d="M20 12h24v13c0 8-5 14-12 14s-12-6-12-14z" fill="${G2()}"/><path d="M20 16h-6c0 7 3 11 8 12M44 16h6c0 7-3 11-8 12" fill="none" stroke="${L?dk:'#b8703c'}" stroke-width="3.2" stroke-linecap="round"/><path d="M24 22q2-2 4 0t4 0 4 0 4 0" fill="none" stroke="${L?dk:'rgba(255,240,220,.7)'}" stroke-width="1.6"/><rect x="29" y="39" width="6" height="12" fill="${L?dk:'#a5602f'}"/><rect x="21" y="51" width="22" height="11" rx="2" fill="${G2()}"/>`;}
+ else if(lv===2){s=gr('#ffffff','#c5d0da','#66727e')+`<ellipse cx="32" cy="9" rx="17" ry="3.2" fill="${L?dk:'#e9eef3'}"/><path d="M15 9h34c0 15-7 25-17 25S15 24 15 9z" fill="${G2()}"/><path d="M16 12c-10 0-11 13 3 16M48 12c10 0 11 13-3 16" fill="none" stroke="${L?dk:'#9aa7b3'}" stroke-width="3.6" stroke-linecap="round"/><path d="M20 17q3-3 6 0t6 0 6 0 6 0M22 23q2.5-2.5 5 0t5 0 5 0 5 0" fill="none" stroke="${L?dk:'rgba(255,255,255,.75)'}" stroke-width="1.5"/><path d="M29 34h6l2 13H27z" fill="${L?dk:'#8d99a5'}"/><rect x="20" y="47" width="24" height="5" rx="2" fill="${G2()}"/><rect x="17" y="52" width="30" height="10" rx="2" fill="${L?dk:'#7d8995'}"/>`;}
+ else if(lv===3){s=gr('#fff3b0','#ffc93c','#c47a12')+`<path d="M18 8h28v15c0 9-6 16-14 16s-14-7-14-16z" fill="${G2()}"/><path d="M18 12H9c0 9 5 14 11 14M46 12h9c0 9-5 14-11 14" fill="none" stroke="${L?dk:'#ffc93c'}" stroke-width="4" stroke-linecap="round"/><path d="M32 13l3 6 6.5 1-4.7 4.5 1.1 6.4L32 28l-5.9 2.9 1.1-6.4-4.7-4.5 6.5-1z" fill="${L?dk:'#ffffff'}" opacity="${L?1:.9}"/><rect x="28" y="39" width="8" height="10" fill="${L?dk:'#e0a227'}"/><rect x="19" y="49" width="26" height="13" rx="2" fill="${G2()}"/>`+(L?'':`<g fill="#e0a227">${[[10,44,-40],[8,37,-20],[9,30,0],[54,44,40],[56,37,20],[55,30,0]].map(([x,y,a])=>`<ellipse cx="${x}" cy="${y}" rx="2.6" ry="5" transform="rotate(${a} ${x} ${y})"/>`).join('')}</g>`);}
+ else if(lv===4){s=gr('#f4fbff','#a9c9e2','#45678a')+`<path d="M24 44C27 28 35 13 49 6c-5 9-7 22-3 38z" fill="${G2()}"/><path d="M30 40c3-12 9-23 17-30" fill="none" stroke="${L?dk:'rgba(255,255,255,.8)'}" stroke-width="2" stroke-linecap="round"/><path d="M10 50c5-6 9 1 14-3s9 1 14-3 9 1 16-3v9H10z" fill="${G2()}"/><path d="M12 49c4-4 8 1 12-2s8 1 12-2 8 1 13-2" fill="none" stroke="${L?dk:'#ffffff'}" stroke-width="1.6" opacity=".8"/><rect x="18" y="53" width="28" height="9" rx="2" fill="${L?dk:'#5f84a8'}"/>`;}
+ else{s=gr('#ffffff','#8ff0ff','#7a5cff')+`<path d="M32 3l4.3 10.6 11.4.9-8.7 7.4 2.7 11.1L32 27l-9.7 6 2.7-11.1-8.7-7.4 11.4-.9z" fill="${G2()}" stroke="${L?dk:'#ffffff'}" stroke-width="1.2" stroke-linejoin="round"/><path d="M32 3v24M16.3 14.5 32 27l15.7-12.5M25 32.9 32 27l7 5.9" fill="none" stroke="${L?dk:'rgba(255,255,255,.75)'}" stroke-width="1"/><path d="M28 33h8l3 15H25z" fill="${L?dk:'#ffc93c'}"/><rect x="18" y="48" width="28" height="14" rx="3" fill="${L?dk:'#1b1f2e'}" stroke="${L?dk:'#ffc93c'}" stroke-width="1.6"/>`+(L?'':`<circle cx="25" cy="55" r="2.2" fill="#ff3b4f"/><circle cx="32" cy="55" r="2.6" fill="#33d6ff"/><circle cx="39" cy="55" r="2.2" fill="#7be35a"/>`);}
+ return `<svg viewBox="0 0 64 76" aria-hidden="true">${s}${plinth}${L?'<g transform="translate(32 30)"><rect x="-7" y="-2" width="14" height="11" rx="2" fill="#c3cad6"/><path d="M-4.5-2v-3a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="#c3cad6" stroke-width="2.4"/></g>':''}</svg>`;}
+function renderTrof(){const g=$('#trGrid');g.textContent='';const dl=difLv(),k=trofCount();$('#trSub').textContent='Dificultad del campeonato: '+dl+'/5 · Trofeos: '+k+' de 5';
+ for(const t of TROFEOS){const st=trofStore[t.lv],on=!!(st&&st.n>0),cur=!on&&t.lv===dl;const d=document.createElement('div');d.className='tr '+(on?'on':cur?'cur':'off');d.innerHTML='<div class="ts">'+trofSvg(t.lv,on,'r')+'</div><div><b></b><small></small><span class="dots"></span><em></em></div>';
+  d.querySelector('b').textContent=t.n;d.querySelector('small').textContent=t.m+' · Dificultad '+t.lv;d.querySelector('.dots').textContent='●'.repeat(t.lv)+'○'.repeat(5-t.lv);
+  d.querySelector('em').textContent=on?('Ganado'+(st.n>1?' ×'+st.n:'')+(st.best?' · Mejor: '+pts(st.best)+' puntos':'')+(st.moto?' · '+st.moto:'')):cur?'Gana el campeonato en dificultad '+t.lv+' para conseguirlo':'Bloqueado: primero gana la dificultad '+(t.lv-1);g.append(d);}}
+function trofBack(){if(G._trFrom==='champ'){G._trFrom=null;show('scrChamp');}else toTitle();}
 const SWATCHES=['#f4f5f7','#b8c0cc','#3a3e46','#16181d','#e3202b','#ff7a1a','#ffd21a','#7be35a','#1f9e52','#19c3c9','#1e5eff','#13285e','#7b3fe4','#ff3f8e'];
 const PAINT_PARTS=[['hull','CASCO'],['deck','LATERALES'],['hood','CAPÓ'],['stripe','RAYAS'],['seat','ASIENTO']];
 let paintStore=store.get('ct_paint',{});if(!paintStore||typeof paintStore!=='object')paintStore={};
@@ -2119,12 +2157,12 @@ function demoStart(){G.demo=true;G.zi=0;G.lap=0;G.parts={};G.zone=buildZone(0,0)
 function restartDemo(){demoStart();}
 function goTitle(){G._champOn=false;G._champDone=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();show('scrTitle');renderUser();Music.play('menu');wake(false);}
 function toTitle(){if(G.mode!=='demo'){goTitle();return;}show('scrTitle');renderUser();}
-function renderUser(){drawPortrait($('#uAv'),AVATARS[G.avatar|0]||AVATARS[0]);$('#uName').textContent=pilotName();$('#uCash').textContent=pts(G.money);$('#uProg').textContent='Campeonato '+best+'/'+ZONES.length;}
+function renderUser(){drawPortrait($('#uAv'),AVATARS[G.avatar|0]||AVATARS[0]);$('#uName').textContent=pilotName();$('#uCash').textContent=pts(G.money);$('#uProg').textContent='Campeonato '+best+'/'+ZONES.length;{const k=trofCount();$('#uTrof').textContent='Dificultad '+difLv()+'/5 · 🏆 '+k+(k===1?' trofeo':' trofeos');}}
 function goGarage(){show('scrGarage');renderGarage();Music.play('menu');}
 function goPilot(){show('scrPilot');renderPilot();Music.play('menu');}
 function renderPilot(){const grid=$('#avGrid');grid.textContent='';AVATARS.forEach((a,i)=>{const b=document.createElement('button');b.className='av'+(i===G.avatar?' on':'');const cv=document.createElement('canvas');cv.width=136;cv.height=136;drawPortrait(cv,a);const sp=document.createElement('span');sp.textContent=a.name;b.append(cv,sp);
  b.addEventListener('click',()=>{G.avatar=i;Snd.click();grid.querySelectorAll('.av').forEach((x,j)=>x.classList.toggle('on',j===i));});grid.append(b);});$('#aName').value=G.pname||'';}
-function newGame(){G._champOn=true;G._champDone=false;G.runId=Date.now();G.free=false;G.demo=false;G.zi=0;G.lap=0;G.lives=3;G.dmg=0;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
+function newGame(){G._champOn=true;G._champDone=false;G.runId=Date.now();G.free=false;G.demo=false;G.zi=0;G.lap=difLv()-1;G.lives=3;G.dmg=0;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
 function startFree(zi){G.free=true;G.demo=false;G.zi=zi;G.lap=0;G.lives=3;G.dmg=0;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
 function goFree(){G.free=true;if(G.mode!=='demo'){Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();wake(false);}show('scrFree');renderFree();Music.play('menu');}
 function renderFree(){const F=$('#fGrid');F.textContent='';ZONES.forEach((Z,i)=>{const b=document.createElement('button');b.className='fz';b.setAttribute('aria-label','Zona '+(i+1)+' '+Z.name);const c=document.createElement('canvas');c.width=400;c.height=225;b.append(c);drawCover(c,i);b.addEventListener('click',()=>{Snd.click();startFree(i);});F.append(b);});
@@ -2153,11 +2191,11 @@ function zoneWin(){const Zn=G.zone,Z=Zn.Z,P=G.P;Snd.win();Music.play('menu');
  if(G.free){const ft=P.finT||G.elapsed,old=store.get('ct_ghost2_'+ZONES[G.zi].name,null);if(!old||!(old.t<=ft)){store.set('ct_ghost2_'+ZONES[G.zi].name,{t:+ft.toFixed(2),m:MOTOS[G.moto].id,p:G.ghostRec});lines.push([old?'¡Nuevo récord!':'Récord guardado',fmtT(ft)]);}else lines.push(['Tu récord',fmtT(old.t)]);medalLines(lines);showResult('¡PANTALLA SUPERADA!','Carrera libre · '+Z.name,lines,()=>goFree());return;}
  const nb=Math.max(best,G.lap>0?ZONES.length:G.zi+1);if(nb>best){const un=unlocksBetween(best,nb);best=nb;store.set('ct_best',best);if(un.length)lines.push(['¡Desbloqueado!',un.join(' · ')]);}
  medalLines(lines);showResult(last?'¡HAS GANADO LA FINAL!':'¡ZONA SUPERADA!',last?'Has ganado a El Tiburón y el campeonato.':'Zona '+(G.zi+1)+' · '+Z.name,lines,()=>{if(last)champEnd();else{G.zi++;goMap();}});}
-function champEnd(){G._champDone=true;medal('campeon');G.mode='over';const m=MOTOS[G.moto],en={name:pilotName(),score:G.score|0,zone:ZONES.length,lap:G.lap,moto:m.id,mname:paintOf(m).name||'',at:G.runId||Date.now()};
+function champEnd(){G._champDone=true;medal('campeon');G.mode='over';const lv=Math.max(1,Math.min(5,G.lap+1)),T=trofStore[lv]||(trofStore[lv]={n:0,best:0});T.n=(T.n|0)+1;if(!T.at)T.at=Date.now();if((G.score|0)>(T.best|0)){T.best=G.score|0;T.moto=motoName(MOTOS[G.moto]);}store.set('ct_trof',trofStore);const nxt=Math.min(5,lv+1);if(nxt>difLv())store.set('ct_dif',nxt);const m=MOTOS[G.moto],en={name:pilotName(),score:G.score|0,zone:ZONES.length,lap:G.lap,moto:m.id,mname:paintOf(m).name||'',at:G.runId||Date.now()};
  const q=qualifies(G.score);if(q){lastHl=en.at;saveScore(en);}
- $('#cScore').textContent=pts(G.score)+' PUNTOS';$('#cInfo').textContent='Has ganado las '+ZONES.length+' carreras'+(G.lap?' de la vuelta '+(G.lap+1):'')+' con '+motoName(m)+'.';
+ $('#cScore').textContent=pts(G.score)+' PUNTOS';$('#cInfo').textContent='Has ganado las '+ZONES.length+' carreras en dificultad '+lv+' con '+motoName(m)+'.';const TT=TROFEOS[lv-1];$('#cTrof').innerHTML=trofSvg(lv,true,'c');$('#cTrofTxt').textContent=(T.n>1?'Trofeo '+TT.n+' ×'+T.n:'¡Nuevo trofeo: '+TT.n+'!')+(lv<5?' · Siguiente: dificultad '+(lv+1)+'/5':' · Dificultad máxima');
  const r=$('#cRank');r.className='crank'+(q?'':' no');r.textContent=q?'¡Entras en el TOP 10 como '+en.name+'!':'Esta vez no entras en el top 10.';
- $('#cNext').textContent='VUELTA '+(G.lap+2)+' · MÁS DIFÍCIL';show('scrChamp');Snd.win();}
+ $('#cNext').textContent=lv<5?'CAMPEONATO · DIFICULTAD '+(lv+1)+'/5':'OTRO CAMPEONATO · DIFICULTAD 5/5';show('scrChamp');Snd.win();}
 function medSvg(on){const a=on?'#ffe08a':'#6b7486',b=on?'#e0a227':'#454c5a',r=on?'#e3202b':'#3a404c';return `<svg viewBox="0 0 38 38" aria-hidden="true"><path d="M12 2h6l3 11h-6zM26 2h-6l-3 11h6z" fill="${r}"/><circle cx="19" cy="24" r="11" fill="${b}"/><circle cx="19" cy="24" r="8" fill="${a}"/><path d="M19 18.5l1.7 3.4 3.8.5-2.8 2.6.7 3.7-3.4-1.8-3.4 1.8.7-3.7-2.8-2.6 3.8-.5z" fill="${b}"/></svg>`;}
 function renderMedals(){const g=$('#mdGrid');g.textContent='';let n=0;for(const m of MEDALS){const on=!!medStore[m.id];if(on)n++;const d=document.createElement('div');d.className='md '+(on?'on':'off');d.innerHTML=medSvg(on)+'<div><b></b><small></small><em></em></div>';d.querySelector('b').textContent=m.n;d.querySelector('small').textContent=m.d;d.querySelector('em').textContent=(on?'Conseguida · ':'Premio: ')+pts(m.r)+' PTA';g.append(d);}
  $('#mdSub').textContent=n+' de '+MEDALS.length+' medallas conseguidas';}
@@ -2171,7 +2209,7 @@ function showResult(title,sub,lines,next,delay){setTimeout(()=>{$('#hud').hidden
  G._next=next;show('scrResult');Snd.engineStop();},delay||0);}
 function gameOver(){G.mode='over';G._champOn=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;Music.play('menu');wake(false);saveWallet();
  if(G.free){showResult('¡SIN VIDAS!','Se acabó esta carrera libre. Las pesetas que has ganado se quedan en tu monedero.',[['Zona',(G.zi+1)+' · '+G.zone.Z.name],['Monedero',pts(G.money)+' PTA']],()=>goFree());return;}
- $('#oScore').textContent=pts(G.score);$('#oInfo').textContent='Llegaste a la zona '+(G.zi+1)+' ('+G.zone.Z.name+')'+(G.lap?' de la vuelta '+(G.lap+1):'')+' con '+MOTOS[G.moto].name+'.';
+ $('#oScore').textContent=pts(G.score);$('#oInfo').textContent='Llegaste a la zona '+(G.zi+1)+' ('+G.zone.Z.name+') en dificultad '+(G.lap+1)+' con '+MOTOS[G.moto].name+'.';
  const f=$('#nameForm');f.hidden=!qualifies(G.score);if(!f.hidden)$('#nameIn').value=G.pname||store.get('ct_name','')||pilotName();show('scrOver');}
 function togglePause(){if(G.mode==='play'||G.mode==='count'){G._pm=G.mode;G.mode='pause';Snd.engineSet(0,0,0,0,0,0,1);Snd.sirenStop();show('scrPause');}else if(G.mode==='pause'){resume();}}
 function resume(){show(null);G.mode=G._pm==='count'?'play':G._pm||'play';$('#count').hidden=true;last=performance.now();}
@@ -2275,7 +2313,7 @@ function renderGarage(){const m=MOTOS[G.moto],ms=motoState(m),[mpr,mneed]=SHOP[m
  statRows($('#gStats'),m);
  const D=$('#gDots');D.textContent='';MOTOS.forEach((_,i)=>{const s=document.createElement('span');if(i===G.moto)s.className='on';D.append(s);});}
 function changeMoto(d){G.moto=(G.moto+d+MOTOS.length)%MOTOS.length;Snd.click();renderGarage();}
-function renderMap(retry){const Z=ZONES[G.zi];$('#mZoneN').textContent=(retry?'OTRA VEZ · ':'')+(G.free?'CARRERA LIBRE · ZONA '+(G.zi+1):'CAMPEONATO · ZONA '+(G.zi+1)+' DE '+ZONES.length+(G.lap?' · VUELTA '+(G.lap+1):''));$('#mZoneName').textContent=Z.name;$('#mGoal').textContent=Z.goal;
+function renderMap(retry){const Z=ZONES[G.zi];$('#mZoneN').textContent=(retry?'OTRA VEZ · ':'')+(G.free?'CARRERA LIBRE · ZONA '+(G.zi+1):'CAMPEONATO · ZONA '+(G.zi+1)+' DE '+ZONES.length+' · DIFICULTAD '+(G.lap+1)+'/5');$('#mZoneName').textContent=Z.name;$('#mGoal').textContent=Z.goal;
  const I=$('#mInfo');I.textContent='';const tag=(t,c)=>{const s=document.createElement('span');if(c)s.className=c;s.textContent=t;I.append(s);};
  tag('♥ '+G.lives+' vidas','red');tag(pts(G.money)+' PTA','gold');tag('Gasolina '+Math.ceil(G.fuel)+' %',G.fuel<35?'red':'lime');tag('Turbos: '+G.turbo);
  if(G.free){const gh=store.get('ct_ghost2_'+ZONES[G.zi].name,null);if(gh&&gh.t)tag('Tu récord: '+fmtT(gh.t)+' · corre contra tu fantasma','gold');}
@@ -2491,7 +2529,7 @@ async function saveScore(e){const loc=localRank().filter(x=>x.at!==e.at);loc.pus
 function renderRank(){const ol=$('#rankList'),list=rankList();ol.textContent='';$('#rankSrc').textContent=(globalScores&&dbWritable)?'Ranking guardado en la nube':'Guardado en este móvil';
  if(!list.length){const li=document.createElement('li');li.className='rank-empty';li.textContent='Aún no hay récords. ¡Sé el primero!';ol.append(li);return;}
  list.slice(0,10).forEach((e,i)=>{const m=MOTOS.find(x=>x.id===e.moto)||MOTOS[0];const li=document.createElement('li');li.className='rk'+(lastHl&&e.at===lastHl?' me':'');li.style.setProperty('--sc',m.ui);
-  const a=document.createElement('span');a.className='pos';a.textContent=(i+1)+'º';const n=document.createElement('span');n.className='nm';n.textContent=String(e.name||'PILOTO').slice(0,12);const mt=document.createElement('span');mt.className='meta';mt.textContent=(e.mname?String(e.mname).slice(0,12)+' · ':'')+m.name+' · zona '+((e.zone|0)||1)+(e.lap>0?' · vuelta '+((e.lap|0)+1):'');n.append(mt);const sc=document.createElement('span');sc.className='sc';sc.textContent=pts(e.score);li.append(a,n,sc);ol.append(li);});}
+  const a=document.createElement('span');a.className='pos';a.textContent=(i+1)+'º';const n=document.createElement('span');n.className='nm';n.textContent=String(e.name||'PILOTO').slice(0,12);const mt=document.createElement('span');mt.className='meta';mt.textContent=(e.mname?String(e.mname).slice(0,12)+' · ':'')+m.name+' · zona '+((e.zone|0)||1)+(e.lap>0?' · dificultad '+((e.lap|0)+1):'');n.append(mt);const sc=document.createElement('span');sc.className='sc';sc.textContent=pts(e.score);li.append(a,n,sc);ol.append(li);});}
 (async()=>{try{if(!window.claude||!window.claude.use)return;db=await window.claude.use('db');if(!db)return;db.collection('scores').orderBy('score','desc').limit(10).onSnapshot(s=>{globalScores=s.docs.map(d=>d.data()).filter(validEntry);if(!$('#scrRank').hidden)renderRank();},()=>{globalScores=null;});}catch(e){db=null;}})();
 
 /* ================= BOTONES ================= */
@@ -2548,8 +2586,8 @@ on('#fBack',()=>{Snd.click();goTitle();});
 on('#mBk',()=>{Snd.click();if(G.free)goFree();else goGarage();});
 on('#rBk',()=>{Snd.click();const n=G._next;G._next=null;n&&n();});
 on('#psBk',()=>resume());on('#oBk',()=>{Snd.click();goTitle();});on('#rkBk',()=>{Snd.click();rankBack();});
-on('#bMed',()=>{Snd.click();show('scrMedals');renderMedals();});on('#mdBk',()=>{Snd.click();toTitle();});
-on('#cNext',()=>{Snd.click();G._champDone=false;G.zi=0;G.lap++;goMap();});on('#cRk',()=>{Snd.click();show('scrRank');renderRank();});on('#cMenu',()=>{Snd.click();goTitle();});on('#cBk',()=>{Snd.click();goTitle();});
+on('#bMed',()=>{Snd.click();show('scrMedals');renderMedals();});on('#bTrof',()=>{Snd.click();G._trFrom=null;show('scrTrof');renderTrof();});on('#trBk',()=>{Snd.click();trofBack();});on('#mdBk',()=>{Snd.click();toTitle();});
+on('#cNext',()=>{Snd.click();G._champDone=false;G.zi=0;G.lap=difLv()-1;goMap();});on('#cTr',()=>{Snd.click();G._trFrom='champ';show('scrTrof');renderTrof();});on('#cRk',()=>{Snd.click();show('scrRank');renderRank();});on('#cMenu',()=>{Snd.click();goTitle();});on('#cBk',()=>{Snd.click();goTitle();});
 function midChamp(){return !!G._champOn&&!G._champDone&&!G.free&&(G.zi>0||G.lap>0)&&G.mode!=='over';}
 function goHome(){if(midChamp()&&!confirm('¿Volver al inicio? Dejas el campeonato a medias.'))return;Snd.click();goTitle();}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-home]');if(!b)return;e.preventDefault();Snd.init();goHome();});
@@ -2609,7 +2647,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=59;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=60;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
