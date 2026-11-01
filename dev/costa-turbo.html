@@ -571,7 +571,7 @@ const ZONES=[
  {name:'CARRERA ES TRENC',obj:'race2',goal:'Termina entre los 2 primeros. Hay dos pasos estrechos y dos islas, y las chicas de los flotadores te distraen.',len:16000,riv:5,bar:null,theme:'trenc',tod:'tropical',skill:.9,piri:1,islands:2,passes:2,floats:1,finish:'ES TRENC',shallowW:250},
  {name:'CARRERA SAN TELM',obj:'race3',goal:'Termina entre los 3 primeros. Esta vez la costa queda a la derecha: calitas, recovecos y acantilados altísimos.',len:16000,riv:5,bar:null,theme:'tram',tod:'afternoon',skill:.9,piri:1,mirror:1,finish:'SAN TELM'},
  {name:'TORMENTA',obj:'time',goal:'Cruza la tormenta de noche antes de que se acabe el tiempo.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'night',pace:195},
- {name:'CARRERA DE BOYAS',obj:'race3',goal:'Termina entre los 3 primeros. Pasa cada boya por el lado de la flecha: naranja por la izquierda, verde por la derecha. Si fallas, 2 segundos parado.',len:16000,riv:5,bar:null,theme:'open',tod:'afternoon',skill:.9,turns:1},
+ {name:'CARRERA DE BOYAS',obj:'race3',goal:'Termina entre los 3 primeros. Slalom de verdad: rodea cada boya por fuera, la naranja por la izquierda y la verde por la derecha. Si fallas, 2 segundos parado.',len:16000,riv:5,bar:null,theme:'open',tod:'afternoon',skill:.9,turns:1},
  {name:'LA FINAL',obj:'win',goal:'Gana a El Tiburón: tienes que llegar el primero.',len:17000,riv:5,bar:null,theme:'port',tod:'golden',skill:.95,boss:1}
 ];
 const AVATARS=[
@@ -929,8 +929,8 @@ function buildZone(zi,lap){
    else{for(let i=0;i<3;i++)add({t:'rock',x:lerp(L+20,R-20,r()),y:-u2-(r()-.5)*60,rad:10+r()*7,v:(r()*3)|0});const x=lerp(L+60,R-60,r());for(let i=0;i<6;i++)add({t:'coin',x:clamp(x+Math.sin(i*.8)*30,L,R),y:-u2-90-i*28});u2+=400;}
    if(r()<.14)add({t:'fuel',x:lerp(L+20,R-20,r()),y:-u2+70});u2+=130+r()*90;}
   const mu=len-560;add({t:'ramp',x:WG/2,y:-mu,w:210,kick:1,mega:1});for(let i=0;i<7;i++)add({t:'coin',x:WG/2,y:-mu-90-i*34,air:1});}
- if(Z.turns){u=len;let tu=900,side=r()<.5?-1:1;while(tu<len-520){const L=zone.shore(-tu)+40,R=WG-40,mid=(L+R)/2;if(r()<.72)side=-side;const x=side<0?lerp(mid-10,R-40,r()):lerp(L+40,mid+10,r());add({t:'tbuoy',x,y:-tu,side});
-   for(let i=0;i<4;i++)add({t:'coin',x:clamp(x+side*48,L,R),y:-tu+150-i*30});if(r()<.35)add({t:'rock',x:clamp(x-side*72,L+10,R-10),y:-tu-210,rad:10+r()*6,v:0});if(r()<.1)add({t:'fuel',x:lerp(L+30,R-30,r()),y:-tu+260});tu+=480+r()*170;}}
+ if(Z.turns){u=len;let tu=900,side=r()<.5?-1:1;while(tu<len-520){const L=zone.shore(-tu)+40,R=WG-40,mid=(L+R)/2;side=-side;const x=side<0?lerp(L+70,mid-35,r()):lerp(mid+35,R-70,r());add({t:'tbuoy',x,y:-tu,side});
+   for(let i=0;i<4;i++)add({t:'coin',x:clamp(x+side*48,L,R),y:-tu+150-i*30});if(r()<.3)add({t:'rock',x:clamp(x-side*80,L+10,R-10),y:-tu-60,rad:9+r()*5,v:0});if(r()<.1)add({t:'fuel',x:lerp(L+30,R-30,r()),y:-tu+300});tu+=560+r()*160;}}
  if(Z.obj==='slalom'){for(let gu=700;gu<len-300;gu+=520){if(!free(gu))continue;const L=zone.shore(-gu)+50,R=WG-50;gateSide^=1;const gx=gateSide?lerp(L,R,.36+r()*.08):lerp(L,R,.56+r()*.08);add({t:'gate',x:gx,y:-gu,w:108,done:0});zone.gatesTotal++;}}
  while(u<len-300){
   if(!free(u)){u+=160;continue;}
@@ -1149,7 +1149,7 @@ function aiCtl(c,dt){const Zn=G.zone,L=Zn.shore(c.y-120)+30,R=WG-26;c.ai.re-=dt;
  if(c.ai.re<=0){c.ai.tx=lerp(L+10,R-10,Math.random());c.ai.re=1.6+Math.random()*2.2;}
  // obstacle avoid
  let bigDone=false;for(const o of Zn.big||[]){if(o.t==='pass'){if(o.y<c.y-20&&o.y>c.y-520){c.ai.tx=o.gx;c.ai.re=Math.max(c.ai.re,.3);bigDone=true;break;}}else if(o.y+o.ry>c.y-560&&o.y-o.ry<c.y+20){if(c.ai.isl!==o){c.ai.isl=o;c.ai.side=Math.random()<.5?-1:1;}c.ai.tx=clamp(c.ai.side<0?o.x-o.rx-42:o.x+o.rx+42,L+8,R-8);c.ai.re=Math.max(c.ai.re,.3);bigDone=true;break;}}
- if(!bigDone&&Zn.Z.turns){let nb=null;const O2=Zn.objs;for(let i=findStart(O2,c.y-560);i<O2.length&&O2[i].y<c.y-4;i++)if(O2[i].t==='tbuoy')nb=O2[i];if(nb){c.ai.tx=clamp(nb.x+nb.side*48,L+8,R-8);c.ai.re=Math.max(c.ai.re,.25);bigDone=true;}}
+ if(!bigDone&&Zn.Z.turns){let nb=null;const O2=Zn.objs;for(let i=findStart(O2,c.y-780);i<O2.length&&O2[i].y<c.y-4;i++)if(O2[i].t==='tbuoy')nb=O2[i];if(nb){c.ai.tx=clamp(nb.x+nb.side*48,L+8,R-8);c.ai.re=Math.max(c.ai.re,.25);bigDone=true;}}
  const O=Zn.objs,s=findStart(O,c.y-240);if(!bigDone)for(let i=s;i<O.length&&O[i].y<c.y-20;i++){const o=O[i];if(o.t==='coin'||o.t==='check'||o.t==='finish'||o.t==='ramp'||o.t==='can'||o.t==='fuel'||o.t==='gate'||o.t==='island'||o.t==='pass'||o.t==='tbuoy')continue;const w=o.t==='yacht'?34:o.t==='sail'?20:o.t==='rock'?o.rad+14:o.t==='piri'?30:o.t==='float'?20:o.t==='motor'?16:14;if(Math.abs(o.x-c.ai.tx)<w+14||Math.abs(o.x-c.x)<w+12){c.ai.tx=o.x>(L+R)/2?o.x-w-30:o.x+w+30;c.ai.tx=clamp(c.ai.tx,L+8,R-8);c.ai.re=Math.max(c.ai.re,.6);break;}}
  for(const o of Zn.movers){if(o.y<c.y-260||o.y>c.y)continue;if(Math.abs(o.x-c.x)<60){c.ai.tx=clamp(o.x>(L+R)/2?o.x-70:o.x+70,L+8,R-8);}}
  const dx=c.ai.tx-c.x,want=clamp(Math.atan2(dx,170),-.55,.55);let turn=want>c.h+.05?1:want<c.h-.05?-1:0;
