@@ -1,0 +1,11 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a),out={};
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(()=>{__T.newGame();__G.zi=0;__goMap();});await W(300);await E(()=>__T.startRace());await W(3600);
+ out.h=await E(()=>__G.zone.objs.filter(o=>o.t==='heart').map(o=>[Math.round(o.x),Math.round(o.y)]));
+ await E(()=>{const P=__G.P,h=__G.zone.objs.find(o=>o.t==='heart');P.x=h.x-30;P.y=h.y+300;P.v=0;P.h=0;P.va=0;__T.setHp(7);});await W(500);await p.screenshot({path:'v38-corazon-agua.png'});
+ await p.screenshot({path:'v38-hud.png',clip:{x:240,y:60,width:150,height:40}});
+ await E(()=>__T.setHp(8));await W(100);await p.screenshot({path:'v38-hud2.png',clip:{x:240,y:60,width:150,height:40}});
+ await E(()=>{__T.setHp(7);__T.openBar();});await W(600);await p.screenshot({path:'v38-bar.png'});
+ console.log(JSON.stringify(out));console.log('ERRS',JSON.stringify(errs));await b.close();})();
