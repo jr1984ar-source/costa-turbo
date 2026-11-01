@@ -1,0 +1,8 @@
+{
+ "rojo":    {"shell":"#d0151f","peak":"#d0151f","peakAcc":"#ff5a1f","band":"#b8101a","lower":"#c01019","rim":"#ff5a1f","chinFront":"#ff5a1f","logo":"#ffffff"},
+ "azul":    {"shell":"#f4f6f9","peak":"#1e4fd8","peakAcc":"#ffffff","band":"#1e4fd8","lower":"#1e4fd8","rim":"#0d2a8a","chinFront":"#f4f6f9","logo":"#1e4fd8"},
+ "negro":   {"shell":"#24262c","peak":"#24262c","peakAcc":"#f4f6f9","band":"#f4f6f9","lower":"#24262c","rim":"#e3202b","chinFront":"#f4f6f9","logo":"#f4f6f9"},
+ "jettson": {"shell":"#a7afbd","peak":"#7b5cff","peakAcc":"#1d2027","band":"#a7afbd","lower":"#7b5cff","rim":"#5b3cd8","chinFront":"#7b5cff","logo":"#1d2027"},
+ "fluor":   {"shell":"#ff6a1a","peak":"#ff6a1a","peakAcc":"#c6ff1a","band":"#ff3f8e","lower":"#ff3f8e","rim":"#1d2027","chinFront":"#1d2027","logo":"#1d2027"},
+ "amarillo":{"shell":"#ffd21a","peak":"#1d2027","peakAcc":"#ffd21a","band":"#1d2027","lower":"#ffd21a","rim":"#1d2027","chinFront":"#1d2027","logo":"#1d2027"}
+}

@@ -1,0 +1,11 @@
+const {chromium}=require('playwright');const fs=require('fs');
+const src=fs.readFileSync('jetski3q.js','utf8');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await E(()=>{__G.money=48500;});
+ await p.click('#bShop');await W(500);
+ await E(src=>{eval(src.replace("if (typeof module","if (false&&typeof module"));
+  const st=document.createElement('style');st.textContent=`.ski3q{position:relative;flex:1;height:200px;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse 80% 70% at 50% 20%,rgba(140,215,255,.5),transparent 70%),linear-gradient(180deg,#9fdcf5 0%,#d8f2fb 46%,#3cc3dd 47%,#1488c8 75%,#0d63ad 100%);display:grid;place-items:center}.ski3q svg{width:100%;height:auto;filter:drop-shadow(0 6px 10px rgba(0,20,60,.3))}.ski3q .wv{position:absolute;left:0;right:0;bottom:22px;height:18px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.55) 0 18px,transparent 18px 40px);opacity:.5;filter:blur(1px)}`;document.head.append(st);
+  const pv=document.querySelector('#sPv');const d=document.createElement('div');d.className='ski3q';
+  d.innerHTML='<div class="wv"></div>'+jetSki3q({hull:'#e6f01a',deck:'#26292f',acc:'#e6f01a',seatA:'#1d2027',seatB:'#e6f01a',name:'BRAVA'},'t');pv.replaceWith(d);},src);
+ await W(300);await p.screenshot({path:'boceto14.png'});console.log(JSON.stringify(errs));await b.close();})();

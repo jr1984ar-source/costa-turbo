@@ -1,0 +1,5 @@
+const fs=require('fs');const {chromium}=require('playwright');
+const items=JSON.parse(process.argv[2]),out=process.argv[3],cols=+process.argv[4]||1,wd=+process.argv[5]||760;
+const cards=items.map(([f,n])=>`<div class="c"><img src="${f}"><p>${n}</p></div>`).join('');
+fs.writeFileSync('rsheet.html',`<!doctype html><html><head><meta charset=utf8><style>body{margin:0;font-family:Arial}.w{display:grid;grid-template-columns:repeat(${cols},1fr);gap:12px;padding:14px;width:${wd}px;background:#0a1630}.c{background:radial-gradient(ellipse at 50% 35%,#ffffff,#d6dce4 80%);border-radius:16px;padding:12px}.c img{width:100%;display:block;filter:drop-shadow(0 10px 8px rgba(0,0,0,.25))}.c p{margin:6px 4px 0;color:#15171c;font-weight:900;font-size:17px}</style></head><body><div class="w">${cards}</div></body></html>`);
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:wd+28,height:600}})).newPage();await p.goto('file://'+process.cwd()+'/rsheet.html');await p.waitForTimeout(500);await p.screenshot({path:out,fullPage:true});await b.close();})();
