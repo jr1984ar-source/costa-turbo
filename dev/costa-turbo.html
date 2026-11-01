@@ -41,8 +41,9 @@ button{font:inherit;color:inherit;cursor:pointer}
 .zone span{color:var(--cyan)}
 .rt{display:flex;gap:6px;align-items:center;pointer-events:auto}
 .lives{padding:4px 9px;border-radius:999px;display:flex;gap:3px;align-items:center;font-family:var(--cond);font-weight:700;font-size:13px}
-.lives i{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red)}
-.lives i.off{background:rgba(255,255,255,.2);box-shadow:none}
+.lives{filter:drop-shadow(0 0 3px rgba(255,71,87,.55))}
+.lives i{width:13px;height:12px;background:#ff3b4f;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 15'%3E%3Cpath d='M8 14.2 6.9 13.2C3 9.7.5 7.4.5 4.6.5 2.3 2.3.5 4.6.5c1.3 0 2.6.6 3.4 1.6C8.8 1.1 10.1.5 11.4.5c2.3 0 4.1 1.8 4.1 4.1 0 2.8-2.5 5.1-6.4 8.6z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 15'%3E%3Cpath d='M8 14.2 6.9 13.2C3 9.7.5 7.4.5 4.6.5 2.3 2.3.5 4.6.5c1.3 0 2.6.6 3.4 1.6C8.8 1.1 10.1.5 11.4.5c2.3 0 4.1 1.8 4.1 4.1 0 2.8-2.5 5.1-6.4 8.6z'/%3E%3C/svg%3E") center/contain no-repeat}
+.lives i.off{background:rgba(255,255,255,.25)}
 #btnPause{width:34px;height:30px;border-radius:10px;display:grid;place-items:center;padding:0;border:1px solid var(--line);background:var(--glass)}
 #btnPause svg{width:12px;height:12px;fill:#fff}
 .track{position:absolute;right:max(6px,env(safe-area-inset-right,0px));top:112px;bottom:150px;width:16px;display:flex;justify-content:center}
