@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(()=>{__T.newGame();__G.zi=__Z.findIndex(z=>z.name==='BAHÍA DE PALMA');__goMap();});await W(300);await E(()=>__T.startRace());await W(3800);
+ await E(()=>{window.requestAnimationFrame=()=>0;document.querySelector('#hud').hidden=true;const C=__G.zone.circ,P=__G.P,i=Math.round(4500/8);P.x=C.x[i]+Math.cos(C.h[i])*60;P.y=C.y[i]+Math.sin(C.h[i])*60;P.h=P.va=C.h[i]+.5;__G.camA=P.h;for(const c of __G.rivals){c.x=1e5;}__render();});await W(100);await p.screenshot({path:'circ-a.png'});
+ await E(()=>{const C=__G.zone.circ;C._W=C.W;C.W=1;__render();});await W(100);await p.screenshot({path:'circ-b.png'});
+ await E(()=>{const C=__G.zone.circ;C.W=C._W;const Zn=__G.zone;Zn._l=Zn.lands;Zn.lands=[];__render();});await W(100);await p.screenshot({path:'circ-c.png'});
+ await E(()=>{const P=__G.P;P.h=P.va=0;__G.camA=0;__G.zone.lands=__G.zone._l;__render();});await W(100);await p.screenshot({path:'circ-d.png'});
+ console.log(JSON.stringify(errs));await b.close();})();
