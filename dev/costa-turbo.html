@@ -258,6 +258,15 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
 .hm{display:inline-flex;align-items:center;gap:4px}.hm-i{width:14px;height:14px;flex:none}
 .trophy{width:84px;height:84px;filter:drop-shadow(0 6px 18px rgba(255,201,60,.55))}
 .crank{margin:0;font-family:var(--cond);font-weight:800;font-size:20px;letter-spacing:.04em;color:var(--lime)}.crank.no{color:var(--dim);font-size:16px}
+.mgrid{width:min(100%,440px);display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.md{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;padding:8px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);text-align:left}
+.md svg{width:38px;height:38px}
+.md b{display:block;font-family:var(--cond);font-weight:800;font-size:15px;line-height:1.05}
+.md small{display:block;font-size:11px;line-height:1.2;color:var(--dim);margin-top:2px}
+.md em{display:block;font-style:normal;font-family:var(--cond);font-weight:700;font-size:12px;color:var(--gold);margin-top:3px}
+.md.off{opacity:.55}.md.off em{color:var(--dim)}
+.md.on{border-color:rgba(255,201,60,.5);background:rgba(255,201,60,.1)}
+@media (orientation:landscape){.mgrid{grid-template-columns:repeat(3,1fr);width:min(100%,720px)}}
 /* usuario */
 .ucard{width:min(100%,320px);display:flex;align-items:center;gap:10px;padding:8px 10px;text-align:left}
 .ucard canvas{width:44px;height:44px;border-radius:50%;flex:none;border:2px solid var(--orange)}
@@ -327,7 +336,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
       <div class="menu">
         <button class="btn p" id="bPlay">CAMPEONATO</button>
         <button class="btn" id="bFree">CARRERA LIBRE</button>
-        <button class="btn ghost" id="bRank" style="width:100%">RANKING TOP 10</button>
+        <div class="row" style="flex-wrap:nowrap"><button class="btn ghost" id="bRank">RANKING TOP 10</button><button class="btn ghost" id="bMed">MEDALLAS</button></div>
         <div class="row"><button class="btn ghost" id="bSnd">SONIDO: SÍ</button><button class="btn ghost" id="bMus">MÚSICA: SÍ</button></div>
         <button class="btn ghost" id="bFull" hidden>PANTALLA COMPLETA</button>
       </div>
@@ -441,6 +450,12 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
       <div class="menu"><button class="btn p" id="oAgain">OTRA PARTIDA</button><button class="btn" id="oMenu">MENÚ</button></div>
     </section>
 
+    <section id="scrMedals" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="mdBk" style="flex:none">‹ ATRÁS</button><h2 class="h">MEDALLAS</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
+      <p class="sub" id="mdSub"></p>
+      <div class="mgrid" id="mdGrid"></div>
+    </section>
+
     <section id="scrChamp" class="screen" hidden>
       <div class="head"><button class="btn ghost sm" id="cBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <svg class="trophy" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="tg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#fff3b0"/><stop offset=".5" stop-color="#ffc93c"/><stop offset="1" stop-color="#c47a12"/></linearGradient></defs><path d="M18 8h28v14c0 9-6 16-14 16s-14-7-14-16z" fill="url(#tg)"/><path d="M18 12H9c0 9 5 14 11 14M46 12h9c0 9-5 14-11 14" fill="none" stroke="#ffc93c" stroke-width="4" stroke-linecap="round"/><rect x="28" y="37" width="8" height="10" fill="#e0a227"/><rect x="20" y="47" width="24" height="8" rx="2" fill="url(#tg)"/><path d="M26 16l3 6 6 1-4 4 1 6-5-3-5 3 1-6-4-4 6-1z" fill="#fff" opacity=".85"/></svg>
@@ -552,6 +567,26 @@ function rivaKit(m){if(m.riva&&owns(m)){const p=partsOf(m);let ch=false;for(cons
 MOTOS.forEach(rivaKit);
 function motoState(m){if(owns(m))return 'own';const n=(SHOP[m.id]||[0,0])[1];return best<n?'lock':'buy';}
 function unlocksBetween(a,b){const u=[];for(const m of MOTOS){const[pr,n]=SHOP[m.id]||[0,0];if(pr&&n>a&&n<=b)u.push('moto '+m.name);}PART_NEED.forEach((n,i)=>{if(i&&n>a&&n<=b)u.push('piezas Stage '+(i+1));});if(PRO_NEED>a&&PRO_NEED<=b)u.push('colores especiales');return u;}
+const MEDALS=[
+ {id:'salto',n:'Primer salto',d:'Salta por primera vez.',r:200},
+ {id:'mega',n:'Mega saltador',d:'Salta la MEGA RAMPA.',r:500},
+ {id:'saltos50',n:'Saltamontes',d:'Haz 50 saltos en total.',r:800},
+ {id:'mortal',n:'Mortal perfecto',d:'Aterriza un mortal hacia atrás.',r:400},
+ {id:'combo',n:'Combo',d:'Mortal y superman en el mismo salto.',r:800},
+ {id:'ola',n:'Surfero',d:'Coge bien una ola gigante.',r:500},
+ {id:'delfines',n:'Amigo de los delfines',d:'Coge turbo de 5 delfines.',r:600},
+ {id:'monedas',n:'Hucha llena',d:'Coge 60 monedas en una sola pantalla.',r:800},
+ {id:'limpio',n:'Sin un rasguño',d:'Termina una carrera sin chocar.',r:800},
+ {id:'podio',n:'Ganador',d:'Gana una carrera llegando el primero.',r:500},
+ {id:'boyas',n:'Slalom perfecto',d:'Termina la Carrera de Boyas sin penalizaciones.',r:1000},
+ {id:'tiburon',n:'Cazatiburones',d:'Gana La Final a El Tiburón.',r:2000},
+ {id:'campeon',n:'Campeón de la costa',d:'Gana el campeonato completo.',r:3000}];
+let medStore=store.get('ct_medals',{});if(!medStore||typeof medStore!=='object')medStore={};
+let statStore=store.get('ct_stats',{});if(!statStore||typeof statStore!=='object')statStore={};
+function bumpStat(k,n){statStore[k]=(statStore[k]|0)+(n||1);store.set('ct_stats',statStore);return statStore[k];}
+function medal(id){if(medStore[id]||G.demo)return;const m=MEDALS.find(x=>x.id===id);if(!m)return;medStore[id]=Date.now();store.set('ct_medals',medStore);G.money+=m.r;saveWallet();(G._newMed=G._newMed||[]).push(m);
+ if(G.mode==='play'){msg('¡MEDALLA!',m.n+' · +'+pts(m.r)+' PTA','var(--gold)');}try{Snd.check();}catch(_){}}
+function medalLines(lines){for(const m of G._newMed||[])lines.push(['🏅 '+m.n,'+'+pts(m.r)+' PTA']);G._newMed=[];}
 const SWATCHES=['#f4f5f7','#b8c0cc','#3a3e46','#16181d','#e3202b','#ff7a1a','#ffd21a','#7be35a','#1f9e52','#19c3c9','#1e5eff','#13285e','#7b3fe4','#ff3f8e'];
 const PAINT_PARTS=[['hull','CASCO'],['deck','LATERALES'],['hood','CAPÓ'],['stripe','RAYAS'],['seat','ASIENTO']];
 let paintStore=store.get('ct_paint',{});if(!paintStore||typeof paintStore!=='object')paintStore={};
@@ -1097,6 +1132,7 @@ function startZone(){
   const grid=[[.32,-150],[.72,-110],[.48,-70],[.8,-30],[.3,10]];
   pool.slice(0,Z.riv).forEach((mm,i)=>{const c=craft(mm,WG*grid[i][0],grid[i][1],false);c.skill=(Z.skill||.9)*(mm===SHARK?1.08:1)*(1+G.lap*.04)*(.97+i*.012);G.rivals.push(c);});
   G.P.y=40;G.P.x=WG*.56;}
+ G.ghostRec=[];G._gAcc=0;G.ghost=G.free?store.get('ct_ghost_'+zi,null):null;if(G.ghost&&!Array.isArray(G.ghost.p))G.ghost=null;G._pens=0;G._crashes=0;G._newMed=[];
  G.police=[];G.parts_fx=[];G.pops=[];G.pitSlots=0;G.jumps=0;G.gates=0;G.catches=0;G.barUsed=false;G.finishOrder=[];G.elapsed=0;G.zoneCoins=0;G.regenT=0;G.chaseT=0;
  G.time=Z.obj==='time'||Z.obj==='slalom'||Z.obj==='jumps'?Math.round(Zn.len/3/(Z.pace||200))+9+(Z.giant?6:0):0;
  if(Z.obj==='chase'){for(let i=0;i<2;i++)G.police.push({x:WG*(.4+i*.3),y:420+i*120,h:0,v:0,mode:'chase',t:1e9,cool:2+i,lights:0});}
@@ -1116,11 +1152,11 @@ let msgTO;function msg(t,sub,col){const m=$('#msg');m.textContent='';const a=doc
 function splash(x,y,n,spd,col){for(let i=0;i<n;i++){const a=Math.random()*TAU,s=spd*(.3+Math.random()*.8);G.parts_fx.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.5+Math.random()*.5,max:1,s:3+Math.random()*4,c:col||null});}}
 function buzz(ms){try{navigator.vibrate&&navigator.vibrate(ms);}catch(_){}}
 
-function crash(c,why){if(c.crash>0||c.inv>0)return;c.crash=.75;c.v*=.22;c.inv=1.6;c.boostT=0;splash(c.x,c.y,18,120);if(c.isP){Snd.crash();G.shake=10;buzz(90);if(why)pop(c.x,c.y-30,why,'#ff4757');}}
+function crash(c,why){if(c.crash>0||c.inv>0)return;c.crash=.75;c.v*=.22;c.inv=1.6;c.boostT=0;splash(c.x,c.y,18,120);if(c.isP){G._crashes=(G._crashes|0)+1;Snd.crash();G.shake=10;buzz(90);if(why)pop(c.x,c.y-30,why,'#ff4757');}}
 function giantHit(c){if(c.air>0||c.z>.5)return;
- if(c.v>=c.st.maxV*.72&&Math.abs(c.va)<.42&&!(c.capT>0)&&!(c.stuckT>0)){c.airT=.95+c.v/420;c.air=c.airT;c.trick=0;c._tr=[];c.flipT=0;c.supT=0;Snd.jump();G.jumps++;const b=400+Math.round(c.v);G.score+=b;pop(c.x,c.y-46,'¡OLA GIGANTE! +'+b,'#33d6ff');splash(c.x,c.y,26,170);G.shake=6;}
+ if(c.v>=c.st.maxV*.72&&Math.abs(c.va)<.42&&!(c.capT>0)&&!(c.stuckT>0)){c.airT=.95+c.v/420;c.air=c.airT;c.trick=0;c._tr=[];c.flipT=0;c.supT=0;Snd.jump();G.jumps++;const b=400+Math.round(c.v);G.score+=b;pop(c.x,c.y-46,'¡OLA GIGANTE! +'+b,'#33d6ff');medal('ola');splash(c.x,c.y,26,170);G.shake=6;}
  else{c.capT=2.8;c.v=0;c.boostT=0;c.driftT=0;c.driftDir=0;c.air=0;c.z=0;Snd.crash();G.shake=12;buzz(160);splash(c.x,c.y,34,180);msg('¡VOLCADO!','Pierdes unos segundos','var(--red)');}}
-function startJump(c){c.airT=.45+c.v/620;c.air=c.airT;c.trick=0;c._tr=[];c.flipT=0;c.supT=0;if(c.isP){Snd.jump();G.jumps++;}}
+function startJump(c){c.airT=.45+c.v/620;c.air=c.airT;c.trick=0;c._tr=[];c.flipT=0;c.supT=0;if(c.isP){Snd.jump();G.jumps++;if(!G.demo){medal('salto');if(bumpStat('jumps')>=50)medal('saltos50');}}}
 function updateCraft(c,dt,ctl){const Zn=G.zone,st=c.st;
  c.prevY=c.y;
  if(c.capT>0){c.capT-=dt;c.v=0;c.air=0;c.z=0;c.boostT=0;if(c.capT<=0){c.capT=0;c.inv=1.3;c.h=0;c.va=0;}for(const p of c.trail)p.t+=dt;return;}
@@ -1148,7 +1184,7 @@ function updateCraft(c,dt,ctl){const Zn=G.zone,st=c.st;
   if(c.isP){Snd.land();G.shake=5;const tr=c._tr||[];
    if(c.flipT>0||c.supT>0){c.flipT=0;c.supT=0;c._tr=[];c.inv=0;crash(c,'¡MAL ATERRIZAJE!');}
    else if(!G.demo){let pts0=0,names=[];if(c.trick>c.airT*.55){pts0+=300;names.push('360');}if(tr.includes('flip')){pts0+=500;names.push('MORTAL');}if(tr.includes('sup')){pts0+=400;names.push('SUPERMAN');}
-    if(pts0){const combo=names.length>1;if(combo)pts0=Math.round(pts0*1.5);G.score+=pts0;G.tricks=(G.tricks||0)+names.length;pop(c.x,c.y-40,(combo?'¡COMBO! ':'¡')+names.join(' + ')+(combo?'':'!')+' +'+pts0,combo?'#ff3f8e':'#33d6ff');}}
+    if(pts0){const combo=names.length>1;if(combo)pts0=Math.round(pts0*1.5);G.score+=pts0;G.tricks=(G.tricks||0)+names.length;if(tr.includes('flip'))medal('mortal');if(tr.includes('flip')&&tr.includes('sup'))medal('combo');pop(c.x,c.y-40,(combo?'¡COMBO! ':'¡')+names.join(' + ')+(combo?'':'!')+' +'+pts0,combo?'#ff3f8e':'#33d6ff');}}
    c._tr=[];c.spin=0;}}}
  // shore & edge
  const sx=Zn.shore(c.y)+11;if(c.x<sx){c.x=sx;if(c.h<0)c.h=Math.abs(c.h)*.4;c.va=c.h;if(c.v>120&&c.air<=0){c.v*=.55;if(c.isP){Snd.bump();G.shake=4;}}}
@@ -1202,7 +1238,7 @@ function update(dt){
   if(!o.act&&o.y>P.y-640){o.act=1;if(racing){Snd.thunder();msg('¡OLA GIGANTE!','Rápido y recto o vuelcas','var(--cyan)');}}
   if(o.act&&racing)o.y+=o.sp*dt;
   const side=P.y>o.y?1:-1;if(o.act&&o.side>0&&side<0){o.done=1;giantHit(P);}o.side=side;}}
- for(const o of Zn.movers){if(o.t!=='dolphin'||o.got||G.demo)continue;if(Math.hypot(o.x-P.x,o.y-P.y)<56&&P.air<=0){o.got=1;if(G.turbo<5){G.turbo++;turboUI();}Snd.pickup();msg('¡DELFINES!','+1 TURBO','var(--cyan)');pop(P.x,P.y-40,'+1 TURBO','#33d6ff');}}
+ for(const o of Zn.movers){if(o.t!=='dolphin'||o.got||G.demo)continue;if(Math.hypot(o.x-P.x,o.y-P.y)<56&&P.air<=0){o.got=1;if(bumpStat('dolphins')>=5)medal('delfines');if(G.turbo<5){G.turbo++;turboUI();}Snd.pickup();msg('¡DELFINES!','+1 TURBO','var(--cyan)');pop(P.x,P.y-40,'+1 TURBO','#33d6ff');}}
  // movers
  for(const o of Zn.movers){if(o.t==='kayak'){o.x+=o.vx*dt;const L=Zn.shore(o.y)+14;if(o.x<L||o.x>WG-14)o.vx*=-1;}else{o.x+=o.vx*dt;o.y+=o.vy*dt;o.flash+=dt;}}
  // collisions craft vs objects
@@ -1221,7 +1257,7 @@ function update(dt){
   for(let i=s;i<Zn.objs.length;i++){const o=Zn.objs[i];if(o.y>c.y+170)break;
    if(o.t==='coin'){if(!o.got&&c.isP&&!G.demo&&Math.hypot(o.x-c.x,o.y-c.y)<17){o.got=1;G.money+=25;G.score+=25;G.zoneCoins++;Snd.coin();}continue;}
    if(o.t==='can'||o.t==='fuel'){if(!o.got&&c.isP&&!G.demo&&Math.hypot(o.x-c.x,o.y-c.y)<18){o.got=1;Snd.pickup();if(o.t==='can'){if(G.turbo<5)G.turbo++;turboUI();msg('¡REFRESCO!','+1 TURBO','var(--cyan)');}else{G.fuel=Math.min(100,G.fuel+30);msg('¡GASOLINA!','+30 %','var(--lime)');}}continue;}
-   if(o.t==='ramp'){if(c.prevY>o.y&&c.y<=o.y&&Math.abs(c.x-o.x)<o.w/2&&c.air<=0&&c.v>110&&c.crash<=0){startJump(c);if(o.mega){c.airT*=1.8;c.air=c.airT;}if(c.isP&&!G.demo){const b=(o.mega?600:100)+Math.round(c.v/4);G.score+=b;pop(c.x,c.y-40,(o.mega?'¡MEGA SALTO! +':'¡SALTO! +')+b,o.mega?'#33d6ff':'#ffc93c');if(o.mega)msg('¡MEGA SALTO!','','var(--cyan)');}}continue;}
+   if(o.t==='ramp'){if(c.prevY>o.y&&c.y<=o.y&&Math.abs(c.x-o.x)<o.w/2&&c.air<=0&&c.v>110&&c.crash<=0){startJump(c);if(o.mega){c.airT*=1.8;c.air=c.airT;}if(c.isP&&!G.demo){const b=(o.mega?600:100)+Math.round(c.v/4);G.score+=b;pop(c.x,c.y-40,(o.mega?'¡MEGA SALTO! +':'¡SALTO! +')+b,o.mega?'#33d6ff':'#ffc93c');if(o.mega){msg('¡MEGA SALTO!','','var(--cyan)');medal('mega');}}}continue;}
    if(o.t==='gate'){if(c.isP&&!G.demo&&!o.done&&c.prevY>o.y&&c.y<=o.y){o.done=1;if(Math.abs(c.x-o.x)<o.w/2){G.gates++;G.score+=50;Snd.gate();pop(c.x,c.y-36,'¡BIEN! +50','#7be35a');}else{G.time=Math.max(0,G.time-1);Snd.miss();msg('BOYA FALLADA','−1 s','var(--red)');}}
     if(Math.hypot(c.x-(o.x-o.w/2),c.y-o.y)<15||Math.hypot(c.x-(o.x+o.w/2),c.y-o.y)<15){c.v*=1-2*dt;}continue;}
    if(o.t==='check'){if(c.isP&&!G.demo&&!o.done&&c.y<=o.y){o.done=1;const add=Math.round(Zn.len/3/(Zn.Z.pace||200))+3;G.time+=add;Snd.check();msg('CONTROL','+'+add+' SEGUNDOS','var(--lime)');}continue;}
@@ -1229,7 +1265,7 @@ function update(dt){
    if(o.t==='yacht'){if(c.isP&&!o.waved&&Math.abs(c.y-o.y)<130&&Math.abs(c.x-o.x)<190){o.waved=1;o.wave=3.2;o.txt=['¡Holaaa!','¡Guapo!','¡Vaya moto!','¡Corre, corre!','¡Toma, un refresco!'][(Math.random()*5)|0];if(!G.demo){Snd.girls();const cy=c.y-200;Zn.objs.splice(findStart(Zn.objs,cy),0,{t:'can',x:clamp(c.x+(Math.random()-.5)*60,Zn.shore(cy)+30,WG-30),y:cy});}}}
    if(o.t==='jelly'){if(c.isP&&!G.demo&&!o.hit&&c.z<.3&&Math.hypot(o.x-c.x,o.y-c.y)<20){o.hit=1;c.v*=.45;c.boostT=0;Snd.miss();G.shake=3;pop(c.x,c.y-36,'¡MEDUSA!','#ff3f8e');}continue;}
    if(o.t==='tbuoy'&&!G.demo&&!c.fin&&c.prevY>o.y&&c.y<=o.y){const ok=o.side<0?c.x<o.x:c.x>o.x;
-    if(c.isP){if(ok){o.ok=1;G.score+=60;Snd.gate();pop(c.x,c.y-36,'¡BIEN! +60','#7be35a');}else{c.stuckT=2;c.stuckY=c.y;c.v=0;c.boostT=0;Snd.miss();G.shake=4;msg('¡PENALIZACIÓN!','Boya por el lado malo · 2 s','var(--red)');}}
+    if(c.isP){if(ok){o.ok=1;G.score+=60;Snd.gate();pop(c.x,c.y-36,'¡BIEN! +60','#7be35a');}else{G._pens=(G._pens|0)+1;c.stuckT=2;c.stuckY=c.y;c.v=0;c.boostT=0;Snd.miss();G.shake=4;msg('¡PENALIZACIÓN!','Boya por el lado malo · 2 s','var(--red)');}}
     else if(!ok){c.stuckT=2;c.stuckY=c.y;c.v=0;c.boostT=0;}}
    if(o.t==='island'||o.t==='pass')continue;
    if(o.t==='piri'&&c.isP&&!G.demo&&!o.gift&&Math.hypot(c.x-o.rx,c.y-o.y)<38){o.gift=1;G.lives=Math.min(6,G.lives+1);G.turbo=Math.min(5,G.turbo+2);livesUI();turboUI();Snd.cash();Snd.pickup();msg('¡PIRI-PIRI!','+1 VIDA · +2 TURBOS','var(--gold)');}
@@ -1255,7 +1291,7 @@ function update(dt){
  G.shake=Math.max(0,G.shake-dt*28);G.flash=Math.max(0,G.flash-dt*1.8);
  for(const o of Zn.objs)if((o.t==='yacht'||o.t==='float')&&o.wave>0)o.wave-=dt;
  // race progress
- if(racing&&!G.demo){G.elapsed+=dt;
+ if(racing&&!G.demo){G.elapsed+=dt;if(G.free&&P.fin===0){G._gAcc+=dt;if(G._gAcc>=.1){G._gAcc-=.1;G.ghostRec.push([Math.round(P.x),Math.round(P.y),+P.h.toFixed(2)]);}}
   if(G.time>0||['time','slalom','jumps'].includes(Zn.Z.obj)){if(P.fin===0){G.time-=dt;if(G.time<=0){G.time=0;failZone('¡SE ACABÓ EL TIEMPO!');return;}}}
   // bar
   const ring=Zn.ring;if(ring&&!G.barUsed&&P.fin===0){const d=Math.hypot(P.x-ring.x,P.y-ring.y);if(d<26&&P.v<P.st.maxV*.55){openBar();return;}if(d<180&&P.y>ring.y&&!G._barHint){G._barHint=1;msg(Zn.bar==='jj'?'BAR JJ\'S':'BAR ROXY','Frena con ATRÁS dentro del círculo','var(--gold)');}}
@@ -1319,6 +1355,10 @@ function render(){
  for(const o of Zn.big||[]){const ext=o.t==='island'?o.ry+40:o.h;if(o.y+ext>camTop&&o.y-ext<camTop+VH)drawObj(o);}
  const s=findStart(Zn.objs,camTop-90);for(let i=s;i<Zn.objs.length;i++){const o=Zn.objs[i];if(o.y>camTop+VH+170)break;if(o.t!=='island'&&o.t!=='pass')drawObj(o);}
  for(const o of Zn.movers)if(o.y>camTop-90&&o.y<camTop+VH+90)drawObj(o);
+ // fantasma
+ if(G.ghost&&G.free&&!G.demo&&G.ghost.p.length>1){const gp=G.ghost.p,f=G.elapsed/.1,i=Math.min(gp.length-2,Math.floor(f)),a=gp[i],b=gp[i+1],k=Math.min(1,f-i),gx=lerp(a[0],b[0],k),gy=lerp(a[1],b[1],k),gh=lerp(a[2],b[2],k);
+  if(gy>camTop-60&&gy<camTop+VH+60&&f<gp.length+20){const gm=SP.jet[G.ghost.m]||SP.jet[MOTOS[0].id];ctx.save();ctx.globalAlpha=.4;ctx.translate(gx,gy);ctx.rotate(gh);ctx.drawImage(gm.c,-16,-34,32,68);ctx.restore();
+   ctx.font='800 10px "Saira Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';const tx='RÉCORD '+fmtT(G.ghost.t),w=ctx.measureText(tx).width+12;ctx.fillStyle='rgba(255,255,255,.75)';ctx.beginPath();ctx.roundRect(gx-w/2,gy-52,w,15,7);ctx.fill();ctx.fillStyle='#0a1630';ctx.fillText(tx,gx,gy-44.5);}}
  // wakes
  for(const c of crafts())drawWake(c);
  // police
@@ -1515,15 +1555,20 @@ function zoneWin(){const Zn=G.zone,Z=Zn.Z,P=G.P;Snd.win();Music.play('menu');
  let bonus=500;if(G.time>0){bonus+=Math.round(G.time)*50;lines.push(['Tiempo sobrante',Math.round(G.time)+' s']);}
  if(Z.obj==='slalom')lines.push(['Boyas',G.gates+' / '+Zn.gatesTotal]);if(Z.obj==='jumps')lines.push(['Saltos',String(G.jumps)]);
  bonus*=G.lap+1;G.score+=bonus;G.money+=prize;lines.push(['Premio',pts(prize)+' PTA']);lines.push(['Puntos de la zona','+'+pts(bonus)]);
- const last=G.zi===ZONES.length-1;saveWallet();
- if(G.free){showResult('¡PANTALLA SUPERADA!','Carrera libre · '+Z.name,lines,()=>goFree());return;}
+ const last=G.zi===ZONES.length-1;
+ if(G.zoneCoins>=60)medal('monedas');if(Z.riv&&P.rank===1)medal('podio');if(Z.riv&&!(G._crashes>0))medal('limpio');if(Z.turns&&!(G._pens>0))medal('boyas');if(Z.boss&&P.rank===1)medal('tiburon');
+ saveWallet();
+ if(G.free){const ft=P.finT||G.elapsed,old=store.get('ct_ghost_'+G.zi,null);if(!old||!(old.t<=ft)){store.set('ct_ghost_'+G.zi,{t:+ft.toFixed(2),m:MOTOS[G.moto].id,p:G.ghostRec});lines.push([old?'¡Nuevo récord!':'Récord guardado',fmtT(ft)]);}else lines.push(['Tu récord',fmtT(old.t)]);medalLines(lines);showResult('¡PANTALLA SUPERADA!','Carrera libre · '+Z.name,lines,()=>goFree());return;}
  const nb=Math.max(best,G.lap>0?ZONES.length:G.zi+1);if(nb>best){const un=unlocksBetween(best,nb);best=nb;store.set('ct_best',best);if(un.length)lines.push(['¡Desbloqueado!',un.join(' · ')]);}
- showResult(last?'¡HAS GANADO LA FINAL!':'¡ZONA SUPERADA!',last?'Has ganado a El Tiburón y el campeonato.':'Zona '+(G.zi+1)+' · '+Z.name,lines,()=>{if(last)champEnd();else{G.zi++;goMap();}});}
-function champEnd(){G._champDone=true;G.mode='over';const m=MOTOS[G.moto],en={name:pilotName(),score:G.score|0,zone:ZONES.length,lap:G.lap,moto:m.id,mname:paintOf(m).name||'',at:G.runId||Date.now()};
+ medalLines(lines);showResult(last?'¡HAS GANADO LA FINAL!':'¡ZONA SUPERADA!',last?'Has ganado a El Tiburón y el campeonato.':'Zona '+(G.zi+1)+' · '+Z.name,lines,()=>{if(last)champEnd();else{G.zi++;goMap();}});}
+function champEnd(){G._champDone=true;medal('campeon');G.mode='over';const m=MOTOS[G.moto],en={name:pilotName(),score:G.score|0,zone:ZONES.length,lap:G.lap,moto:m.id,mname:paintOf(m).name||'',at:G.runId||Date.now()};
  const q=qualifies(G.score);if(q){lastHl=en.at;saveScore(en);}
  $('#cScore').textContent=pts(G.score)+' PUNTOS';$('#cInfo').textContent='Has ganado las '+ZONES.length+' carreras'+(G.lap?' de la vuelta '+(G.lap+1):'')+' con '+motoName(m)+'.';
  const r=$('#cRank');r.className='crank'+(q?'':' no');r.textContent=q?'¡Entras en el TOP 10 como '+en.name+'!':'Esta vez no entras en el top 10.';
  $('#cNext').textContent='VUELTA '+(G.lap+2)+' · MÁS DIFÍCIL';show('scrChamp');Snd.win();}
+function medSvg(on){const a=on?'#ffe08a':'#6b7486',b=on?'#e0a227':'#454c5a',r=on?'#e3202b':'#3a404c';return `<svg viewBox="0 0 38 38" aria-hidden="true"><path d="M12 2h6l3 11h-6zM26 2h-6l-3 11h6z" fill="${r}"/><circle cx="19" cy="24" r="11" fill="${b}"/><circle cx="19" cy="24" r="8" fill="${a}"/><path d="M19 18.5l1.7 3.4 3.8.5-2.8 2.6.7 3.7-3.4-1.8-3.4 1.8.7-3.7-2.8-2.6 3.8-.5z" fill="${b}"/></svg>`;}
+function renderMedals(){const g=$('#mdGrid');g.textContent='';let n=0;for(const m of MEDALS){const on=!!medStore[m.id];if(on)n++;const d=document.createElement('div');d.className='md '+(on?'on':'off');d.innerHTML=medSvg(on)+'<div><b></b><small></small><em></em></div>';d.querySelector('b').textContent=m.n;d.querySelector('small').textContent=m.d;d.querySelector('em').textContent=(on?'Conseguida · ':'Premio: ')+pts(m.r)+' PTA';g.append(d);}
+ $('#mdSub').textContent=n+' de '+MEDALS.length+' medallas conseguidas';}
 function rankBack(){if(G._champDone&&G.mode==='over'&&!G.demo)show('scrChamp');else goTitle();}
 function failZone(why,fromFinish){if(G.mode==='over')return;G.mode='result';endRace();G.lives--;livesUI();Snd.fail();Music.play('menu');
  if(G.lives<=0){setTimeout(gameOver,fromFinish?0:900);if(!fromFinish)msg(why,'¡Sin vidas!','var(--red)');return;}
@@ -1641,6 +1686,7 @@ function changeMoto(d){G.moto=(G.moto+d+MOTOS.length)%MOTOS.length;Snd.click();r
 function renderMap(retry){const Z=ZONES[G.zi];$('#mZoneN').textContent=(retry?'OTRA VEZ · ':'')+(G.free?'CARRERA LIBRE · ZONA '+(G.zi+1):'CAMPEONATO · ZONA '+(G.zi+1)+' DE '+ZONES.length+(G.lap?' · VUELTA '+(G.lap+1):''));$('#mZoneName').textContent=Z.name;$('#mGoal').textContent=Z.goal;
  const I=$('#mInfo');I.textContent='';const tag=(t,c)=>{const s=document.createElement('span');if(c)s.className=c;s.textContent=t;I.append(s);};
  tag('♥ '+G.lives+' vidas','red');tag(pts(G.money)+' PTA','gold');tag('Gasolina '+Math.ceil(G.fuel)+' %',G.fuel<35?'red':'lime');tag('Turbos: '+G.turbo);
+ if(G.free){const gh=store.get('ct_ghost_'+G.zi,null);if(gh&&gh.t)tag('Tu récord: '+fmtT(gh.t)+' · corre contra tu fantasma','gold');}
  tag(Z.bar==='jj'?"Bar JJ's a mitad de zona":Z.bar==='roxy'?'Bar Roxy a mitad de zona':Z.boss?'Sin bar: depósito lleno para la final':'Sin bar: sales con el depósito al 85 %');if(Z.piri)tag('Piri-Piri: vida y turbos','gold');
  const c=$('#mapCv');drawCover(c,G.zi);fontsOK.then(()=>{if(!$('#scrMap').hidden)drawCover(c,G.zi);});
  const P=$('#mProg');P.hidden=!!G.free;P.textContent='';if(!G.free)ZONES.forEach((_,i)=>{const sp=document.createElement('span');sp.textContent=i+1;if(i<G.zi)sp.className='ok';else if(i===G.zi)sp.className='on';P.append(sp);});
@@ -1858,6 +1904,7 @@ on('#fBack',()=>{Snd.click();goTitle();});
 on('#mBk',()=>{Snd.click();if(G.free)goFree();else goGarage();});
 on('#rBk',()=>{Snd.click();const n=G._next;G._next=null;n&&n();});
 on('#psBk',()=>resume());on('#oBk',()=>{Snd.click();goTitle();});on('#rkBk',()=>{Snd.click();rankBack();});
+on('#bMed',()=>{Snd.click();show('scrMedals');renderMedals();});on('#mdBk',()=>{Snd.click();toTitle();});
 on('#cNext',()=>{Snd.click();G._champDone=false;G.zi=0;G.lap++;goMap();});on('#cRk',()=>{Snd.click();show('scrRank');renderRank();});on('#cMenu',()=>{Snd.click();goTitle();});on('#cBk',()=>{Snd.click();goTitle();});
 function midChamp(){return !!G._champOn&&!G._champDone&&!G.free&&(G.zi>0||G.lap>0)&&G.mode!=='over';}
 function goHome(){if(midChamp()&&!confirm('¿Volver al inicio? Dejas el campeonato a medias.'))return;Snd.click();goTitle();}
