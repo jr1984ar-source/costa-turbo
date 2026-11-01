@@ -1,0 +1,10 @@
+const fs=require('fs');const {chromium}=require('playwright');
+const maps={actual:'zonas/ski_map.json',A:'zonas/ski_map_s2.json',B:'zonas/ski_map_s1.json'};
+const src=fs.readFileSync('skiart.js','utf8');
+const P=[{hull:'#e3202b',deck:'#f4f5f7',hood:'#e3202b',stripe:'#f4f5f7',seat:'#16181d'},{hull:'#ffd21a',deck:'#2c2f36',hood:'#2c2f36',stripe:'#ffd21a',seat:'#ffd21a'},{hull:'#7b3fe4',deck:'#ff3f8e',hood:'#ff3f8e',stripe:'#f4f5f7',seat:'#7b3fe4'}];
+const T={actual:'Ahora (v65)',A:'A · pocas líneas',B:'B · solo contorno y bordes de piezas'};
+let cols='';for(const k of ['actual','A','B'])cols+=`<div class="col"><h3>${T[k]}</h3><div id="c_${k}"></div></div>`;
+let js='';for(const k of ['actual','A','B']){const M=fs.readFileSync(maps[k],'utf8');js+=`(function(){const SKI_MAP=${M};${src};skiMapLoad(()=>{for(const p of P){const d=skiPaint(p);const c=document.createElement('canvas');c.width=d.width;c.height=d.height;c.getContext('2d').putImageData(d,0,0);document.getElementById('c_${k}').append(c);}window.__n=(window.__n||0)+1;});})();`;}
+const html=`<!doctype html><html><head><meta charset=utf8><style>body{margin:0;background:#0a1630;font-family:Arial}.w{display:flex;gap:10px;padding:10px;width:1180px}.col{flex:1;background:linear-gradient(180deg,#9fdcf5 0%,#d8f2fb 30%,#3cc3dd 31%,#1488c8 100%);border-radius:14px;padding:6px}.col h3{margin:4px 6px 6px;color:#0f2448;font-size:17px}canvas{width:100%;display:block;margin-bottom:6px;filter:drop-shadow(0 6px 6px rgba(0,20,60,.3))}</style></head><body><div class="w">${cols}</div><script>const P=${JSON.stringify(P)};${js}</script></body></html>`;
+fs.writeFileSync('t127.html',html);
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:1200,height:800}})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));await p.goto('file://'+process.cwd()+'/t127.html');await p.waitForFunction(()=>window.__n===3);await p.waitForTimeout(200);await p.screenshot({path:'t127.png',fullPage:true});console.log(JSON.stringify(errs));await b.close();})();
