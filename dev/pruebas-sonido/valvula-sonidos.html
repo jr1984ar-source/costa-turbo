@@ -1,0 +1,93 @@
+<title>Sonidos de Válvula</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500&display=swap">
+<style>
+/* Una sola columna tipo panel del juego: mar oscuro, botones grandes para el dedo. Look oscuro a propósito, igual que Costa Turbo. */
+:root{
+  --bg:#0a1630; --panel:#13254a; --line:rgba(255,255,255,.16); --ink:#ffffff; --dim:rgba(255,255,255,.66);
+  --orange:#ff7a1a; --cyan:#33d6ff; --gold:#ffc93c;
+  --cond:"Saira Condensed","Arial Narrow",system-ui,sans-serif; --body:Saira,system-ui,sans-serif;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 28px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.18em;color:var(--cyan);margin:0}
+h1{font-family:var(--cond);font-weight:800;font-size:clamp(30px,9vw,40px);line-height:1;margin:4px 0 0;letter-spacing:.02em;text-wrap:balance}
+.note{margin:0;color:var(--dim);font-size:14px;line-height:1.4}
+.seg{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.seg span{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.12em;color:var(--dim);margin-right:4px}
+.seg button{font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.06em;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--dim);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--cyan);border-color:var(--cyan);color:#06213a}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.snd{position:relative;overflow:hidden;text-align:left;border:1px solid var(--line);border-radius:16px;background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,.03));color:var(--ink);padding:14px;min-height:118px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;cursor:pointer;font:inherit}
+.snd:active{transform:scale(.97)}
+.snd:focus-visible,.seg button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.snd b{font-family:var(--cond);font-weight:800;font-size:26px;line-height:1;letter-spacing:.03em}
+.snd small{font-size:13px;color:var(--dim);line-height:1.25}
+.snd.new{border-color:rgba(255,122,26,.55);background:linear-gradient(160deg,rgba(255,122,26,.22),rgba(255,122,26,.05))}
+.snd.new b{color:var(--orange)}
+.snd .wave{position:absolute;left:0;bottom:0;height:4px;width:0;background:var(--orange)}
+.snd.old .wave{background:var(--dim)}
+.snd.play .wave{animation:run var(--d,.5s) linear forwards}
+@keyframes run{to{width:100%}}
+.tag{align-self:flex-start;font-family:var(--cond);font-weight:700;font-size:11px;letter-spacing:.14em;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.1);color:var(--dim)}
+.snd.new .tag{background:rgba(255,122,26,.2);color:var(--gold)}
+@media (prefers-reduced-motion:reduce){.snd.play .wave{animation:none;width:100%}}
+</style>
+
+<div class="wrap">
+  <div>
+    <p class="eyebrow">COSTA TURBO · PRUEBA DE SONIDO</p>
+    <h1>Válvula de descarga</h1>
+  </div>
+  <p class="note">Toca cada botón para oír el «psshh» al soltar el acelerador. Sube el volumen; si no suena, quita el modo silencio del iPhone.</p>
+  <div class="seg" role="group" aria-label="Velocidad al soltar el acelerador">
+    <span>VELOCIDAD AL SOLTAR</span>
+    <button id="spHi" aria-pressed="true">A TOPE</button>
+    <button id="spMid" aria-pressed="false">MEDIA</button>
+  </div>
+  <div class="grid">
+    <button class="snd old" data-s="0" style="--d:.4s"><span class="tag">AHORA</span><b>Actual</b><small>El sonido que tiene ahora el juego.</small><i class="wave"></i></button>
+    <button class="snd new" data-s="1" style="--d:.45s"><span class="tag">NUEVO</span><b>Stage 1</b><small>Psshh corto con golpe al soltar.</small><i class="wave"></i></button>
+    <button class="snd new" data-s="2" style="--d:.75s"><span class="tag">NUEVO</span><b>Stage 2</b><small>Más fuerte y largo, con el silbido del turbo bajando.</small><i class="wave"></i></button>
+    <button class="snd new" data-s="3" style="--d:.95s"><span class="tag">NUEVO</span><b>Stage 3</b><small>De carreras: psshh y «tu-tu-tu».</small><i class="wave"></i></button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+let ctx=null,out=null,noise=null,sp=1;
+function init(){if(ctx){if(ctx.state==='suspended')ctx.resume();return;}
+ try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+ const AC=window.AudioContext||window.webkitAudioContext;ctx=new AC();
+ out=ctx.createDynamicsCompressor();out.threshold.value=-10;out.ratio.value=4;const mg=ctx.createGain();mg.gain.value=.9;out.connect(mg);mg.connect(ctx.destination);
+ const len=ctx.sampleRate*2;noise=ctx.createBuffer(1,len,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;}
+function hiss(o){const t0=o.at,s=ctx.createBufferSource();s.buffer=noise;
+ const f=ctx.createBiquadFilter();f.type=o.ft||'bandpass';f.frequency.setValueAtTime(o.f,t0);if(o.f2)f.frequency.exponentialRampToValueAtTime(o.f2,t0+o.t);f.Q.value=o.q==null?.7:o.q;
+ let node=f;if(o.hp){const h=ctx.createBiquadFilter();h.type='highpass';h.frequency.value=o.hp;f.connect(h);node=h;}
+ const g=ctx.createGain(),a=o.a||.008;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(o.v,t0+a);if(o.hold)g.gain.setValueAtTime(o.v,t0+a+o.hold);g.gain.exponentialRampToValueAtTime(.0001,t0+o.t);
+ s.connect(f);node.connect(g);g.connect(out);s.start(t0,Math.random());s.stop(t0+o.t+.05);}
+function tone(o){const t0=o.at,os=ctx.createOscillator();os.type=o.w||'sine';os.frequency.setValueAtTime(o.f,t0);if(o.f2)os.frequency.exponentialRampToValueAtTime(o.f2,t0+o.t);
+ const g=ctx.createGain(),a=o.a||.01;g.gain.setValueAtTime(.0001,t0);g.gain.exponentialRampToValueAtTime(o.v,t0+a);g.gain.exponentialRampToValueAtTime(.0001,t0+o.t);
+ os.connect(g);g.connect(out);os.start(t0);os.stop(t0+o.t+.05);}
+// sonido actual del juego
+function oldBov(){const t0=ctx.currentTime+.02;hiss({at:t0,ft:'highpass',f:2500,f2:5000,t:.4,v:.22,a:.01,q:.7});}
+// nuevo: golpe + aire que baja de tono + silbido del turbo apagándose (+ tu-tu-tu en Stage 3)
+function newBov(st,speed){const t0=ctx.currentTime+.02,k=[0,.85,1,1.1][st]*(.55+.45*speed),dur=[0,.42,.72,.9][st];
+ hiss({at:t0,ft:'bandpass',f:2300,q:.9,t:.06,v:.55*k,a:.002});
+ hiss({at:t0,ft:'bandpass',f:6800,f2:1700,q:.75,hp:850,t:dur,v:.34*k,a:.006,hold:dur*.14});
+ hiss({at:t0+.01,ft:'lowpass',f:1500,f2:480,t:dur*.8,v:.13*k,a:.012});
+ if(st>=2)tone({at:t0,w:'sine',f:3200,f2:1300,t:.09,v:.05*k,a:.004});
+ tone({at:t0,w:'sine',f:7400,f2:2500,t:dur*1.35,v:(st>1?.045:.03)*k,a:.012});
+ if(st===3){let t=t0+.06;for(let i=0;i<9;i++){const fall=1-i/11;hiss({at:t,ft:'lowpass',f:1150,f2:620,q:1,t:.036,v:.24*k*fall,a:.003});tone({at:t,w:'sine',f:98,f2:70,t:.045,v:.13*k*fall,a:.003});t+=.04+i*.006;}}}
+const bH=document.getElementById('spHi'),bM=document.getElementById('spMid');
+function setSp(v){sp=v;bH.setAttribute('aria-pressed',String(v===1));bM.setAttribute('aria-pressed',String(v!==1));}
+bH.addEventListener('click',()=>setSp(1));bM.addEventListener('click',()=>setSp(.5));
+document.querySelectorAll('.snd').forEach(b=>b.addEventListener('click',()=>{init();const st=+b.dataset.s;if(st===0)oldBov();else newBov(st,sp);
+ b.classList.remove('play');void b.offsetWidth;b.classList.add('play');}));
+})();
+</script>

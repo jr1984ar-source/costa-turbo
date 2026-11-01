@@ -1,0 +1,18 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a),S=async n=>{await W(350);await p.screenshot({path:'v16-'+n+'.png'});};
+ const pads=()=>E(()=>getComputedStyle(document.getElementById('padL')).display);const log=[];
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1200);await S('title');log.push('title pads '+await pads());
+ await p.tap('#bPlay');await p.tap('#aGo');log.push('garage pads '+await pads());await p.fill('#aName','').catch(()=>{});
+ await p.tap('#gGo');await S('map');log.push('map pads '+await pads());
+ await p.tap('#mGo');await W(1500);log.push('race pads '+await pads());await S('race');
+ await E(()=>__T.togglePause());await W(200);log.push('pause pads '+await pads());await p.tap('#pResume');await W(300);
+ await E(()=>{__G.zi=9;__G.P.rank=1;__G.score=48000;__T.zoneWin();});await W(500);await S('result');await p.tap('#rGo');await S('champ');
+ log.push('champ: '+await E(()=>document.getElementById('cRank').textContent+' | '+document.getElementById('cNext').textContent));
+ await p.tap('#cRk');await S('rank');log.push('rank: '+await E(()=>[...document.querySelectorAll('#rankList li')].map(l=>l.textContent).join(' / ')));
+ await p.tap('#rkBk');log.push('rank back -> '+await E(()=>[...document.querySelectorAll('.screen')].filter(s=>!s.hidden).map(s=>s.id).join()));
+ await p.tap('#cNext');await W(300);log.push('vuelta2 '+await E(()=>__G.zi+'/'+__G.lap+' '+document.getElementById('mZoneN').textContent));
+ await p.tap('#mGo');await W(3700);await E(()=>{__G.score=61000;__G.lives=0;__T.gameOver();});await W(400);
+ log.push('over form hidden: '+await E(()=>document.getElementById('nameForm').hidden));await p.tap('#nameForm button[type=submit]');await W(400);
+ log.push('rank2: '+await E(()=>[...document.querySelectorAll('#rankList li')].map(l=>l.textContent).join(' / ')));
+ console.log(log.join('\n'),JSON.stringify(errs));await b.close();})();

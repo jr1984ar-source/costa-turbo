@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844}});await ctx.addInitScript(()=>{try{if(!sessionStorage.getItem('x')){localStorage.setItem('ct_moto','7');sessionStorage.setItem('x',1);}}catch(e){}});
+ const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await p.waitForTimeout(1200);
+ const a=await p.evaluate(()=>__G.moto);
+ await p.click('#bPlay');await p.click('#aGo');await p.click('#gGo');await p.waitForTimeout(200);await p.click('#mGo');await p.waitForTimeout(3700);
+ await p.evaluate(()=>{__G.lives=0;__T.gameOver();});await p.waitForTimeout(400);
+ const over=await p.evaluate(()=>({vis:!document.getElementById('scrOver').hidden,info:document.getElementById('oInfo').textContent}));
+ await p.reload();await p.waitForTimeout(1000);const w=await p.evaluate(()=>({m:__G.money,cash:document.getElementById('uCash').textContent,prog:document.getElementById('uProg').textContent}));
+ console.log(a,JSON.stringify(over),JSON.stringify(w),JSON.stringify(errs));await b.close();})();

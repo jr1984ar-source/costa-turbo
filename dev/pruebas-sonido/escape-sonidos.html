@@ -1,0 +1,130 @@
+<title>Sonidos de Escape</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500&display=swap">
+<style>
+/* Banco de pruebas de motor: una columna, selector arriba y el botón de acelerar grande abajo, como en el juego. Look oscuro a propósito, igual que Costa Turbo. */
+:root{
+  --bg:#0a1630; --panel:#13254a; --line:rgba(255,255,255,.16); --ink:#ffffff; --dim:rgba(255,255,255,.66);
+  --orange:#ff7a1a; --orange2:#ff9a3d; --cyan:#33d6ff; --gold:#ffc93c; --red:#ff4757;
+  --cond:"Saira Condensed","Arial Narrow",system-ui,sans-serif; --body:Saira,system-ui,sans-serif;
+  color-scheme:dark;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 28px}
+.wrap{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.18em;color:var(--cyan);margin:0}
+h1{font-family:var(--cond);font-weight:800;font-size:clamp(30px,9vw,40px);line-height:1;margin:4px 0 0;letter-spacing:.02em;text-wrap:balance}
+.note{margin:0;color:var(--dim);font-size:14px;line-height:1.4}
+.grp{display:flex;flex-direction:column;gap:6px}
+.grp>span{font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.14em;color:var(--dim)}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1;min-width:0;font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.05em;padding:10px 8px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--dim);cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--cyan);border-color:var(--cyan);color:#06213a}
+.seg.ver button[aria-pressed="true"][data-v="new"]{background:var(--orange);border-color:var(--orange);color:#fff}
+.desc{margin:0;min-height:40px;font-size:14px;line-height:1.35;color:var(--ink)}
+.desc b{font-family:var(--cond);font-weight:800;letter-spacing:.04em;color:var(--gold)}
+.bench{display:flex;align-items:center;gap:16px;padding:14px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02))}
+.acc{flex:none;width:118px;height:118px;border-radius:50%;border:0;display:grid;place-items:center;font-family:var(--cond);font-weight:800;font-size:16px;letter-spacing:.06em;color:#fff;cursor:pointer;touch-action:none;
+  background:radial-gradient(circle at 50% 30%,#ffb067,var(--orange) 55%,#d4520a);box-shadow:0 10px 22px rgba(255,122,26,.45),inset 0 -6px 12px rgba(0,0,0,.18),inset 0 2px 0 rgba(255,255,255,.35)}
+.acc.on{transform:scale(.93);filter:brightness(1.12)}
+.acc svg{width:22px;height:22px;fill:#fff;display:block;margin:0 auto 2px}
+.meter{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
+.meter small{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.14em;color:var(--dim)}
+.bar{height:12px;border-radius:6px;background:rgba(255,255,255,.12);overflow:hidden}
+.bar i{display:block;height:100%;width:18%;border-radius:6px;background:linear-gradient(90deg,var(--cyan),var(--gold) 70%,var(--red))}
+.rpm{font-family:var(--cond);font-weight:800;font-size:30px;line-height:1;font-variant-numeric:tabular-nums}
+.row{display:flex;gap:8px}
+.btn{flex:1;font-family:var(--cond);font-weight:800;font-size:16px;letter-spacing:.06em;padding:12px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);color:#fff;cursor:pointer}
+.btn.p{border:0;background:linear-gradient(var(--orange2),#ff6a00)}
+.seg button:focus-visible,.btn:focus-visible,.acc:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.acc.on{transform:none}}
+</style>
+
+<div class="wrap">
+  <div>
+    <p class="eyebrow">COSTA TURBO · PRUEBA DE SONIDO</p>
+    <h1>Tubos de escape</h1>
+  </div>
+  <p class="note">Elige versión y escape, y mantén pulsado ACELERAR. Suéltalo con el motor arriba para oír los petardeos del Stage 3. Sube el volumen; si no suena, quita el modo silencio del iPhone.</p>
+  <div class="grp"><span>VERSIÓN</span>
+    <div class="seg ver" role="group" aria-label="Versión del sonido">
+      <button data-v="old" aria-pressed="false">AHORA</button>
+      <button data-v="new" aria-pressed="true">NUEVO</button>
+    </div>
+  </div>
+  <div class="grp"><span>ESCAPE</span>
+    <div class="seg st" role="group" aria-label="Escape">
+      <button data-s="0" aria-pressed="false">DE SERIE</button>
+      <button data-s="1" aria-pressed="false">STAGE 1</button>
+      <button data-s="2" aria-pressed="false">STAGE 2</button>
+      <button data-s="3" aria-pressed="true">STAGE 3</button>
+    </div>
+  </div>
+  <p class="desc" id="desc"></p>
+  <div class="bench">
+    <button class="acc" id="acc" aria-label="Acelerar (mantener pulsado)"><span><svg viewBox="0 0 20 20"><path d="M10 2 18 12h-5v6H7v-6H2z"/></svg>ACELERAR</span></button>
+    <div class="meter"><small>VUELTAS DEL MOTOR</small><div class="bar"><i id="bar"></i></div><div class="rpm" id="rpm">PARADO</div></div>
+  </div>
+  <div class="row"><button class="btn p" id="auto">ACELERÓN SOLO</button><button class="btn" id="stop">APAGAR</button></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const DESC={
+ old:['Motor de serie, tal como suena ahora.','Ahora: un poco más sucio y algo más fuerte.','Ahora: más sucio y más fuerte.','Ahora: el más sucio y fuerte, sin más.'],
+ new:['<b>DE SERIE</b> · motor normal, sin cambios.','<b>STAGE 1</b> · más grave y con más cuerpo.','<b>STAGE 2</b> · deportivo: ronco, con «brrr» en bajas y petardeos al soltar.','<b>STAGE 3</b> · de carreras: muy grave y rasposo, con petardazos fuertes al soltar.']};
+let ver='new',st=3,ctx=null,out=null,noise=null,eng=null,thr=false,r=0,last=0,autoT=0;
+const $=s=>document.querySelector(s);
+function init(){if(ctx){if(ctx.state==='suspended')ctx.resume();return;}
+ try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+ const AC=window.AudioContext||window.webkitAudioContext;ctx=new AC();
+ const comp=ctx.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;comp.connect(ctx.destination);out=ctx.createGain();out.gain.value=.8;out.connect(comp);
+ const len=ctx.sampleRate*2;noise=ctx.createBuffer(1,len,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<len;i++)d[i]=Math.random()*2-1;}
+function curve(k){const n=1024,a=new Float32Array(n);for(let i=0;i<n;i++){const x=i*2/n-1;a[i]=(1+k)*x/(1+k*Math.abs(x));}return a;}
+function startEngine(){init();if(eng)return;const c=ctx;
+ const o1=c.createOscillator();o1.type='sawtooth';const o2=c.createOscillator();o2.type='square';const o3=c.createOscillator();o3.type='triangle';
+ const mx=c.createGain();mx.gain.value=.5;const ws=c.createWaveShaper();ws.curve=curve(2);const lp=c.createBiquadFilter();lp.type='lowpass';lp.Q.value=3;lp.frequency.value=500;
+ const am=c.createGain();am.gain.value=1;const g=c.createGain();g.gain.value=0;
+ o1.connect(mx);o2.connect(mx);o3.connect(mx);mx.connect(ws);ws.connect(lp);lp.connect(am);am.connect(g);g.connect(out);
+ const lfo=c.createOscillator();lfo.type='square';const ld=c.createGain();ld.gain.value=0;lfo.connect(ld);ld.connect(am.gain);
+ const sub=c.createOscillator();sub.type='sine';const slp=c.createBiquadFilter();slp.type='lowpass';slp.frequency.value=220;const sg=c.createGain();sg.gain.value=0;sub.connect(slp);slp.connect(sg);sg.connect(out);
+ const rs=c.createOscillator();rs.type='sawtooth';const rhp=c.createBiquadFilter();rhp.type='bandpass';rhp.frequency.value=1500;rhp.Q.value=.9;const rg=c.createGain();rg.gain.value=0;rs.connect(rhp);rhp.connect(rg);rg.connect(out);
+ const wn=c.createBufferSource();wn.buffer=noise;wn.loop=true;const wf=c.createBiquadFilter();wf.type='bandpass';wf.frequency.value=900;wf.Q.value=.6;const wg=c.createGain();wg.gain.value=0;wn.connect(wf);wf.connect(wg);wg.connect(out);
+ [o1,o2,o3,lfo,sub,rs,wn].forEach(n=>n.start());eng={o1,o2,o3,ws,lp,am,g,lfo,ld,sub,sg,rs,rg,wf,wg,key:''};last=performance.now();requestAnimationFrame(tick);}
+function stopEngine(){if(!eng)return;const e=eng;eng=null;const t=ctx.currentTime;[e.g,e.sg,e.rg,e.wg].forEach(g=>g.gain.setTargetAtTime(0,t,.05));[e.o1,e.o2,e.o3,e.lfo,e.sub,e.rs].forEach(n=>{try{n.stop(t+.4);}catch(_){}});r=0;thr=false;$('#acc').classList.remove('on');$('#rpm').textContent='PARADO';$('#bar').style.width='0%';}
+function set(rpm,spd,th){const e=eng,t=ctx.currentTime,f=30+rpm*92,x=st,nw=ver==='new';
+ const key=ver+st;if(e.key!==key){e.ws.curve=curve(nw?2+x*3.4:2+x*2.5);e.key=key;}
+ e.o1.frequency.setTargetAtTime(f,t,.05);e.o2.frequency.setTargetAtTime(f*.5,t,.05);e.o3.frequency.setTargetAtTime(f*2.01,t,.05);
+ e.lp.frequency.setTargetAtTime(nw?(240+rpm*2000)*(1+x*.16):(260+rpm*2100)*(1+x*.1),t,.06);
+ const base=.03+th*.042+rpm*.042;e.g.gain.setTargetAtTime(base*(nw?[1,1.15,1.32,1.5][x]:1+x*.18),t,.08);
+ e.sub.frequency.setTargetAtTime(f*.5,t,.05);e.sg.gain.setTargetAtTime(nw?[0,.03,.045,.06][x]*(.45+rpm*.55):0,t,.08);
+ e.rs.frequency.setTargetAtTime(f*1.5,t,.05);e.rg.gain.setTargetAtTime(nw?[0,0,.009,.017][x]*rpm*(th?1:.5):0,t,.08);
+ e.lfo.frequency.setTargetAtTime(f*.5,t,.05);e.ld.gain.setTargetAtTime(nw?[0,.12,.22,.32][x]*(1.2-Math.min(1,rpm)*.6):0,t,.08);
+ e.wg.gain.setTargetAtTime(spd*.16,t,.06);e.wf.frequency.setTargetAtTime(500+spd*1400,t,.08);}
+function burst(at,v){const c=ctx;const mk=(ft,fr,q,a,dur,vv)=>{const s=c.createBufferSource();s.buffer=noise;const f=c.createBiquadFilter();f.type=ft;f.frequency.value=fr;f.Q.value=q;const gg=c.createGain();gg.gain.setValueAtTime(.0001,at);gg.gain.exponentialRampToValueAtTime(vv,at+a);gg.gain.exponentialRampToValueAtTime(.0001,at+dur);s.connect(f);f.connect(gg);gg.connect(out);s.start(at,Math.random());s.stop(at+dur+.03);};
+    mk('bandpass',2800+Math.random()*900,.7,.001,.014,v*1.1);mk('lowpass',1300+Math.random()*700,.7,.002,.05,v*.95);
+    const o=c.createOscillator();o.type='sine';o.frequency.setValueAtTime(115,at);o.frequency.exponentialRampToValueAtTime(42,at+.07);const og=c.createGain();og.gain.setValueAtTime(.0001,at);og.gain.exponentialRampToValueAtTime(v*1.05,at+.003);og.gain.exponentialRampToValueAtTime(.0001,at+.08);o.connect(og);og.connect(out);o.start(at);o.stop(at+.1);}
+function pops(level){if(ver!=='new'||st<2||level<.55)return;const n=st===3?9+Math.floor(Math.random()*4):4+Math.floor(Math.random()*2);let t=ctx.currentTime+.05;for(let i=0;i<n;i++){burst(t,(st===3?.95:.65)*(.6+Math.random()*.4)*(.6+level*.4));t+=.045+Math.random()*.12;}}
+function tick(now){if(!eng)return;const dt=Math.min(.05,(now-last)/1000);last=now;
+ if(autoT>0){autoT-=dt;if(autoT<=1.2&&thr){setThr(false);}}
+ if(thr)r+=(1-r)*dt*.9;else r-=r*dt*.75;r=Math.max(0,Math.min(1,r));
+ const rpm=Math.min(1.3,.18+r*.72+(thr?.12:0));set(rpm,r,thr?1:0);
+ $('#bar').style.width=Math.round(rpm/1.3*100)+'%';$('#rpm').textContent=Math.round(800+rpm*6200).toLocaleString('es-ES')+' RPM';
+ requestAnimationFrame(tick);}
+function setThr(v){if(v===thr)return;const was=thr;thr=v;$('#acc').classList.toggle('on',v);if(was&&!v)pops(r);}
+function desc(){$('#desc').innerHTML=DESC[ver][st];}
+document.querySelectorAll('.ver button').forEach(b=>b.addEventListener('click',()=>{ver=b.dataset.v;document.querySelectorAll('.ver button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));desc();}));
+document.querySelectorAll('.st button').forEach(b=>b.addEventListener('click',()=>{st=+b.dataset.s;document.querySelectorAll('.st button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));desc();}));
+const acc=$('#acc');
+acc.addEventListener('pointerdown',e=>{e.preventDefault();startEngine();autoT=0;try{acc.setPointerCapture(e.pointerId);}catch(_){}setThr(true);});
+['pointerup','pointercancel','lostpointercapture'].forEach(k=>acc.addEventListener(k,()=>setThr(false)));
+acc.addEventListener('contextmenu',e=>e.preventDefault());
+acc.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();startEngine();setThr(true);}});acc.addEventListener('keyup',e=>{if(e.key===' '||e.key==='Enter')setThr(false);});
+$('#auto').addEventListener('click',()=>{startEngine();autoT=3.4;setThr(true);});
+$('#stop').addEventListener('click',stopEngine);
+desc();
+})();
+</script>

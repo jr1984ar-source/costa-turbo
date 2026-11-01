@@ -1,0 +1,17 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2,hasTouch:true,isMobile:true});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ let dlg=0;p.on('dialog',d=>{dlg++;d.accept();});
+ const S=async n=>{await p.waitForTimeout(300);await p.screenshot({path:'v14-'+n+'.png'});};
+ const cur=()=>p.evaluate(()=>[...document.querySelectorAll('.screen')].filter(s=>!s.hidden).map(s=>s.id).join(','));
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await p.waitForTimeout(1200);
+ const log=[];
+ await p.tap('#bPlay');await S('pilot');await p.tap('#aGo');await S('garage');await p.tap('#gGo');await S('map');log.push('map:'+await cur());
+ await p.tap('#mBk');log.push('mBk->'+await cur());await p.tap('#gGo');log.push('gGo->'+await cur()+' zi'+await p.evaluate(()=>__G.zi));
+ await p.tap('#mGo');await p.waitForTimeout(3500);await p.evaluate(()=>{__G.P.rank=1;__T.zoneWin();});await p.waitForTimeout(400);await S('result');
+ await p.tap('#rBk');log.push('rBk->'+await cur()+' zi'+await p.evaluate(()=>__G.zi));
+ await p.tap('#mBk');await S('garage-cont');log.push('gGoTxt:'+await p.evaluate(()=>document.getElementById('gGo').textContent));await p.tap('#gGo');log.push('cont zi'+await p.evaluate(()=>__G.zi+' lives'+__G.lives));
+ await p.tap('#scrMap [data-home]');log.push('home dlg'+dlg+' ->'+await cur());
+ await p.tap('#bShop');await S('shop');await p.tap('#scrShop [data-home]');log.push('shopHome->'+await cur());
+ await p.tap('#bRank');await S('rank');await p.tap('#rkBk');log.push('rank->'+await cur());
+ await p.tap('#bFree');await p.tap('#aGo');await p.tap('#gGo');await S('free');await p.evaluate(()=>document.querySelectorAll('.fz')[3].click());await p.tap('#mBk');log.push('freeMapBack->'+await cur());
+ console.log(log.join('\n'),JSON.stringify(errs));await b.close();})();
