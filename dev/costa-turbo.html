@@ -607,7 +607,7 @@ const ZONES=[
  {name:'EL PUERTO',obj:'time',goal:'Llega a la meta antes de que se acabe el tiempo.',len:15000,riv:5,bar:'jj',theme:'port',tod:'morning',skill:.84,pace:205,piri:1},
  {name:'LA CALA',obj:'slalom',goal:'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.',len:11000,riv:0,bar:'roxy',theme:'cove',tod:'noon',pace:170},
  {name:'CARRERA AL MAGO',obj:'race3',goal:'Llega a El Mago entre los 3 primeros. La costa queda a la derecha, la isla la puedes rodear por los dos lados y antes de la meta hay muchos barcos fondeados.',len:16000,riv:5,bar:null,theme:'cove',tod:'noon',skill:.88,piri:1,island:1,anchored:1,finish:'EL MAGO',mirror:1},
- {name:'GRAN CARRERA',obj:'race3',goal:'Termina entre los 3 primeros.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9,piri:1},
+ {name:'GRAN CARRERA',alt:1,obj:'race3',goal:'Termina entre los 3 primeros.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9,piri:1},
  {name:'PERSECUCIÓN',obj:'chase',goal:'Llega a la meta sin que la policía te pille 3 veces.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'afternoon'},
  {name:'OLAS GIGANTES',obj:'jumps',giant:1,goal:'Haz 6 saltos y llega a tiempo. Las olas gigantes, cógelas rápido y recto: si vas lento o torcido, vuelcas.',len:15000,riv:0,bar:'jj',theme:'beach',tod:'sunset',pace:200,piri:1},
  {name:'LAS RAMPAS',obj:'jumps',needJ:10,goal:'Haz 10 saltos de rampa y llega antes de que se acabe el tiempo. Mar abierto, sin costa.',len:15000,riv:0,bar:null,theme:'open',tod:'noon',pace:195,ramps:1},
@@ -617,7 +617,7 @@ const ZONES=[
  {name:'SA CALOBRA',obj:'time',goal:'Cruza el cañón del Torrent de Pareis antes de que se acabe el tiempo. Paredes de roca a los dos lados y muy poco sitio.',len:13000,riv:0,bar:null,theme:'tram',tod:'noon',pace:185,canyon:1,finish:'SA CALOBRA'},
  {name:'CABRERA',obj:'race3',goal:'Termina entre los 3 primeros por el parque nacional de Cabrera. No entres en las zonas protegidas de boyas amarillas: multa de 500 PTA.',len:16000,riv:5,bar:null,theme:'cove',tod:'afternoon',skill:.9,cab:1,finish:'CABRERA'},
  {name:'PORTALS',obj:'time',goal:'Cruza el puerto de Portals antes de que se acabe el tiempo esquivando los superyates que entran y salen.',len:14000,riv:0,bar:null,theme:'port',tod:'afternoon',pace:195,supers:1,finish:'PORTALS'},
- {name:'TORMENTA',obj:'time',goal:'Cruza la tormenta de noche antes de que se acabe el tiempo.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'night',pace:195},
+ {name:'TORMENTA',alt:1,obj:'time',goal:'Cruza la tormenta de noche antes de que se acabe el tiempo.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'night',pace:195},
  {name:'CARRERA DE BOYAS',obj:'race3',goal:'Termina entre los 3 primeros. Slalom de verdad: rodea cada boya por fuera, la naranja por la izquierda y la verde por la derecha. Si fallas, 2 segundos parado.',len:16000,riv:5,bar:null,theme:'open',tod:'afternoon',skill:.9,turns:1},
  {name:'FORMENTERA',obj:'race3',goal:'Termina entre los 3 primeros hasta la punta de Ses Illetes. Agua transparente, muchos barcos fondeados y praderas de posidonia que te frenan. A mitad, el Beso Beach.',len:16000,riv:5,bar:'beso',theme:'form',tod:'tropical',skill:.9,form:1,shallowW:260,finish:'SES ILLETES'},
  {name:'BAHAMAS',obj:'race3',goal:'Termina entre los 3 primeros entre los cayos. Esquiva los cerdos nadando, las mantarrayas y los tiburones nodriza.',len:16000,riv:5,bar:null,theme:'open',tod:'tropical',skill:.9,bah:1,cays:1,finish:'EXUMAS'},
@@ -947,11 +947,15 @@ function buildZone(zi,lap){
   shoreU=u=>{let x=mtn(u);const cv=cove(u);if(cv){const fl=56+8*n1(u/90);x=lerp(x,Math.min(x,fl),Math.pow(sm(cv.w,cv.w*.3,cv.d),.7));}return x;};coveF=cove;
   kindU=u=>{const cv=cove(u);return cv&&cv.d<cv.w*.86?'cala':'mount';};}
  if(Z.theme==='open'){shoreU=u=>-(VW>WG?(VW-WG)/2:0);kindU=u=>'open';}
+ let altPres=null,altBase=null;if(Z.alt){const base=shoreU,n=5,sl=len/n;altBase=base;
+  altPres=(u,want)=>{u=Math.max(0,u);const k=Math.min(n-1,Math.floor(u/sl));if((k%2)!==want)return 0;const din=k===0?1e9:u-k*sl,dout=k===n-1?1e9:(k+1)*sl-u;return Math.min(sm(0,420,din),sm(0,420,dout));};
+  shoreU=u=>lerp(-90,base(u),altPres(u,0));}
  const zone={Z,zi,lap,len,lenK,seed,shore:y=>shoreU(-y),kind:y=>kindU(-y),barY:-barU,bar:Z.bar,objs:[],movers:[],decos:[],gatesTotal:0,finishY:-len,checks:[]};
  // force bar region kind
  if(Z.bar==='jj'){const k=Math.floor(barU/SEG);zone.kind=y=>{const u=-y;return Math.abs(u-barU)<240?'prom':kindU(u);};}
  if(Z.bar==='roxy'){zone.kind=y=>{const u=-y;return Math.abs(u-barU)<240?'cliff':kindU(u);};}
- zone.rwall=null;if(Z.canyon){const nw=noise1(seed+21);zone.rwall=y=>{const u=-y,k=sm(500,1000,u)*sm(len-300,len-800,u),w=125+28*nw(u/380)+10*nw(u/90);return zone.shore(y)+lerp(560,w,k);};}
+ zone.rwall=null;if(Z.alt){zone.rwall=y=>{const u=-y;return lerp((VW>WG?WG+(VW-WG)/2:WG)+600,(VW>WG?WG+(VW-WG)/2:WG)-altBase(u)*.92,altPres(u,1));};}
+ if(Z.canyon){const nw=noise1(seed+21);zone.rwall=y=>{const u=-y,k=sm(500,1000,u)*sm(len-300,len-800,u),w=125+28*nw(u/380)+10*nw(u/90);return zone.shore(y)+lerp(560,w,k);};}
  zone.cliffK=y=>{if(!coveF)return zone.kind(y)==='mount'?1:0;const cv=coveF(-y);return cv?sm(cv.w*.5,cv.w*.9,cv.d):1;};
  zone.swimX=y=>zone.kind(y)==='beach'?zone.shore(y)+38:null;
  const O=zone.objs,M=zone.movers;
@@ -974,7 +978,7 @@ function buildZone(zi,lap){
   resv.push([cu-260,cu+220]);}}
  zone.waves=[];if(Z.giant){for(const f of(Array.isArray(Z.giant)?Z.giant:[.2,.34,.48,.62,.85,.88,.91])){const cu=Math.round(len*f);zone.waves.push({y:-cu,act:0,side:1,done:0,sp:44+r()*16,ph:r()*6,fade:1});resv.push([cu-240,cu+260]);}}
  if(Z.anchored){resv.push([len-1750,len+10]);for(let au=len-1650;au<len-250;au+=130+r()*40){const L=zone.shore(-au)+20,R=RX-18,gap=lerp(L+50,R-50,r()),xs=[];for(let k=0;k<12&&xs.length<3;k++){const x=lerp(L,R,r());if(Math.abs(x-gap)<58||xs.some(v=>Math.abs(v-x)<46))continue;xs.push(x);}for(const x of xs)add({t:r()<.6?'sail':'motor',x,y:-au+(r()-.5)*30,rot:(r()-.5)*.8});}}
- if(Z.piri){let pu=Math.round(len*.3);while(isRes(pu)||Math.abs(pu-barU)<400)pu+=300;const L=zone.shore(-pu),x=lerp(L+60,RX-110,r());add({t:'piri',x,y:-pu,rx:x+52,gift:0});resv.push([pu-200,pu+200]);}
+ if(Z.piri){let pu=Math.round(len*.3);while(isRes(pu)||Math.abs(pu-barU)<400)pu+=300;const L=Math.max(0,zone.shore(-pu)),x=lerp(L+60,Math.min(RX,zone.rwall?zone.rwall(-pu):RX)-110,r());add({t:'piri',x,y:-pu,rx:x+52,gift:0});resv.push([pu-200,pu+200]);}
  const wPat=Z.form?{coins:3,boat:2.6,yacht:1.2,rocks:.3,ramp:.8,kayak:.5,posi:2}:Z.bah?{coins:3,pig:2.2,ray:1,nurse:.8,ramp:.9,rocks:.3,yacht:.4}:Z.aus?{coins:3,ramp:6,surfer:2,coral:1.4,croc:.8,rocks:.4}:Z.canyon?{coins:3.4,rocks:2.4,ramp:.8,kayak:.8,boat:.4}:Z.cab?{coins:3,rocks:1.4,boat:1,yacht:.5,kayak:.6,ramp:1}:Z.supers?{coins:3,yacht:1.6,boat:1.4,ramp:1,kayak:.5,rocks:.3}:Z.obj==='slalom'?{coins:3,ramp:1,rocks:1.5,boat:1,yacht:.6,kayak:.6,patrol:.4}:Z.obj==='jumps'?{coins:3,ramp:8,rocks:1.5,boat:1,yacht:.8,kayak:.6,patrol:.7}:Z.obj==='chase'?{coins:3,ramp:1.4,rocks:2,boat:1.4,yacht:.7,kayak:.7,patrol:.4}:Z.floats?{coins:3,ramp:1.2,rocks:.6,boat:.6,yacht:1.2,kayak:.5,patrol:.6,float:3.4}:Z.theme==='tram'?{coins:3.4,ramp:1.3,rocks:2.6,boat:1.3,yacht:.6,kayak:1,patrol:.6}:{coins:3.5,ramp:1.5,rocks:1.6,boat:1.2,yacht:.8,kayak:.8,patrol:1};
  const pick=()=>{let s=0;for(const k in wPat)s+=wPat[k];let x=r()*s;for(const k in wPat){x-=wPat[k];if(x<=0)return k;}return 'coins';};
  let lastYacht=-2000,u=560,gateSide=0;
@@ -993,7 +997,7 @@ function buildZone(zi,lap){
  if(Z.obj==='slalom'){for(let gu=700;gu<len-300;gu+=520){if(!free(gu))continue;const L=zone.shore(-gu)+50,R=WG-50;gateSide^=1;const gx=gateSide?lerp(L,R,.36+r()*.08):lerp(L,R,.56+r()*.08);add({t:'gate',x:gx,y:-gu,w:108,done:0});zone.gatesTotal++;}}
  while(u<len-300){
   if(!free(u)){u+=160;continue;}
-  const L=zone.shore(-u)+36,R=Math.min(WG-24,zone.rwall?zone.rwall(-u)-30:999);let k=pick();if(k==='yacht'&&u-lastYacht<1500)k='coins';
+  const L=Math.max(24,zone.shore(-u)+36),R=Math.min(WG-24,zone.rwall?zone.rwall(-u)-30:999);let k=pick();if(k==='yacht'&&u-lastYacht<1500)k='coins';
   if(Z.obj==='slalom'&&(k==='rocks'||k==='boat')&&O.some(o=>o.t==='gate'&&Math.abs(o.y+u)<140))k='coins';
   if(k==='coins'){const n=6+(r()*4|0),x0=lerp(L+24,R-24,r()),sh=r();for(let i=0;i<n;i++){const x=sh<.4?x0:sh<.75?x0+Math.sin(i*.7)*34:x0+(i-n/2)*9;add({t:'coin',x:clamp(x,L+10,R-10),y:-u-i*28});}u+=n*28+80;}
   else if(k==='ramp'){const w=96+r()*40,x=lerp(L+w/2+6,R-w/2-6,r());add({t:'ramp',x,y:-u,w});for(let i=0;i<5;i++)add({t:'coin',x:x+(i-2)*0,y:-u-70-i*30,air:1});u+=260;}
@@ -1254,13 +1258,14 @@ function updateCraft(c,dt,ctl){const Zn=G.zone,st=c.st;
    c._tr=[];c.spin=0;}}}
  // shore & edge
  const sx=Zn.shore(c.y)+11;if(c.x<sx){c.x=sx;if(c.h<0)c.h=Math.abs(c.h)*.4;c.va=c.h;if(c.v>120&&c.air<=0){c.v*=.55;if(c.isP){Snd.bump();G.shake=4;}}}
+ {const lx=(VW>WG?-(VW-WG)/2:0)+11;if(c.x<lx){c.x=lx;if(c.h<0)c.h=Math.abs(c.h)*.4;c.va=c.h;c.v*=1-3*dt;}}
  if(Zn.rwall){const rw=Zn.rwall(c.y)-11;if(c.x>rw){c.x=rw;if(c.h>0)c.h=-Math.abs(c.h)*.4;c.va=c.h;if(c.v>120&&c.air<=0){c.v*=.55;if(c.isP){Snd.bump();G.shake=4;}}}}
  const ex=(VW>WG?WG+(VW-WG)/2:WG)-11;if(c.x>ex){c.x=ex;if(c.h>0)c.h=-Math.abs(c.h)*.4;c.va=c.h;c.v*=1-3*dt;}
  // trail for wake
  c.trailAcc+=Math.abs(c.prevY-c.y)+Math.abs(Math.sin(c.h)*c.v*dt);if(c.trailAcc>9){c.trailAcc=0;c.trail.unshift({x:c.x-Math.sin(c.h)*27,y:c.y+Math.cos(c.h)*27,h:c.h,t:0,a:c.air>0?0:clamp(c.v/200,0,1)});if(c.trail.length>(c.isP?26:18))c.trail.pop();}
  for(const p of c.trail)p.t+=dt;
 }
-function aiCtl(c,dt){const Zn=G.zone,L=Zn.shore(c.y-120)+30,R=Math.min(WG-26,Zn.rwall?Zn.rwall(c.y-120)-30:999);c.ai.re-=dt;
+function aiCtl(c,dt){const Zn=G.zone,L=Math.max((VW>WG?-(VW-WG)/2:0)+30,Zn.shore(c.y-120)+30),R=Math.min(WG-26,Zn.rwall?Zn.rwall(c.y-120)-30:999);c.ai.re-=dt;
  const ring=Zn.ring;
  if(ring&&!c.isP&&!c.fin){
   if(!c.pit&&c.y>ring.y&&c.y-ring.y<520){c.pit=1;c.slot=(G.pitSlots++)%5;}
@@ -1415,12 +1420,12 @@ function render(){
   ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1;ctx.setLineDash([4,6]);for(const x of[xl,xr]){ctx.beginPath();ctx.moveTo(x,camTop-10);ctx.lineTo(x,camTop+VH+10);ctx.stroke();}ctx.setLineDash([]);
   for(let y=Math.floor(camTop/36)*36;y<camTop+VH+36;y+=36)for(const x of[xl,xr]){ctx.fillStyle='rgba(0,20,50,.25)';ctx.beginPath();ctx.ellipse(x+2,y+3,6,3.5,0,0,TAU);ctx.fill();ctx.fillStyle='#ffd21a';ctx.beginPath();ctx.arc(x,y,4.6,0,TAU);ctx.fill();ctx.fillStyle='rgba(255,255,255,.65)';ctx.beginPath();ctx.arc(x-1.4,y-1.6,1.6,0,TAU);ctx.fill();}}
  else{const[x0]=chunkRange();for(let i=Math.floor(camTop/CH);i<=Math.floor((camTop+VH)/CH);i++){let c=chunks.get(i);if(!c){c=renderChunk(i);chunks.set(i,c);if(chunks.size>8){const far=[...chunks.keys()].sort((a,b)=>Math.abs(b-i)-Math.abs(a-i))[0];chunks.delete(far);}}ctx.drawImage(c,x0,i*CH,c.width/K,c.height/K);}}
- if(Zn.rwall){const xr=(VW>WG?WG+(VW-WG)/2:WG)+40,y0=camTop-20,y1=camTop+VH+20;
-  ctx.save();for(let y=Math.floor(y0/6)*6;y<y1;y+=6){const x=Zn.rwall(y);if(x>xr)continue;const gg=ctx.createLinearGradient(x-60,0,x,0);gg.addColorStop(0,'rgba(8,24,40,0)');gg.addColorStop(1,'rgba(8,24,40,.45)');ctx.fillStyle=gg;ctx.fillRect(x-60,y,61,6.5);}
-  ctx.beginPath();ctx.moveTo(xr,y0);for(let y=y0;y<=y1;y+=5)ctx.lineTo(Math.min(xr,Zn.rwall(y)),y);ctx.lineTo(xr,y1);ctx.closePath();const rg=ctx.createLinearGradient(0,0,80,0);ctx.fillStyle='#8c877d';ctx.fill();ctx.clip();
-  for(let cy=Math.floor(y0/26);cy<=Math.floor(y1/26);cy++)for(let k=0;k<5;k++){const h=hash2(cy,k,Zn.seed),x=Zn.rwall(cy*26)+4+h*120,y=cy*26+hash2(k,cy,3)*26,sz=6+hash2(cy+k,k,5)*12;ctx.fillStyle=['#a39e93','#7d786e','#b8b3a8','#6b665d','#948f84'][(hash2(cy,k,7)*5)|0];ctx.globalAlpha=.85;ctx.beginPath();ctx.ellipse(x,y,sz,sz*.6,hash2(k,cy,9)*3,0,TAU);ctx.fill();}
-  ctx.globalAlpha=1;for(let y=Math.floor(y0/5)*5;y<y1;y+=5){const x=Zn.rwall(y);const gg=ctx.createLinearGradient(x,0,x+26,0);gg.addColorStop(0,'rgba(28,24,20,.65)');gg.addColorStop(1,'rgba(28,24,20,0)');ctx.fillStyle=gg;ctx.fillRect(x,y,27,5.5);}
-  for(let cy=Math.floor(y0/40);cy<=Math.floor(y1/40);cy++){const h=hash2(cy,11,Zn.seed);if(h<.5)continue;const x=Zn.rwall(cy*40)+30+h*70,y=cy*40;ctx.fillStyle=h>.75?'#2f5a26':'#3f7f35';ctx.beginPath();ctx.arc(x,y,4+h*4,0,TAU);ctx.fill();}
+ if(Zn.rwall){const xr=(VW>WG?WG+(VW-WG)/2:WG)+40,y0=camTop-20,y1=camTop+VH+20,RS=Zn.Z.theme==='beach'?'sand':Zn.Z.theme==='cove'?'red':'rock';
+  ctx.save();for(let y=Math.floor(y0/6)*6;y<y1;y+=6){const x=Zn.rwall(y);if(x>xr)continue;const gg=ctx.createLinearGradient(x-(RS==='sand'?120:60),0,x,0);if(RS==='sand'){gg.addColorStop(0,'rgba(30,160,210,0)');gg.addColorStop(.7,'rgba(70,205,215,.6)');gg.addColorStop(1,'rgba(140,240,225,.9)');}else{gg.addColorStop(0,'rgba(8,24,40,0)');gg.addColorStop(1,'rgba(8,24,40,.45)');}ctx.fillStyle=gg;ctx.fillRect(x-(RS==='sand'?120:60),y,(RS==='sand'?121:61),6.5);}
+  ctx.beginPath();ctx.moveTo(xr,y0);for(let y=y0;y<=y1;y+=5)ctx.lineTo(Math.min(xr,Zn.rwall(y)),y);ctx.lineTo(xr,y1);ctx.closePath();ctx.fillStyle=RS==='sand'?'#f1d9a6':RS==='red'?'#c47a44':'#8c877d';ctx.fill();ctx.clip();
+  for(let cy=Math.floor(y0/26);cy<=Math.floor(y1/26);cy++)for(let k=0;k<5;k++){const h=hash2(cy,k,Zn.seed),x=Zn.rwall(cy*26)+4+h*120,y=cy*26+hash2(k,cy,3)*26,sz=6+hash2(cy+k,k,5)*12;if(RS==='sand'){ctx.fillStyle=hash2(cy,k,7)>.5?'rgba(180,140,80,.3)':'rgba(255,255,255,.4)';ctx.fillRect(x,y,1.4,1.4);continue;}ctx.fillStyle=(RS==='red'?['#d98f57','#b9693a','#e7a46b','#a75d31','#cf8650']:['#a39e93','#7d786e','#b8b3a8','#6b665d','#948f84'])[(hash2(cy,k,7)*5)|0];ctx.globalAlpha=.85;ctx.beginPath();ctx.ellipse(x,y,sz,sz*.6,hash2(k,cy,9)*3,0,TAU);ctx.fill();}
+  ctx.globalAlpha=1;if(RS!=='sand')for(let y=Math.floor(y0/5)*5;y<y1;y+=5){const x=Zn.rwall(y);const gg=ctx.createLinearGradient(x,0,x+26,0);gg.addColorStop(0,'rgba(28,24,20,.65)');gg.addColorStop(1,'rgba(28,24,20,0)');ctx.fillStyle=gg;ctx.fillRect(x,y,27,5.5);}
+  for(let cy=Math.floor(y0/40);cy<=Math.floor(y1/40);cy++){const h=hash2(cy,11,Zn.seed);if(h<.5)continue;const x=Zn.rwall(cy*40)+(RS==='sand'?16:30)+h*70,y=cy*40;if(RS==='sand'&&h<.8){ctx.fillStyle=['#ffffff','#ff4f6b','#33a3ff','#ffd21a'][(h*40|0)%4];ctx.beginPath();ctx.arc(x,y,7,0,TAU);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.12)';ctx.lineWidth=.8;for(let a=0;a<6;a++){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*7,y+Math.sin(a)*7);ctx.stroke();}continue;}ctx.fillStyle=h>.75?'#2f5a26':'#3f7f35';ctx.beginPath();ctx.arc(x,y,4+h*4,0,TAU);ctx.fill();}
   ctx.restore();ctx.fillStyle='rgba(255,255,255,.7)';for(let y=Math.floor(y0/3)*3;y<y1;y+=3){const x=Zn.rwall(y),h=hash2(Math.round(y),5,Zn.seed);if(x>xr)continue;ctx.beginPath();ctx.arc(x-1-h*3,y,1+h*1.4,0,TAU);ctx.fill();}}
  // bar ring
  if(Zn.ring&&!G.barUsed){const r=Zn.ring,p=1+Math.sin(G.t*5)*.08;const rg=ctx.createRadialGradient(r.x,r.y,4,r.x,r.y,26);rg.addColorStop(0,'rgba(255,201,60,.4)');rg.addColorStop(1,'rgba(255,201,60,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(r.x,r.y,26,0,TAU);ctx.fill();ctx.setLineDash([5,4]);ctx.lineDashOffset=-G.t*20;ctx.strokeStyle='#ffe28a';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(r.x,r.y,18*p,0,TAU);ctx.stroke();ctx.setLineDash([]);
@@ -2104,7 +2109,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=35;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=36;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
