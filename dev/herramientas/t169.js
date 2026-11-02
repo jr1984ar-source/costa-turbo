@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ await p.goto('file://'+process.cwd()+'/ct-wrapped2.html');await p.waitForTimeout(1200);
+ await p.evaluate(()=>{__T.newGame(0);});await p.waitForTimeout(600);
+ console.log('mapa:',await p.evaluate(()=>document.querySelector('#mZoneName').textContent+' | '+document.querySelector('#mZoneN').textContent+' | ring:'+!!__G.zone.ring));
+ await p.screenshot({path:'v87-mapa.png'});
+ await p.evaluate(()=>__T.startRace());await p.waitForTimeout(600);await p.screenshot({path:'v87-salida.png'});
+ await p.waitForTimeout(4500);
+ console.log('tras 5 s: pos',await p.evaluate(()=>Math.round(__G.P.y)),'rivales',await p.evaluate(()=>__G.rivals.map(c=>Math.round(c.y)).join(',')),'choques',await p.evaluate(()=>__G._crashes|0));
+ console.log('errs',JSON.stringify(errs));await b.close();})();
