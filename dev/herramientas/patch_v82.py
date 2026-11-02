@@ -1,0 +1,40 @@
+import shutil
+H = 'costa-turbo.html'
+shutil.copy(H, 'costa-turbo.pre-v82.html')
+h = open(H).read()
+def rep(s, a, b, n=1):
+    c = s.count(a); assert c == n, (c, a[:100]); return s.replace(a, b)
+h = rep(h, "const APP_VER=81", "const APP_VER=82")
+# ===== textos del juego como estaban (en inglés) =====
+h = rep(h, "<small>BAR JJ</small>EL BAR DEL PUERTO", "<small>JJ'S SPORTS LOUNGE</small>EL BAR DEL PUERTO", 2)
+h = rep(h, "Zn.bar==='jj'?'BAR JJ':", "Zn.bar==='jj'?\"BAR JJ'S\":")
+h = rep(h, "tag(Z.bar==='jj'?'Bar JJ a mitad de zona':", "tag(Z.bar==='jj'?\"Bar JJ's a mitad de zona\":")
+h = rep(h, "'RIVA RACING','BAR JJ','BESO BEACH'", "'RIVA RACING','JJ’S SPORTS','BESO BEACH'")
+h = rep(h, "const sign=[[3,46,'#1f3fb0','BAR'],[46,97,'#8e1f2c','JJ']];", "const sign=[[3,28,'#8e1f2c',\"JJ's\"],[28,66,'#1f3fb0','SPORTS'],[66,97,'#1c1c1f','LOUNGE']];")
+h = rep(h, "${t==='JJ'?11.5:10.5}px", "${t===\"JJ's\"?11.5:10.5}px")
+h = rep(h, "const sign=[[10,Math.round(W*.45),'#1f3fb0','BAR'],[Math.round(W*.45)+2,W-10,'#8e1f2c','JJ']];", "const sign=[[10,108,'#8e1f2c',\"JJ's\"],[110,250,'#1f3fb0','SPORTS'],[252,W-10,'#1c1c1f','LOUNGE']];")
+h = rep(h, "n:'Boyas perfectas'", "n:'Slalom perfecto'")
+h = rep(h, "Termina entre los 3 primeros. Rodea cada boya", "Termina entre los 3 primeros. Slalom de verdad: rodea cada boya")
+h = rep(h, "Z.obj==='slalom'?['BOYAS',", "Z.obj==='slalom'?['SLALOM',")
+h = rep(h, "{tag:'PASO DE BOYAS',", "{tag:'SLALOM DE BOYAS',")
+h = rep(h, "¡ESTÁS ENTRE LOS 10 MEJORES! TU NOMBRE:", "¡ENTRAS EN EL TOP 10! TU NOMBRE:")
+h = rep(h, '<h2 class="h">LOS 10 MEJORES</h2>', '<h2 class="h">TOP 10</h2>')
+h = rep(h, "'¡Entras entre los 10 mejores como '", "'¡Entras en el TOP 10 como '")
+h = rep(h, "'Esta vez no entras entre los 10 mejores.'", "'Esta vez no entras en el top 10.'")
+h = rep(h, "u.push('piezas nivel '+(i+1))", "u.push('piezas Stage '+(i+1))")
+h = rep(h, "p.name+' · Nivel '+lv+'/3'", "p.name+' · Stage '+lv+'/3'")
+h = rep(h, "montadas en nivel 2.", "montadas en Stage 2.")
+h = rep(h, "'Nivel '+(lv+1),'var(--lime)'", "'Stage '+(lv+1),'var(--lime)'")
+h = rep(h, "<em>NIVEL ${lv}/3</em>", "<em>STAGE ${lv}/3</em>")
+h = rep(h, "NIVEL 3 · MÁX", "STAGE 3 · MÁX", 2)
+h = rep(h, "(lv?'NIVEL '+(lv+1)+' · ':", "(lv?'STAGE '+(lv+1)+' · ':")
+# ===== zona de parada de los bares: el triple de grande =====
+h = rep(h, "const d=Math.hypot(P.x-ring.x,P.y-ring.y);if(d<26&&P.v<P.st.maxV*.55){openBar();return;}", "const d=Math.hypot(P.x-ring.x,P.y-ring.y);if(d<RING_R&&P.v<P.st.maxV*.55){openBar();return;}")
+h = rep(h, "const rg=ctx.createRadialGradient(r.x,r.y,4,r.x,r.y,26);rg.addColorStop(0,'rgba(255,201,60,.4)');rg.addColorStop(1,'rgba(255,201,60,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(r.x,r.y,26,0,TAU);ctx.fill();ctx.setLineDash([5,4]);ctx.lineDashOffset=-G.t*20;ctx.strokeStyle='#ffe28a';ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(r.x,r.y,18*p,0,TAU);ctx.stroke();ctx.setLineDash([]);",
+ "const R2=RING_R,rg=ctx.createRadialGradient(r.x,r.y,8,r.x,r.y,R2*1.15);rg.addColorStop(0,'rgba(255,201,60,.32)');rg.addColorStop(1,'rgba(255,201,60,0)');ctx.fillStyle=rg;ctx.beginPath();ctx.arc(r.x,r.y,R2*1.15,0,TAU);ctx.fill();ctx.fillStyle='rgba(255,226,138,.1)';ctx.beginPath();ctx.arc(r.x,r.y,R2*.78*p,0,TAU);ctx.fill();ctx.setLineDash([9,7]);ctx.lineDashOffset=-G.t*24;ctx.strokeStyle='#ffe28a';ctx.lineWidth=3.2;ctx.beginPath();ctx.arc(r.x,r.y,R2*.78*p,0,TAU);ctx.stroke();ctx.setLineDash([]);")
+h = rep(h, "ctx.fillStyle='#ffe28a';ctx.font='800 13px \"Saira Condensed\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('BAR',r.x,r.y+1);\n  label(r.x+(r.x>WG-110?-60:62),r.y-4,",
+ "ctx.fillStyle='#ffe28a';ctx.font='800 26px \"Saira Condensed\",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('BAR',r.x,r.y+1);\n  label(r.x+(r.x>WG-150?-RING_R*.78-46:RING_R*.78+46),r.y-4,")
+h = rep(h, "if(G.zone.ring)light(SX(G.zone.ring.x)*k,(G.zone.ring.y-camTop)*k,80*k,.8);", "if(G.zone.ring)light(SX(G.zone.ring.x)*k,(G.zone.ring.y-camTop)*k,RING_R*1.5*k,.8);")
+h = rep(h, "{x:zone.shore(-(barU+JJC))+52,y:-(barU+JJC)}:{x:zone.shore(-barU)+72,y:-barU+30}", "{x:zone.shore(-(barU+JJC))+70,y:-(barU+JJC)}:{x:zone.shore(-barU)+78,y:-barU+30}")
+h = rep(h, "const CUTS_AT=", "const RING_R=72;\nconst CUTS_AT=")
+open(H, 'w').write(h); print('ok')
