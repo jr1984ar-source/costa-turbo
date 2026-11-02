@@ -1497,7 +1497,7 @@ function buildCanyon(Z,zi,lap,seed){const r=rng(seed),def=CIRCS[Z.circ],step=8,W
  for(let s=900;s<Lp-700;s+=620+r()*520){if(coinS.some(q=>Math.abs(q-s)<200))s+=220;const i=I(s),sd=r()<.5?-1:1,lat=sd*((sd<0?wl[i]:wr[i])-45-r()*60);add({t:'rock',x:xs[i]+Math.cos(hs[i])*lat,y:ys[i]+Math.sin(hs[i])*lat,rad:10+r()*8,v:(r()*3)|0});}
  for(const c of cov){if(c.d<85||Math.abs(c.s-40)<300||Math.abs(c.s-(Lp-260))<300)continue;const i=I(c.s),A=c.side<0?wl:wr,lat=c.side*(A[i]-30);const kd=r()<.7?'llaut':'rib';add({t:'cboat',kind:kd,x:xs[i]+Math.cos(hs[i])*lat,y:ys[i]+Math.sin(hs[i])*lat,r:hs[i]+(r()<.5?0:Math.PI),...BOATK[kd],moored:1,s:(r()*1e6)|0});}
  {const i=I(Lp*.5);add({t:'fuel',x:xs[i],y:ys[i]});}
- if(!G.free){const rh=rng(seed+77),nh=rh()<.5?1:2;for(let k=0;k<nh;k++){const i=I(Lp*(nh===1?.42:k?.78:.42)),ln=(rh()-.5)*W*.3;add({t:'heart',x:xs[i]+Math.cos(hs[i])*ln,y:ys[i]+Math.sin(hs[i])*ln});}}
+ if(!G.free){const rh=rng(seed+77),nh=heartsN(rh);for(let k=0;k<nh;k++){const i=I(Lp*((k+1)/(nh+1))),ln=(rh()-.5)*W*.3;add({t:'heart',x:xs[i]+Math.cos(hs[i])*ln,y:ys[i]+Math.sin(hs[i])*ln});}}
  const inWater=(px,py)=>{for(let q=0;q<N;q+=3){const dd=Math.hypot(xs[q]-px,ys[q]-py);if(dd<Math.max(wl[q],wr[q])+18)return true;}return false;};
  for(let s=-S0;s<Lp+PO;s+=26)for(const sd of[-1,1]){if(r()<.45)continue;const i=I(s),d=(sd<0?wl[i]:wr[i])+26+r()*260,px=xs[i]+Math.cos(hs[i])*sd*d,py=ys[i]+Math.sin(hs[i])*sd*d;if(inWater(px,py))continue;add({t:'cdeco',x:px,y:py,d:{t:'pine',x:px,y:py,r:9+r()*10,s:(r()*1e6)|0}});}
  const labels=[];{const i=I(Lp*.52);labels.push({x:xs[i],y:ys[i],txt:'TORRENT DE PAREIS'});}{const i=I(Lp);labels.push({x:xs[i],y:ys[i],txt:'SA CALOBRA'});}
@@ -1617,7 +1617,7 @@ function buildArchi(Z,zi,lap,seed){const r=rng(seed),def=CIRCS[Z.circ],ST=def.st
  if(!TR)for(let s=1200;s<Lp-1200;s+=1500+r()*1300){if(busy(s))continue;const i=I(s),lat=(r()-.5)*W*.5;add({t:'cray',x:xs[i]+Math.cos(hs[i])*lat,y:ys[i]+Math.sin(hs[i])*lat,vx:r()<.5?30:-30,ph:r()*6});}
  {let s=Lp*.5;while(busy(s))s+=300;const i=I(s);add({t:'fuel',x:xs[i],y:ys[i]});}
  if(!TR){let sp=Lp*.56;for(const m of mids)if(Math.abs(m.s-sp)<600)sp=m.s+700;const i=I(sp),sd=r()<.5?-1:1,lat=sd*((sd<0?wl[i]:wr[i])-120);add({t:'cplane',x:xs[i]+Math.cos(hs[i])*lat,y:ys[i]+Math.sin(hs[i])*lat,r:hs[i]+.9*sd});}
- if(!G.free){const rh=rng(seed+77),nh=rh()<.5?1:2;for(let k=0;k<nh;k++){let s=Lp*(nh===1?.42:k?.78:.42);while(busy(s))s+=300;const i=I(s),ln=(rh()-.5)*W*.3;add({t:'heart',x:xs[i]+Math.cos(hs[i])*ln,y:ys[i]+Math.sin(hs[i])*ln});}}
+ if(!G.free){const rh=rng(seed+77),nh=heartsN(rh);for(let k=0;k<nh;k++){let s=Lp*((k+1)/(nh+1));while(busy(s))s+=300;const i=I(s),ln=(rh()-.5)*W*.3;add({t:'heart',x:xs[i]+Math.cos(hs[i])*ln,y:ys[i]+Math.sin(hs[i])*ln});}}
  if(!TR){const i=I(Lp*.6);labels.push({x:xs[i],y:ys[i],txt:'EXUMA CAYS'});const j2=I(Lp);labels.push({x:xs[j2],y:ys[j2],txt:'EXUMAS'});}
  O.sort((a,b)=>a.y-b.y);
  return{Z,zi,lap,len:Lp,lenK:Math.max(1,Lp/16000),seed,shore:()=>-1e7,kind:()=>'open',barY:1e9,bar:null,objs:O,movers:[],decos:[],gatesTotal:0,finishY:-1e9,checks:[],big:[],ring:null,swimX:()=>null,cliffK:()=>0,rwall:null,waves:[],circ:C,lands,strips:[],cbig:big,cars:[],walk:[],labels};}
@@ -1675,7 +1675,7 @@ function buildCircuit(Z,zi,lap,seed){if(CIRCS[Z.circ].archi)return buildArchi(Z,
   add({t:'cramp',x,y,h:hs[i],w:112,kick:1});ramps.push(s);for(let k2=0;k2<3;k2++){const d=74+k2*34;add({t:'coin',x:x+Math.sin(hs[i])*d,y:y-Math.cos(hs[i])*d,air:1});}});
  for(let s=320;s<TT-240;s+=470+r()*170){if(ramps.some(q=>Math.abs(q-s)<280))continue;const lat=(r()-.5)*W*.55;for(let k2=0;k2<6;k2++){const i=I(s+k2*26);add({t:'coin',x:xs[i]+Math.cos(hs[i])*lat,y:ys[i]+Math.sin(hs[i])*lat});}}
  {const[x,y]=P(TT*.5,0);add({t:'fuel',x,y});}
- if(!G.free){const rh=rng(seed+77),nh=rh()<.5?1:2;for(let k=0;k<nh;k++){const ii=Math.floor(N*(nh===1?.3:k?.75:.3))%N,ln=(rh()-.5)*W*.3;add({t:'heart',x:xs[ii]+Math.cos(hs[ii])*ln,y:ys[ii]+Math.sin(hs[ii])*ln});}}
+ if(!G.free){const rh=rng(seed+77),nh=heartsN(rh);for(let k=0;k<nh;k++){const ii=Math.floor(N*((k+1)/(nh+1)))%N,ln=(rh()-.5)*W*.3;add({t:'heart',x:xs[ii]+Math.cos(hs[ii])*ln,y:ys[ii]+Math.sin(hs[ii])*ln});}}
  // ----- tribuna en el pontón de salida (lado de dentro) -----
  {const s=230,i=I(s),x0=W/2+26,dep=68,len=380,h=hs[i],ca=Math.cos(h),sa=Math.sin(h),loc=(lx,ly)=>[xs[i]+lx*ca-ly*sa,ys[i]+lx*sa+ly*ca];
   const pts=[loc(x0,-len/2),loc(x0+dep,-len/2),loc(x0+dep,len/2),loc(x0,len/2)];land(pts,{draw:false});big.push({t:'stand',x:xs[i],y:ys[i],h,x0,dep,len,R:len/2+dep+x0});
@@ -2204,11 +2204,13 @@ function startZone(){
 function crafts(){return G.rivals.length?[...G.rivals,G.P]:[G.P];}
 function findStart(arr,y){let lo=0,hi=arr.length;while(lo<hi){const m=(lo+hi)>>1;if(arr[m].y<y)lo=m+1;else hi=m;}return lo;}
 function heartPath(g,s){g.beginPath();g.moveTo(0,s*.78);g.bezierCurveTo(-s*1.35,-s*.12,-s*.62,-s*1.08,0,-s*.42);g.bezierCurveTo(s*.62,-s*1.08,s*1.35,-s*.12,0,s*.78);g.closePath();}
-function placeHearts(O,add,seed,len,shore,rwall){const rh=rng(seed+77),nh=rh()<.5?1:2;
- for(let k=0;k<nh;k++){const base=Math.round(len*(nh===1?.5:k?.7:.36)+(rh()-.5)*300);let best=null,bd=-1;
+function heartsN(rh){const r0=rh(),C=inCup();if(!C)return r0<.5?1:2;return Math.min(10,1+(C.fin?3:(G.cpos|0))+Math.max(0,G.lap|0));}
+function placeHearts(O,add,seed,len,shore,rwall){const rh=rng(seed+77),nh=heartsN(rh);
+ for(let k=0;k<nh;k++){const base=Math.round(len*((k+1)/(nh+1))+(rh()-.5)*Math.min(300,len/(nh+1)*.5));let best=null,bd=-1;
   for(const dy of[0,-160,160,-320,320]){const hy=-(base+dy),L=Math.max(30,shore(hy)+50),R=Math.min(WG-30,rwall?rwall(hy)-50:WG-30);if(R<L+20)continue;
    for(let j=0;j<7;j++){const x=lerp(L,R,j/6);let d=1e9,bad=false;
     for(const o of O){if(o.y==null||Math.abs(o.y-hy)>420)continue;
+     if((o.t==='check'||o.t==='finish'||o.t==='heart')&&Math.abs(o.y-hy)<90){bad=true;continue;}
      if(o.t==='island'||o.t==='nozone'){const ex=(x-o.x)/(o.rx+40),ey=(hy-o.y)/(o.ry+40);if(ex*ex+ey*ey<1)bad=true;continue;}
      if(o.t==='pass'){if(Math.abs(hy-o.y)<(o.h||100)/2+90)bad=true;continue;}
      if(o.t==='coin'||o.t==='check'||o.t==='finish'||Math.abs(o.y-hy)>110)continue;d=Math.min(d,Math.hypot((o.x||0)-x,(o.y-hy)*.8));}
@@ -3275,7 +3277,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=91;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=92;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
