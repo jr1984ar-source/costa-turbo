@@ -154,9 +154,9 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
 .gmoto{height:128px;display:grid;place-items:center;border-radius:14px;overflow:hidden;background:linear-gradient(#8fd8f6,#d6f2fb 52%,#3cc3dd 53%,#1488c8 78%,#0d63ad)}
 .gmoto canvas{width:min(100%,290px);height:auto;aspect-ratio:580/240;animation:bob 2.4s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-3px) rotate(-1deg)}}
-.gname{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.gname{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 8px}
 .gname b{font-family:var(--cond);font-weight:800;font-size:28px;letter-spacing:.04em;color:var(--sc);text-shadow:0 0 14px color-mix(in srgb,var(--sc) 45%,transparent);line-height:1}
-.gname small{font-size:13px;color:var(--dim);text-align:right}
+.gname small{flex:1 1 150px;font-size:13px;color:var(--dim);text-align:right}
 .stats{display:grid;gap:4px}
 .st{display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:center;font-family:var(--cond);font-weight:600;font-size:13px;letter-spacing:.08em;color:var(--dim)}
 .st i{display:grid;grid-template-columns:repeat(8,1fr);gap:3px}
@@ -602,7 +602,7 @@ const MOTOS=[
  {id:'dorada',name:'DORADA',riva:1,colors:'Dorada · Kit Riva Racing',pilot:'Leo Durán',bio:'La joya del taller. Rápida, fina y con estilo.',ui:'#d9c08a',st:{vel:5,ace:5,giro:4,turbo:4},
   sk:{hull:'#d6c39a',hullD:'#8f7c55',acc:'#e3202b',seat:'#e3202b',vest:'#1b1d22',helmet:'#d6c39a',hs:'#1b1d22',arm:'#1b1d22'},
   side:{deck:'#d6c39a',hood:'#1d1f24',hull:'#c9b48a',trim:'#15171b',seatA:'#e3202b',seatB:'#3a3d45',seatC:'#1d1f24',stripe:'#1d1f24'},face:{skin:'#e2b088',hair:'#3a2a1a',style:'short',vest:'#1b1d22'}},
- {id:'charger',name:'SUPER CHARGER',riva:1,colors:'Negra y roja · Kit Riva Racing',pilot:'Rayo Ferrer',bio:'Compresor a tope. La más rápida del taller.',ui:'#ff3b3b',st:{vel:5,ace:5,giro:4,turbo:5},
+ {id:'charger',name:'SUPERCHARGER',riva:1,colors:'Negra y roja · Kit Riva Racing',pilot:'Rayo Ferrer',bio:'Compresor a tope. La más rápida del taller.',ui:'#ff3b3b',st:{vel:5,ace:5,giro:4,turbo:5},
   sk:{hull:'#1c1e23',hullD:'#0b0c0f',acc:'#e3202b',seat:'#1c1e23',hood:'#16181d',rim:'#e3202b',vest:'#16181d',helmet:'#16181d',hs:'#e3202b',arm:'#16181d'},
   side:{deck:'#1c1e23',hood:'#16181d',hull:'#16181d',trim:'#0a0b0d',seatA:'#1c1e23',seatB:'#2a2d33',seatC:'#e3202b',stripe:'#e3202b'},face:{skin:'#e8b48c',hair:'#1a120c',style:'short',vest:'#16181d'}}
 ];
@@ -2734,7 +2734,7 @@ function drawPortrait(cvs,m,gr){const g=cvs.getContext('2d'),f=m.face,W=cvs.widt
 
 /* ---- garaje y mapa ---- */
 function renderGarage(){const m=MOTOS[G.moto],ms=motoState(m),[mpr,mneed]=SHOP[m.id]||[0,0];$('#gCard').style.setProperty('--sc',m.ui);$('#gPv').classList.toggle('lk',ms!=='own');$('#gLock').hidden=ms==='own';$('#gGo').textContent=ms==='own'?(G.free?'ELEGIR Y VER PANTALLAS':G._champOn?'SEGUIR CON ESTA MOTO':'ELEGIR ESTA MOTO'):'IR AL TALLER';
- drawPortrait($('#gPilot'),AVATARS[G.avatar|0]||AVATARS[0],gearEq());$('#gPilotName').textContent=pilotName();$('#gBio').textContent=MOTO_DESC[m.id]||'';$('#gName').textContent=motoName(m);$('#gColors').textContent=ms==='buy'?(m.riva?'Kit Riva Racing · ':'')+'En el taller: '+pts(mpr)+' PTA':ms==='lock'?'Se desbloquea en la zona '+mneed:paintOf(m).colors?'Pintura personalizada':m.colors;
+ drawPortrait($('#gPilot'),AVATARS[G.avatar|0]||AVATARS[0],gearEq());$('#gPilotName').textContent=pilotName();$('#gBio').textContent=MOTO_DESC[m.id]||'';$('#gName').textContent=motoName(m);$('#gColors').textContent=ms==='buy'?(m.riva?'Kit Riva Racing · ':'')+'En el taller: '+pts(mpr)+'\u00a0PTA':ms==='lock'?'Se desbloquea en la zona '+mneed:paintOf(m).colors?'Pintura personalizada':m.colors;
  const gc=$('#gMoto'),g=gc.getContext('2d');g.setTransform(2,0,0,2,0,0);g.clearRect(0,0,290,120);g.save();g.translate(2,4);g.scale(.836,.836);drawJetProfile(g,sideOf(m));g.restore();motoArt(gc,m);
  statRows($('#gStats'),m);
  const D=$('#gDots');D.textContent='';MOTOS.forEach((_,i)=>{const s=document.createElement('span');if(i===G.moto)s.className='on';D.append(s);});}
@@ -3103,7 +3103,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=74;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=75;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
