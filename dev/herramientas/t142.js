@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1200);
+ await p.click('#bPlay');await W(300);await p.click('#aGo');await W(700);
+ await p.click('#gNext');await W(500);await p.screenshot({path:'v73-garage.png'});
+ console.log(await E(()=>document.querySelector('#gName').textContent+' / '+document.querySelector('#gColors').textContent));
+ await p.click('#gGo');await W(800);
+ await E(()=>{__T.newGame();__G.zi=0;});await W(300);await E(()=>__T.startRace());await W(4500);await p.screenshot({path:'v73-race.png'});
+ console.log(JSON.stringify(errs));await b.close();})();
