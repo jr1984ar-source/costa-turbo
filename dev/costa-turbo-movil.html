@@ -78,7 +78,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes cnt{0%{transform:scale(2);opacity:0}20%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:0}}
 
 /* mandos */
-.pad{display:flex;align-items:center;gap:10px;padding-block:14px max(8px,env(safe-area-inset-bottom,0px));background:linear-gradient(var(--navy2),var(--navy));border-top:1px solid rgba(255,255,255,.12);position:relative;touch-action:none}
+.pad{display:flex;align-items:center;gap:10px;padding-block:14px max(10px,calc(env(safe-area-inset-bottom,0px) - 14px));background:linear-gradient(var(--navy2),var(--navy));border-top:1px solid rgba(255,255,255,.12);position:relative;touch-action:none}
 #padL{grid-area:L;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:6px}
 #padR{grid-area:R;padding-right:max(14px,env(safe-area-inset-right,0px));padding-left:4px;justify-content:flex-end}
 .pad-tag{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:var(--cond);font-weight:600;font-size:11px;color:var(--dim);letter-spacing:.2em;pointer-events:none}
@@ -3264,7 +3264,7 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&(G.mode===
 window.addEventListener('pagehide',()=>Snd.bg(true));window.addEventListener('pageshow',()=>{if(!document.hidden)Snd.bg(false);});
 document.addEventListener('touchstart',()=>{if(Snd.ctx&&!document.hidden&&Snd.ctx.state!=='running'){Snd.bg(false);}},{passive:true});
 
-function fitH(){const hh=window.innerHeight;if(hh>200)document.documentElement.style.height=hh+'px';}
+function fitH(){let hh=window.innerHeight;try{const st=navigator.standalone||matchMedia('(display-mode: standalone)').matches;if(st){const sh=matchMedia('(orientation: portrait)').matches?Math.max(screen.width,screen.height):Math.min(screen.width,screen.height);if(sh>hh&&sh-hh<160)hh=sh;}}catch(_){}if(hh>200)document.documentElement.style.height=hh+'px';}
 fitH();addEventListener('resize',fitH);addEventListener('orientationchange',()=>setTimeout(fitH,350));
 /* ================= BUCLE ================= */
 function resize(){const r=stage.getBoundingClientRect();if(r.width<10||r.height<10)return;DPR=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
@@ -3275,7 +3275,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=88;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=89;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
