@@ -1095,7 +1095,7 @@ const ZONES=[
  {name:'EL PUERTO',water:['#139aa6','#0b6888'],obj:'time',goal:'Llega a la meta antes de que se acabe el tiempo.',len:15000,riv:5,bar:'jj',theme:'port',tod:'morning',skill:.84,pace:205},
  {name:'LA CALA',water:['#10bccf','#0a86b6'],obj:'slalom',goal:'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.',len:11000,riv:0,bar:'roxy',theme:'cove',tod:'noon',pace:170},
  {name:'CARRERA AL MAGO',piriAt:.5,water:['#19c2d6','#0c8fc2'],obj:'race3',goal:'Llega a El Mago entre los 3 primeros. La costa queda a la derecha, la isla la puedes rodear por los dos lados y antes de la meta hay muchos barcos fondeados.',len:16000,riv:5,bar:'jj',barAt:.27,theme:'cove',tod:'noon',skill:.88,piri:1,island:1,anchored:1,finish:'EL MAGO',mirror:1},
- {name:'GRAN CARRERA',water:['#2ccbe0','#1396c9'],alt:1,obj:'race3',goal:'Termina entre los 3 primeros.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9},
+ {name:'GRAN CARRERA',water:['#2ccbe0','#1396c9'],alt:1,cuts:1,obj:'race3',goal:'Termina entre los 3 primeros. Hay dos atajos: canales estrechos detrás de las islas de arena, uno pegado a cada costa.',len:16000,riv:5,bar:'jj',theme:'beach',tod:'afternoon',skill:.9},
  {name:'PERSECUCIÓN',water:['#1572c6','#0c4898'],obj:'chase',goal:'Llega a la meta sin que la policía te pille 3 veces.',len:14000,riv:0,bar:'roxy',theme:'cove',tod:'afternoon'},
  {name:'OLAS GIGANTES',water:['#1a63a4','#0e3d74'],obj:'jumps',giant:1,goal:'Haz 6 saltos y llega a tiempo. Las olas gigantes, cógelas rápido y recto: si vas lento o torcido, vuelcas y pierdes ⅔ de corazón. Cada ola tiene un hueco muy estrecho por donde pasar sin saltar.',len:15000,riv:0,bar:'jj',theme:'beach',tod:'sunset',pace:200},
  {name:'LAS RAMPAS',obj:'jumps',needJ:10,goal:'Haz 10 saltos de rampa y llega antes de que se acabe el tiempo. Mar abierto, sin costa. Rampas amarillas (pequeñas), naranjas y rojas (saltos enormes).',len:15000,riv:0,bar:null,theme:'open',tod:'noon',pace:195,ramps:1},
@@ -1897,6 +1897,13 @@ function buildZone(zi,lap){
  if(Z.catas){for(let su=1300;su<len-700;su+=1000+r()*500){const dir=r()<.5?1:-1;M.push({t:'cata',x:dir>0?-100-r()*150:WG+100+r()*150,y:-su,vx:dir*(38+r()*18),vy:0,flash:r()*3});resv.push([su-70,su+70]);}}
  if(Z.supers){for(let su=1200;su<len-700;su+=850+r()*450){if(Math.abs(su-barU)<420)continue;const dir=r()<.5?1:-1;M.push({t:'super',x:dir>0?-140-r()*200:WG+140+r()*200,y:-su,vx:dir*(32+r()*16),vy:0,flash:0});resv.push([su-90,su+90]);}}
  if(Z.island)island(Math.round(len*.45),58,220);
+ if(Z.cuts&&Z.alt){const sl=len/5;for(const[f,side]of[[1.5,1],[4.3,-1]]){let cu=Math.round(f*sl);if(Math.abs(cu-barU)<900)cu=barU+(cu<barU?-900:900);
+   const rx=36,ry=215,gap=86,wallAt=y=>side<0?zone.shore(y):zone.rwall(y);let lim=side<0?-1e9:1e9;for(let du=-ry-40;du<=ry+40;du+=15){const w=wallAt(-(cu+du));lim=side<0?Math.max(lim,w):Math.min(lim,w);}
+   const x=side<0?lim+gap+rx:lim-gap-rx;add({t:'island',x,y:-cu,rx,ry,seed:(r()*1e6)|0,theme:'cay',cut:side});resv.push([cu-ry-190,cu+ry+190]);
+   for(let du=-ry+20;du<=ry-20;du+=36){if(Math.abs(du)<30)continue;const y=-(cu+du),e=Math.sqrt(Math.max(0,1-(du/ry)*(du/ry))),edge=side<0?x-(rx+10)*e:x+(rx+10)*e,cx=(edge+wallAt(y)+(side<0?11:-11))/2;add({t:'coin',x:cx,y});}
+   {const edge=side<0?x-rx-10:x+rx+10;add({t:'can',x:(edge+wallAt(-cu)+(side<0?11:-11))/2,y:-cu});}
+   const far=side<0?(zone.rwall?Math.min(WG-24,zone.rwall(-cu)):WG-24):Math.max(24,zone.shore(-cu)+11),near=side<0?x+rx+10:x-rx-10;
+   for(const[fu,t]of[[-.55,.3],[.05,.72],[.6,.4]]){const uu=cu+fu*ry,xx=lerp(near+26,far-26,t);add({t:'rock',x:xx,y:-uu,rad:12+r()*5,v:(r()*3)|0});if(r()<.6)add({t:'rock',x:xx+(r()-.5)*36,y:-uu-28,rad:9+r()*4,v:(r()*3)|0});}}}
  if(Z.islands){island(Math.round(len*.27),50,150);island(Math.round(len*.63),52,150);}
  if(Z.passes){for(const f of[.45,.8]){const cu=Math.round(len*f),L=zone.shore(-cu),gx=lerp(L+70,RX-70,.2+r()*.6),h=110,lw=gx-38-(L+12),rw=(RX-24)-(gx+38),wedge=lw<rw?-1:1;add({t:'pass',y:-cu,gx,gw:76,h,wedge});
   const fx0=wedge<0?gx+38:L+12,fx1=wedge<0?RX-24:gx-38,rx=(fx0+fx1)/2,rw2=Math.max(50,Math.min(112,fx1-fx0-20));add({t:'ramp',x:rx,y:-cu+h/2+78,w:rw2,sand:1});for(let i=0;i<3;i++)add({t:'coin',x:rx,y:-cu+40-i*40,air:1});
@@ -3184,7 +3191,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=77;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=78;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
