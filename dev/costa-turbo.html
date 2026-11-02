@@ -321,6 +321,27 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
 .setr.on .tg{background:var(--lime)}
 .setr.on .tg::after{transform:translateX(22px)}
 #vibNote{max-width:380px}
+.cups{width:min(100%,440px);display:grid;gap:10px}
+.cupc{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:12px 12px 12px 10px;border-radius:16px;border:1px solid color-mix(in srgb,var(--cc) 55%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--cc) 22%,transparent),rgba(255,255,255,.04));color:#fff;text-align:left;cursor:pointer;font:inherit}
+.cupc:active{transform:scale(.98)}
+.cupc .ci{font-style:normal;font-size:28px;text-align:center;line-height:1}
+.cupc b{display:block;font-family:var(--cond);font-weight:800;font-size:21px;letter-spacing:.04em;color:var(--cc);line-height:1}
+.cupc small{display:block;font-family:var(--cond);font-weight:600;font-size:14px;color:#fff;margin-top:3px}
+.cupc .cz{display:block;font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.3}
+.cupc .cr{text-align:right;align-self:start}
+.cupc em{display:block;font-style:normal;font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.04em;white-space:nowrap}
+.cupc .ct{display:block;font-family:var(--cond);font-weight:700;font-size:12px;color:var(--gold);margin-top:4px;white-space:nowrap}
+.cupc.lk{opacity:.6}
+.tcup{width:100%;padding:10px 10px 8px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid color-mix(in srgb,var(--cc) 45%,transparent);text-align:left}
+.tch{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:0 2px 6px}
+.tch b{font-family:var(--cond);font-weight:800;font-size:18px;letter-spacing:.04em;color:var(--cc)}
+.tch small{font-family:var(--cond);font-weight:700;font-size:13px;color:var(--dim);white-space:nowrap}
+.trow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.tsm{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.tsm svg{width:100%;max-width:54px;height:60px}
+.tsm span{font-family:var(--cond);font-weight:700;font-size:11px;color:var(--dim);white-space:nowrap}
+.tsm.on span{color:var(--gold)}.tsm.cur span{color:var(--cyan)}.tsm.off{opacity:.45}
+.tsm.on svg{filter:drop-shadow(0 3px 8px rgba(255,220,120,.45))}
 .slist{width:min(100%,440px);display:grid;gap:6px;text-align:left}
 .gmoto canvas.mph{width:auto;max-width:96%;height:118px;aspect-ratio:auto;animation:bob 2.4s ease-in-out infinite;filter:drop-shadow(0 8px 8px rgba(0,20,60,.35))}
 .smodel{width:min(100%,440px);margin-top:-6px;text-align:left;font-family:var(--cond);font-weight:700;font-size:14px;letter-spacing:.04em;color:var(--dim)}
@@ -411,6 +432,12 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
       </div>
       <div class="dots" id="gDots"></div>
       <div class="menu"><div class="row" style="flex-wrap:nowrap"><button class="btn" id="gPaint" style="flex:1">TALLER</button><button class="btn p" id="gGo" style="flex:2">ELEGIR ESTA MOTO</button></div></div>
+    </section>
+
+    <section id="scrCups" class="screen" hidden>
+      <div class="head"><button class="btn ghost sm" id="cuBk" style="flex:none">‹ ATRÁS</button><h2 class="h">CAMPEONATO</h2><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
+      <p class="sub">Elige una copa. Cada una tiene su dificultad y sus trofeos.</p>
+      <div class="cups" id="cuList"></div>
     </section>
 
     <section id="scrPaint" class="screen" hidden>
@@ -533,7 +560,7 @@ h2.h{margin:0;font-family:var(--cond);font-weight:800;font-size:clamp(24px,7vw,3
     <section id="scrChamp" class="screen" hidden>
       <div class="head"><button class="btn ghost sm" id="cBk" style="flex:none">‹ ATRÁS</button><span class="sp"></span><button class="btn ghost sm hm" data-home style="flex:none"><svg class="hm-i" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8 8 2.5 14 8M4 7v6.5h3V10h2v3.5h3V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></svg>INICIO</button></div>
       <div class="trophy" id="cTrof" style="width:96px;height:112px"></div>
-      <h2 class="h">¡CAMPEÓN DE LA COSTA!</h2>
+      <h2 class="h" id="cH">¡CAMPEÓN DE LA COSTA!</h2>
       <div class="big" id="cScore">0</div>
       <p class="sub" id="cInfo"></p>
       <p class="ctrof" id="cTrofTxt"></p>
@@ -1016,7 +1043,24 @@ function medalLines(lines){for(const m of G._newMed||[])lines.push(['🏅 '+m.n,
 const TROFEOS=[{lv:1,n:'Copa Costa',m:'Bronce'},{lv:2,n:'Copa Mediterráneo',m:'Plata'},{lv:3,n:'Copa Baleares',m:'Oro'},{lv:4,n:'Trofeo Tiburón',m:'Platino'},{lv:5,n:'Trofeo Leyenda',m:'Diamante'}];
 let trofStore=store.get('ct_trof',null);if(!trofStore||typeof trofStore!=='object'){trofStore={};if(medStore.campeon&&store.get('ct_dif',null)==null){trofStore[1]={n:1,best:0,at:medStore.campeon};store.set('ct_dif',2);}store.set('ct_trof',trofStore);}
 function difLv(){return Math.max(1,Math.min(5,store.get('ct_dif',1)|0));}
-function trofCount(){let k=0;for(const t of TROFEOS)if(trofStore[t.lv]&&trofStore[t.lv].n>0)k++;return k;}
+// Campeonato en copas de 5 carreras; La Final se abre al ganar las 4 copas
+const CUPS=[
+ {id:'costa',n:'COPA COSTA',nm:'Copa Costa',ic:'🏁',d:'Carreras junto a la costa',z:[2,11,8,9,18],zs:'Al Mago · Cabrera · San Telm · Formentor · Es Vedrà',c:'#ff9a3c'},
+ {id:'paraiso',n:'COPA PARAÍSO',nm:'Copa Paraíso',ic:'🌴',d:'Circuitos y aguas turquesa',z:[19,7,15,20,16],zs:'Bahía de Palma · Es Trenc · Formentera · Bahía de Alcúdia · Bahamas',c:'#3fe0d0'},
+ {id:'crono',n:'COPA CONTRARRELOJ',nm:'Copa Contrarreloj',ic:'⏱️',d:'Contra el reloj',z:[0,1,12,13,10],zs:'El Puerto · La Cala · Portals · Tormenta · Sa Calobra',c:'#5cb8ff'},
+ {id:'accion',n:'COPA ACCIÓN',nm:'Copa Acción',ic:'🌊',d:'Saltos, boyas y policía',z:[5,4,6,14,17],zs:'Olas Gigantes · Persecución · Las Rampas · Carrera de Boyas · Australia',c:'#ffd21a'},
+ {id:'final',n:'LA FINAL',nm:'La Final',ic:'🦈',d:'Contra El Tiburón',z:[21],zs:'Gana a El Tiburón y serás el campeón de la costa',c:'#ff5a5f',fin:1}];
+const METAL=['Bronce','Plata','Oro','Platino','Diamante'];
+let cupStore=store.get('ct_cups',null);if(!cupStore||typeof cupStore!=='object')cupStore={};
+function cupS(id){const s=cupStore[id]||(cupStore[id]={won:0,t:{}});if(!s.t||typeof s.t!=='object')s.t={};return s;}
+function cupLv(i){return Math.min(5,(cupS(CUPS[i].id).won|0)+1);}
+function finalOpen(){const need=cupLv(4);return CUPS.slice(0,4).every(C=>(cupS(C.id).won|0)>=need);}
+function cupTrofN(C){const s=cupS(C.id);let k=0;for(let l=1;l<=5;l++)if(s.t[l]&&s.t[l].n>0)k++;return k;}
+function inCup(){return !G.free&&!G.demo&&G.cup!=null&&CUPS[G.cup];}
+// dificultad de la carrera dentro de la copa (la 1ª fácil, la 5ª como las últimas del campeonato largo)
+function dzi(zi){const C=inCup();if(!C)return zi;return C.fin?21:Math.round((G.cpos|0)*20/Math.max(1,C.z.length-1));}
+let zwon=store.get('ct_zwon',[]);if(!Array.isArray(zwon))zwon=[];
+function trofCount(){let k=0;for(const t of TROFEOS)if(trofStore[t.lv]&&trofStore[t.lv].n>0)k++;for(const C of CUPS)k+=cupTrofN(C);return k;}
 function trofSvg(lv,on,u){const id='tg'+u+lv,L=!on,G2=(a,b,c)=>L?'#5b6578':`url(#${id})`,gr=(a,b,c)=>L?'':`<defs><linearGradient id="${id}" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="${a}"/><stop offset=".5" stop-color="${b}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs>`,dk=L?'#4a5366':null;
  const plinth=`<rect x="14" y="62" width="36" height="12" rx="2" fill="${L?'#2a2f3a':'#5a3a22'}"/><rect x="14" y="62" width="36" height="3" rx="1.5" fill="${L?'#353b48':'#7a5232'}"/><rect x="23" y="66" width="18" height="5" rx="1" fill="${L?'#353b48':'#e8cf9a'}"/>`;
  let s='';
@@ -1026,10 +1070,11 @@ function trofSvg(lv,on,u){const id='tg'+u+lv,L=!on,G2=(a,b,c)=>L?'#5b6578':`url(
  else if(lv===4){s=gr('#f4fbff','#a9c9e2','#45678a')+`<path d="M24 44C27 28 35 13 49 6c-5 9-7 22-3 38z" fill="${G2()}"/><path d="M30 40c3-12 9-23 17-30" fill="none" stroke="${L?dk:'rgba(255,255,255,.8)'}" stroke-width="2" stroke-linecap="round"/><path d="M10 50c5-6 9 1 14-3s9 1 14-3 9 1 16-3v9H10z" fill="${G2()}"/><path d="M12 49c4-4 8 1 12-2s8 1 12-2 8 1 13-2" fill="none" stroke="${L?dk:'#ffffff'}" stroke-width="1.6" opacity=".8"/><rect x="18" y="53" width="28" height="9" rx="2" fill="${L?dk:'#5f84a8'}"/>`;}
  else{s=gr('#ffffff','#8ff0ff','#7a5cff')+`<path d="M32 3l4.3 10.6 11.4.9-8.7 7.4 2.7 11.1L32 27l-9.7 6 2.7-11.1-8.7-7.4 11.4-.9z" fill="${G2()}" stroke="${L?dk:'#ffffff'}" stroke-width="1.2" stroke-linejoin="round"/><path d="M32 3v24M16.3 14.5 32 27l15.7-12.5M25 32.9 32 27l7 5.9" fill="none" stroke="${L?dk:'rgba(255,255,255,.75)'}" stroke-width="1"/><path d="M28 33h8l3 15H25z" fill="${L?dk:'#ffc93c'}"/><rect x="18" y="48" width="28" height="14" rx="3" fill="${L?dk:'#1b1f2e'}" stroke="${L?dk:'#ffc93c'}" stroke-width="1.6"/>`+(L?'':`<circle cx="25" cy="55" r="2.2" fill="#ff3b4f"/><circle cx="32" cy="55" r="2.6" fill="#33d6ff"/><circle cx="39" cy="55" r="2.2" fill="#7be35a"/>`);}
  return `<svg viewBox="0 0 64 76" aria-hidden="true">${s}${plinth}${L?'<g transform="translate(32 30)"><rect x="-7" y="-2" width="14" height="11" rx="2" fill="#c3cad6"/><path d="M-4.5-2v-3a4.5 4.5 0 0 1 9 0v3" fill="none" stroke="#c3cad6" stroke-width="2.4"/></g>':''}</svg>`;}
-function renderTrof(){const g=$('#trGrid');g.textContent='';const dl=difLv(),k=trofCount();$('#trSub').textContent='Dificultad del campeonato: '+dl+'/5 · Trofeos: '+k+' de 5';
- for(const t of TROFEOS){const st=trofStore[t.lv],on=!!(st&&st.n>0),cur=!on&&t.lv===dl;const d=document.createElement('div');d.className='tr '+(on?'on':cur?'cur':'off');d.innerHTML='<div class="ts">'+trofSvg(t.lv,on,'r')+'</div><div><b></b><small></small><span class="dots"></span><em></em></div>';
-  d.querySelector('b').textContent=t.n;d.querySelector('small').textContent=t.m+' · Dificultad '+t.lv;d.querySelector('.dots').textContent='●'.repeat(t.lv)+'○'.repeat(5-t.lv);
-  d.querySelector('em').textContent=on?('Ganado'+(st.n>1?' ×'+st.n:'')+(st.best?' · Mejor: '+pts(st.best)+' puntos':'')+(st.moto?' · '+st.moto:'')):cur?'Gana el campeonato en dificultad '+t.lv+' para conseguirlo':'Bloqueado: primero gana la dificultad '+(t.lv-1);g.append(d);}}
+function renderTrof(){const g=$('#trGrid');g.textContent='';const k=trofCount();$('#trSub').textContent='Trofeos: '+k+' · uno por copa y dificultad';
+ const sec=(nm,col,sub,cells)=>{const d=document.createElement('div');d.className='tcup';d.style.setProperty('--cc',col);d.innerHTML='<div class="tch"><b></b><small></small></div><div class="trow"></div>';d.querySelector('b').textContent=nm;d.querySelector('small').textContent=sub;const r=d.querySelector('.trow');cells.forEach(c=>r.append(c));g.append(d);};
+ const cell=(l,on,cur,u,t)=>{const d=document.createElement('div');d.className='tsm '+(on?'on':cur?'cur':'off');d.innerHTML=trofSvg(l,on,u)+'<span></span>';d.querySelector('span').textContent=METAL[l-1]+(on&&t.n>1?' ×'+t.n:'');return d;};
+ CUPS.forEach((C,ci)=>{const S=cupS(C.id),cur=cupLv(ci),lock=C.fin&&!finalOpen()&&!(S.won>0),cs=[];for(let l=1;l<=5;l++){const t=S.t[l];cs.push(cell(l,!!(t&&t.n>0),!lock&&l===cur,C.id,t));}sec(C.ic+' '+C.n,C.c,lock?'Gana las 4 copas':'Dificultad '+cur+'/5',cs);});
+ if(TROFEOS.some(t=>trofStore[t.lv]&&trofStore[t.lv].n>0)){const cs=TROFEOS.map(t=>{const st=trofStore[t.lv];return cell(t.lv,!!(st&&st.n>0),false,'old',st);});sec('🏆 CAMPEONATO CLÁSICO','#c9ced6','22 pantallas',cs);}}
 function trofBack(){if(G._trFrom==='champ'){G._trFrom=null;show('scrChamp');}else toTitle();}
 const SWATCHES=['#f4f5f7','#b8c0cc','#3a3e46','#16181d','#e3202b','#ff7a1a','#ffd21a','#7be35a','#1f9e52','#19c3c9','#1e5eff','#13285e','#7b3fe4','#ff3f8e'];
 const PAINT_PARTS=[['hull','CASCO ABAJO'],['deck','CASCO ARRIBA'],['hood','TAPA DELANTERA'],['stripe','DETALLES'],['seat','ASIENTO']];
@@ -2092,9 +2137,9 @@ function startZone(){
  G.rivals=[];
  if(Z.riv){const rr=rng(Zn.seed+3);let pool=MOTOS.filter((m,i)=>i!==G.moto&&!m.riva).map(m=>[rr(),m]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]).slice(0,Z.riv);if(Z.boss)pool[Z.riv-1]=SHARK;
   const grid=[[.32,-150],[.72,-110],[.48,-70],[.8,-30],[.3,10]];
-  pool.slice(0,Z.riv).forEach((mm,i)=>{const c=craft(mm,WG*grid[i][0],grid[i][1],false);c.skill=(Z.skill||.9)*(mm===SHARK?1.08:1)*(1+G.lap*.04)*(1+zi*.005)*(.97+i*.012);G.rivals.push(c);});
+  pool.slice(0,Z.riv).forEach((mm,i)=>{const c=craft(mm,WG*grid[i][0],grid[i][1],false);c.skill=(Z.skill||.9)*(mm===SHARK?1.08:1)*(1+G.lap*.04)*(1+dzi(zi)*.005)*(.97+i*.012);G.rivals.push(c);});
   G.P.y=40;G.P.x=WG*.56;
-  const lvl=Math.max(1,Math.min(5,Math.ceil((zi+1)*5/ZONES.length))),k=.86+lvl*.024;for(const c of G.rivals){c.st.maxV=Math.max(c.st.maxV,G.P.st.maxV*k/(c.skill||.9));c.st.acc=Math.max(c.st.acc,G.P.st.acc*(k-.06));c.st.turn=Math.max(c.st.turn,G.P.st.turn*(k-.1));}}
+  const lvl=Math.max(1,Math.min(5,Math.ceil((dzi(zi)+1)*5/ZONES.length))),k=.86+lvl*.024;for(const c of G.rivals){c.st.maxV=Math.max(c.st.maxV,G.P.st.maxV*k/(c.skill||.9));c.st.acc=Math.max(c.st.acc,G.P.st.acc*(k-.06));c.st.turn=Math.max(c.st.turn,G.P.st.turn*(k-.1));}}
  G.ghostRec=[];G._gAcc=0;G.ghost=G.free?store.get('ct_ghost2_'+ZONES[zi].name,null):null;if(G.ghost&&!Array.isArray(G.ghost.p))G.ghost=null;G._pens=0;G._crashes=0;G._newMed=[];
  G.police=[];G.parts_fx=[];G.pops=[];G.pitSlots=0;G.jumps=0;G.gates=0;G.catches=0;G.barUsed=false;G.finishOrder=[];G.elapsed=0;G.zoneCoins=0;G.regenT=0;G.chaseT=0;
  G.time=Z.obj==='time'||Z.obj==='slalom'||Z.obj==='jumps'?Math.round(Zn.len/3/((Z.pace||200)*(1+zi*.008)))+9+(Z.giant?6:0):0;
@@ -2603,18 +2648,18 @@ function demoStart(){G.demo=true;G.zi=0;G.lap=0;G.parts={};G.zone=buildZone(0,0)
 function restartDemo(){demoStart();}
 function goTitle(){G._champOn=false;G._champDone=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();show('scrTitle');renderUser();Music.play('menu');wake(false);}
 function toTitle(){if(G.mode!=='demo'){goTitle();return;}show('scrTitle');renderUser();}
-function renderUser(){drawPortrait($('#uAv'),AVATARS[G.avatar|0]||AVATARS[0],gearEq());$('#uName').textContent=pilotName();$('#uCash').textContent=pts(G.money);$('#uProg').textContent='Campeonato '+best+'/'+ZONES.length;{const k=trofCount();$('#uTrof').textContent='Dificultad '+difLv()+'/5 · 🏆 '+k+(k===1?' trofeo':' trofeos');}}
+function renderUser(){drawPortrait($('#uAv'),AVATARS[G.avatar|0]||AVATARS[0],gearEq());$('#uName').textContent=pilotName();$('#uCash').textContent=pts(G.money);{const w=CUPS.slice(0,4).filter(C=>cupS(C.id).won>0).length;$('#uProg').textContent='Copas '+w+'/4'+(cupS('final').won>0?' · Final ✓':'');}{const k=trofCount();$('#uTrof').textContent='🏆 '+k+(k===1?' trofeo':' trofeos');}}
 function goGarage(){show('scrGarage');renderGarage();Music.play('menu');}
 function goPilot(){show('scrPilot');renderPilot();Music.play('menu');}
 function renderPilot(){const grid=$('#avGrid');grid.textContent='';AVATARS.forEach((a,i)=>{const b=document.createElement('button');b.className='av'+(i===G.avatar?' on':'');const cv=document.createElement('canvas');cv.width=136;cv.height=136;drawPortrait(cv,a);const sp=document.createElement('span');sp.textContent=a.name;b.append(cv,sp);
  b.addEventListener('click',()=>{G.avatar=i;Snd.click();grid.querySelectorAll('.av').forEach((x,j)=>x.classList.toggle('on',j===i));});grid.append(b);});$('#aName').value=G.pname||'';}
-function newGame(){G._champOn=true;G._champDone=false;G.runId=Date.now();G.free=false;G.demo=false;G.zi=0;G.lap=difLv()-1;G.lives=3;G.dmg=0;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
+function newGame(ci){ci=ci==null?(G.cup|0):ci;G.cup=ci;G.cpos=0;G._champOn=true;G._champDone=false;G.runId=Date.now();G.free=false;G.demo=false;G.zi=CUPS[ci].z[0];G.lap=cupLv(ci)-1;G.lives=3;G.dmg=0;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
 function startFree(zi){G.free=true;G.demo=false;G.zi=zi;G.lap=0;G.lives=3;G.dmg=0;G.score=0;G.fuel=100;G.turbo=2;G.parts=partsOf(MOTOS[G.moto]);store.set('ct_moto',G.moto);goMap();}
 function goFree(){G.free=true;if(G.mode!=='demo'){Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;$('#msg').hidden=true;demoStart();wake(false);}show('scrFree');renderFree();Music.play('menu');}
 function renderFree(){const F=$('#fGrid');F.textContent='';ZONES.forEach((Z,i)=>{const b=document.createElement('button');b.className='fz';b.setAttribute('aria-label','Zona '+(i+1)+' '+Z.name);const c=document.createElement('canvas');c.width=400;c.height=225;b.append(c);drawCover(c,i);b.addEventListener('click',()=>{Snd.click();startFree(i);});F.append(b);});
  fontsOK.then(()=>{if(!$('#scrFree').hidden)F.querySelectorAll('canvas').forEach((c,i)=>drawCover(c,i));});}
 function goMap(retry){G.demo=false;G.mode='map';if(retry)G.fuel=Math.max(G.fuel,70);if(!ZONES[G.zi].bar)G.fuel=Math.max(G.fuel,G.zi===ZONES.length-1?100:85);Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;startZone();G.mode='map';show('scrMap');renderMap(retry);Music.play('menu');}
-function startRace(){show(null);$('#hud').hidden=false;lastHud={};$('#zonePill').innerHTML='ZONA '+(G.zi+1)+' <span>·</span> '+G.zone.Z.name;livesUI();turboUI();Music.stop();Snd.init();Snd.engineStart();G.mode='count';G._barHint=0;let n=3;$('#count').hidden=false;
+function startRace(){show(null);$('#hud').hidden=false;lastHud={};{const C=inCup();$('#zonePill').innerHTML=(!C?'ZONA '+(G.zi+1):C.fin?'FINAL':'CARRERA '+((G.cpos|0)+1)+'/'+C.z.length)+' <span>·</span> '+G.zone.Z.name;}livesUI();turboUI();Music.stop();Snd.init();Snd.engineStart();G.mode='count';G._barHint=0;let n=3;$('#count').hidden=false;
  const step=()=>{const c=$('#count');if(G.mode!=='count')return;if(n>0){c.textContent=n;Snd.beep(0);n--;c.classList.remove('go');void c.offsetWidth;c.classList.add('go');setTimeout(step,800);}else{c.textContent='¡YA!';Snd.beep(1);c.classList.remove('go');void c.offsetWidth;c.classList.add('go');G.mode='play';setTimeout(()=>c.hidden=true,700);raceMusic();msg(G.zone.Z.name,G.zone.Z.goal.split('.')[0],'var(--cyan)');if(G.zi===0&&G.lap===0&&!G._tip){G._tip=1;setTimeout(()=>{if(G.mode==='play')msg('TRUCO','DERRAPE + un lado = derrape y miniturbo','var(--pink)');},2600);}}};
  setTimeout(step,300);wake(true);tryFull();}
 function endRace(){Snd.sirenStop();Snd.engineSet(0,0,0,0,0,0,1);}
@@ -2631,31 +2676,36 @@ function zoneWin(){const Zn=G.zone,Z=Zn.Z,P=G.P;Snd.win();Music.play('menu');
  let bonus=500;if(G.time>0){bonus+=Math.round(G.time)*50;lines.push(['Tiempo sobrante',Math.round(G.time)+' s']);}
  if(Z.obj==='slalom')lines.push(['Boyas',G.gates+' / '+Zn.gatesTotal]);if(Z.obj==='jumps')lines.push(['Saltos',String(G.jumps)]);
  bonus*=G.lap+1;G.score+=bonus;G.money+=prize;lines.push(['Premio',pts(prize)+' PTA']);lines.push(['Puntos de la zona','+'+pts(bonus)]);
- const last=G.zi===ZONES.length-1;
+ const CU=inCup(),last=!!CU&&(G.cpos|0)>=CU.z.length-1;
  if(G.zoneCoins>=60)medal('monedas');if(Z.riv&&P.rank===1)medal('podio');if(Z.riv&&!(G._crashes>0))medal('limpio');if(Z.turns&&!(G._pens>0))medal('boyas');if(Z.boss&&P.rank===1)medal('tiburon');
  saveWallet();
  if(G.free){const ft=P.finT||G.elapsed,old=store.get('ct_ghost2_'+ZONES[G.zi].name,null);if(!old||!(old.t<=ft)){store.set('ct_ghost2_'+ZONES[G.zi].name,{t:+ft.toFixed(2),m:MOTOS[G.moto].id,p:G.ghostRec});lines.push([old?'¡Nuevo récord!':'Récord guardado',fmtT(ft)]);}else lines.push(['Tu récord',fmtT(old.t)]);medalLines(lines);showResult('¡PANTALLA SUPERADA!','Carrera libre · '+Z.name,lines,()=>goFree());return;}
- const nb=Math.max(best,G.lap>0?ZONES.length:G.zi+1);if(nb>best){const un=unlocksBetween(best,nb);best=nb;store.set('ct_best',best);if(un.length)lines.push(['¡Desbloqueado!',un.join(' · ')]);}
- medalLines(lines);showResult(last?'¡HAS GANADO LA FINAL!':'¡ZONA SUPERADA!',last?'Has ganado a El Tiburón y el campeonato.':'Zona '+(G.zi+1)+' · '+Z.name,lines,()=>{if(last)champEnd();else{G.zi++;goMap();}});}
-function champEnd(){G._champDone=true;medal('campeon');G.mode='over';const lv=Math.max(1,Math.min(5,G.lap+1)),T=trofStore[lv]||(trofStore[lv]={n:0,best:0});T.n=(T.n|0)+1;if(!T.at)T.at=Date.now();if((G.score|0)>(T.best|0)){T.best=G.score|0;T.moto=motoName(MOTOS[G.moto]);}store.set('ct_trof',trofStore);const nxt=Math.min(5,lv+1);if(nxt>difLv())store.set('ct_dif',nxt);const m=MOTOS[G.moto],en={name:pilotName(),score:G.score|0,zone:ZONES.length,lap:G.lap,moto:m.id,mname:paintOf(m).name||'',at:G.runId||Date.now()};
+ if(!zwon.includes(G.zi)){zwon.push(G.zi);store.set('ct_zwon',zwon);}const nb=Math.min(22,Math.max(best,zwon.length));if(nb>best){const un=unlocksBetween(best,nb);best=nb;store.set('ct_best',best);if(un.length)lines.push(['¡Desbloqueado!',un.join(' · ')]);}
+ medalLines(lines);showResult(last?(CU.fin?'¡HAS GANADO LA FINAL!':'¡HAS GANADO LA '+CU.n+'!'):'¡CARRERA SUPERADA!',last?(CU.fin?'Has ganado a El Tiburón.':'Has ganado las '+CU.z.length+' carreras.'):'Carrera '+((G.cpos|0)+1)+' de '+CU.z.length+' · '+Z.name,lines,()=>{if(last)champEnd();else{G.cpos=(G.cpos|0)+1;G.zi=CU.z[G.cpos];goMap();}});}
+function champEnd(){G._champDone=true;medal('campeon');G.mode='over';const C=CUPS[G.cup|0],S=cupS(C.id),lv=Math.max(1,Math.min(5,G.lap+1)),T=S.t[lv]||(S.t[lv]={n:0,best:0});T.n=(T.n|0)+1;if(!T.at)T.at=Date.now();if((G.score|0)>(T.best|0)){T.best=G.score|0;T.moto=motoName(MOTOS[G.moto]);}
+ const wasOpen=finalOpen();if(lv>(S.won|0))S.won=lv;store.set('ct_cups',cupStore);
+ const m=MOTOS[G.moto],en={name:pilotName(),score:G.score|0,zone:C.z.length,lap:G.lap,cup:C.id,moto:m.id,mname:paintOf(m).name||'',at:G.runId||Date.now()};
  const q=qualifies(G.score);if(q){lastHl=en.at;saveScore(en);}
- $('#cScore').textContent=pts(G.score)+' PUNTOS';$('#cInfo').textContent='Has ganado las '+ZONES.length+' carreras en dificultad '+lv+' con '+motoName(m)+'.';const TT=TROFEOS[lv-1];$('#cTrof').innerHTML=trofSvg(lv,true,'c');$('#cTrofTxt').textContent=(T.n>1?'Trofeo '+TT.n+' ×'+T.n:'¡Nuevo trofeo: '+TT.n+'!')+(lv<5?' · Siguiente: dificultad '+(lv+1)+'/5':' · Dificultad máxima');
+ $('#cH').textContent=C.fin?'¡CAMPEÓN DE LA COSTA!':'¡GANAS LA '+C.n+'!';
+ $('#cScore').textContent=pts(G.score)+' PUNTOS';$('#cInfo').textContent=(C.fin?'Has ganado a El Tiburón':'Has ganado las '+C.z.length+' carreras de la '+C.nm)+' en dificultad '+lv+' con '+motoName(m)+'.';
+ $('#cTrof').innerHTML=trofSvg(lv,true,'c');const tn=C.nm+' · '+METAL[lv-1];let tx=(T.n>1?'Trofeo '+tn+' ×'+T.n:'¡Nuevo trofeo: '+tn+'!')+(lv<5?' · Siguiente: dificultad '+(lv+1)+'/5':' · Dificultad máxima');
+ if(!C.fin&&!wasOpen&&finalOpen())tx+=' · ¡LA FINAL DESBLOQUEADA!';$('#cTrofTxt').textContent=tx;
  const r=$('#cRank');r.className='crank'+(q?'':' no');r.textContent=q?'¡Entras en el TOP 10 como '+en.name+'!':'Esta vez no entras en el top 10.';
- $('#cNext').textContent=lv<5?'CAMPEONATO · DIFICULTAD '+(lv+1)+'/5':'OTRO CAMPEONATO · DIFICULTAD 5/5';show('scrChamp');Snd.win();}
+ $('#cNext').textContent='ELEGIR COPA';show('scrChamp');Snd.win();}
 function medSvg(on){const a=on?'#ffe08a':'#6b7486',b=on?'#e0a227':'#454c5a',r=on?'#e3202b':'#3a404c';return `<svg viewBox="0 0 38 38" aria-hidden="true"><path d="M12 2h6l3 11h-6zM26 2h-6l-3 11h6z" fill="${r}"/><circle cx="19" cy="24" r="11" fill="${b}"/><circle cx="19" cy="24" r="8" fill="${a}"/><path d="M19 18.5l1.7 3.4 3.8.5-2.8 2.6.7 3.7-3.4-1.8-3.4 1.8.7-3.7-2.8-2.6 3.8-.5z" fill="${b}"/></svg>`;}
 function renderMedals(){const g=$('#mdGrid');g.textContent='';let n=0;for(const m of MEDALS){const on=!!medStore[m.id];if(on)n++;const d=document.createElement('div');d.className='md '+(on?'on':'off');d.innerHTML=medSvg(on)+'<div><b></b><small></small><em></em></div>';d.querySelector('b').textContent=m.n;d.querySelector('small').textContent=m.d;d.querySelector('em').textContent=(on?'Conseguida · ':'Premio: ')+pts(m.r)+' PTA';g.append(d);}
  $('#mdSub').textContent=n+' de '+MEDALS.length+' medallas conseguidas';}
 function rankBack(){if(G._champDone&&G.mode==='over'&&!G.demo)show('scrChamp');else goTitle();}
 function failZone(why,fromFinish){if(G.mode==='over')return;G.mode='result';endRace();if(!G.free)G.lives--;livesUI();Snd.fail();Music.play('menu');
  if(G.lives<=0){setTimeout(gameOver,fromFinish?0:900);if(!fromFinish)msg(why,'¡Sin vidas!','var(--red)');return;}
- showResult('¡NO LO HAS CONSEGUIDO!',(why||'')+(G.free?' Vuelve a intentarlo: en carrera libre empiezas con los corazones llenos.':' Te queda'+(hpTot()>3?'n ':' ')+hpTxt()+'.'),[['Zona',(G.zi+1)+' · '+G.zone.Z.name],['Puntos',pts(G.score)]],()=>goMap(true),fromFinish?0:1000);}
+ showResult('¡NO LO HAS CONSEGUIDO!',(why||'')+(G.free?' Vuelve a intentarlo: en carrera libre empiezas con los corazones llenos.':' Te queda'+(hpTot()>3?'n ':' ')+hpTxt()+'.'),[[G.free?'Zona':'Carrera',(G.free?G.zi+1:(G.cpos|0)+1)+' · '+G.zone.Z.name],['Puntos',pts(G.score)]],()=>goMap(true),fromFinish?0:1000);}
 function showResult(title,sub,lines,next,delay){setTimeout(()=>{$('#hud').hidden=true;$('#rTitle').textContent=title;$('#rSub').textContent=sub;const L=$('#rList');L.textContent='';
  for(const[a,b]of lines){const d=document.createElement('div');d.className='rl';const s=document.createElement('span');s.textContent=a;const v=document.createElement('b');v.textContent=b;d.append(s,v);L.append(d);}
  const t=document.createElement('div');t.className='rl tot';t.innerHTML='<span>TOTAL</span>';const tb=document.createElement('b');tb.textContent=pts(G.score)+' PUNTOS';t.append(tb);L.append(t);
  G._next=next;show('scrResult');Snd.engineStop();},delay||0);}
 function gameOver(){G.mode='over';G._champOn=false;Snd.engineStop();Snd.sirenStop();$('#hud').hidden=true;Music.play('menu');wake(false);saveWallet();
  if(G.free){showResult('¡SIN VIDAS!','Se acabó esta carrera libre. Las pesetas que has ganado se quedan en tu monedero.',[['Zona',(G.zi+1)+' · '+G.zone.Z.name],['Monedero',pts(G.money)+' PTA']],()=>goFree());return;}
- $('#oScore').textContent=pts(G.score);$('#oInfo').textContent='Llegaste a la zona '+(G.zi+1)+' ('+G.zone.Z.name+') en dificultad '+(G.lap+1)+' con '+MOTOS[G.moto].name+'.';
+ $('#oScore').textContent=pts(G.score);{const C=CUPS[G.cup|0];$('#oInfo').textContent='Llegaste a la carrera '+((G.cpos|0)+1)+' de '+(C.fin?'La Final':'la '+C.nm)+' ('+G.zone.Z.name+') en dificultad '+(G.lap+1)+' con '+MOTOS[G.moto].name+'.';}
  const f=$('#nameForm');f.hidden=!qualifies(G.score);if(!f.hidden)$('#nameIn').value=G.pname||store.get('ct_name','')||pilotName();show('scrOver');}
 function togglePause(){if(G.mode==='play'||G.mode==='count'){G._pm=G.mode;G.mode='pause';Snd.engineSet(0,0,0,0,0,0,1);Snd.sirenStop();show('scrPause');}else if(G.mode==='pause'){resume();}}
 function resume(){show(null);G.mode=G._pm==='count'?'play':G._pm||'play';$('#count').hidden=true;last=performance.now();}
@@ -2760,13 +2810,13 @@ function renderGarage(){const m=MOTOS[G.moto],ms=motoState(m),[mpr,mneed]=SHOP[m
  statRows($('#gStats'),m);
  const D=$('#gDots');D.textContent='';MOTOS.forEach((_,i)=>{const s=document.createElement('span');if(i===G.moto)s.className='on';D.append(s);});}
 function changeMoto(d){G.moto=(G.moto+d+MOTOS.length)%MOTOS.length;Snd.click();renderGarage();}
-function renderMap(retry){const Z=ZONES[G.zi];$('#mZoneN').textContent=(retry?'OTRA VEZ · ':'')+(G.free?'CARRERA LIBRE · ZONA '+(G.zi+1):'CAMPEONATO · ZONA '+(G.zi+1)+' DE '+ZONES.length+' · DIFICULTAD '+(G.lap+1)+'/5');$('#mZoneName').textContent=Z.name;$('#mGoal').textContent=Z.goal;
+function renderMap(retry){const Z=ZONES[G.zi];{const C=inCup();$('#mZoneN').textContent=(retry?'OTRA VEZ · ':'')+(!C?'CARRERA LIBRE · ZONA '+(G.zi+1):C.n+(C.fin?'':' · CARRERA '+((G.cpos|0)+1)+' DE '+C.z.length)+' · DIFICULTAD '+(G.lap+1)+'/5');}$('#mZoneName').textContent=Z.name;$('#mGoal').textContent=Z.goal;
  const I=$('#mInfo');I.textContent='';const tag=(t,c)=>{const s=document.createElement('span');if(c)s.className=c;s.textContent=t;I.append(s);};
  tag('♥ '+G.lives+' vidas','red');tag(pts(G.money)+' PTA','gold');tag('Gasolina '+Math.ceil(G.fuel)+' %',G.fuel<35?'red':'lime');tag('Turbos: '+G.turbo);
  if(G.free){const gh=store.get('ct_ghost2_'+ZONES[G.zi].name,null);if(gh&&gh.t)tag('Tu récord: '+fmtT(gh.t)+' · corre contra tu fantasma','gold');}
  tag(Z.bar==='jj'?"Bar JJ's a mitad de zona":Z.bar==='beso'?'Beso Beach a mitad de zona':Z.bar==='roxy'?'Bar Roxy a mitad de zona':Z.boss?'Sin bar: depósito lleno para la final':'Sin bar: sales con el depósito al 85 %');if(Z.piri)tag('Piri-Piri: vida y turbos','gold');
  const c=$('#mapCv');drawCover(c,G.zi);fontsOK.then(()=>{if(!$('#scrMap').hidden)drawCover(c,G.zi);});
- const P=$('#mProg');P.hidden=!!G.free;P.textContent='';if(!G.free)ZONES.forEach((_,i)=>{const sp=document.createElement('span');sp.textContent=i+1;if(i<G.zi)sp.className='ok';else if(i===G.zi)sp.className='on';P.append(sp);});
+ const P=$('#mProg'),PC=inCup();P.hidden=!PC||!!PC.fin;P.textContent='';if(PC&&!PC.fin)PC.z.forEach((_,i)=>{const sp=document.createElement('span');sp.textContent=i+1;if(i<(G.cpos|0))sp.className='ok';else if(i===(G.cpos|0))sp.className='on';P.append(sp);});
  }
 
 /* ================= PORTADAS ================= */
@@ -2945,7 +2995,7 @@ function drawCover(c,zi){const g=c.getContext('2d'),W=400,H=225,HZ=96,C=COVER[zi
  gg=g.createLinearGradient(0,0,0,74);gg.addColorStop(0,'rgba(5,14,34,.55)');gg.addColorStop(1,'rgba(5,14,34,0)');g.fillStyle=gg;g.fillRect(0,0,W,74);
  // título
  g.save();g.textBaseline='alphabetic';g.textAlign='left';g.lineJoin='round';
- g.font='800 13px "Saira Condensed",sans-serif';const zt='ZONA '+(zi+1),zw=g.measureText(zt).width+16;g.fillStyle='#ff7a1a';g.beginPath();g.roundRect(12,10,zw,19,9.5);g.fill();g.fillStyle='#fff';g.fillText(zt,20,24);
+ g.font='800 13px "Saira Condensed",sans-serif';const CZ=zi===G.zi&&inCup(),zt=CZ?(CZ.fin?'FINAL':'CARRERA '+((G.cpos|0)+1)):'ZONA '+(zi+1),zw=g.measureText(zt).width+16;g.fillStyle='#ff7a1a';g.beginPath();g.roundRect(12,10,zw,19,9.5);g.fill();g.fillStyle='#fff';g.fillText(zt,20,24);
  let nm=Z.name,pre='';if(nm.indexOf('CARRERA ')===0){pre='CARRERA';nm=nm.slice(8);}
  g.translate(14,0);g.transform(1,0,-.16,1,0,0);let fs=44;g.font=`800 ${fs}px "Saira Condensed",sans-serif`;while(g.measureText(nm).width>250&&fs>24){fs-=2;g.font=`800 ${fs}px "Saira Condensed",sans-serif`;}
  let y=31+(pre?14:0)+fs*.8;
@@ -2966,7 +3016,7 @@ function drawCover(c,zi){const g=c.getContext('2d'),W=400,H=225,HZ=96,C=COVER[zi
   else if(t[3]==='siren'){g.beginPath();g.arc(ix,iy+3,5.5,Math.PI,0);g.closePath();g.fill();g.fillRect(ix-7.5,iy+3.5,15,3);g.lineWidth=1.8;for(const a of[-2.5,-1.57,-.64]){g.beginPath();g.moveTo(ix+Math.cos(a)*8,iy+2+Math.sin(a)*8);g.lineTo(ix+Math.cos(a)*11,iy+2+Math.sin(a)*11);g.stroke();}}
   else if(t[3]==='cup'){g.beginPath();g.moveTo(ix-6,iy-7);g.lineTo(ix+6,iy-7);g.quadraticCurveTo(ix+6,iy+2,ix,iy+2);g.quadraticCurveTo(ix-6,iy+2,ix-6,iy-7);g.fill();g.fillRect(ix-1.2,iy+2,2.4,3.5);g.fillRect(ix-4.5,iy+5.5,9,2.4);g.lineWidth=1.6;g.beginPath();g.arc(ix-6.5,iy-3.5,2.6,Math.PI*.5,Math.PI*1.5);g.stroke();g.beginPath();g.arc(ix+6.5,iy-3.5,2.6,-Math.PI*.5,Math.PI*.5);g.stroke();}
   g.fillStyle=dark?'#2a1b00':'#ffffff';if(!dark){g.lineWidth=3;g.strokeStyle='rgba(0,0,0,.18)';g.strokeText(t[0],bx+31,by+bh/2+1);}g.fillText(t[0],bx+31,by+bh/2+1);g.restore();}
- {const n=ZONES.length,lv=Math.max(1,Math.min(5,Math.ceil((zi+1)*5/n))),bx=12,by=H-26,sw=22,gap=4;g.save();g.fillStyle='rgba(8,22,48,.78)';g.beginPath();g.roundRect(bx-6,by-15,5*(sw+gap)+66,26,9);g.fill();
+ {const n=ZONES.length,lv=Math.max(1,Math.min(5,Math.ceil(((zi===G.zi?dzi(zi):zi)+1)*5/n))),bx=12,by=H-26,sw=22,gap=4;g.save();g.fillStyle='rgba(8,22,48,.78)';g.beginPath();g.roundRect(bx-6,by-15,5*(sw+gap)+66,26,9);g.fill();
   g.font='800 10px "Saira Condensed",sans-serif';g.textBaseline='middle';g.textAlign='left';g.fillStyle='#ffffff';g.fillText('DIFICULTAD',bx,by-2);
   for(let i=0;i<5;i++){const x=bx+56+i*(sw+gap),h=5+i*1.6;const hue=120-i*30;g.fillStyle=i<lv?`hsl(${hue},85%,55%)`:'rgba(255,255,255,.18)';g.beginPath();g.roundRect(x,by+4-h,sw,h,2);g.fill();}
   g.restore();}}
@@ -2983,7 +3033,7 @@ async function saveScore(e){const loc=localRank().filter(x=>x.at!==e.at);loc.pus
 function renderRank(){const ol=$('#rankList'),list=rankList();ol.textContent='';$('#rankSrc').textContent=(globalScores&&dbWritable)?'Ranking guardado en la nube':'Guardado en este móvil';
  if(!list.length){const li=document.createElement('li');li.className='rank-empty';li.textContent='Aún no hay récords. ¡Sé el primero!';ol.append(li);return;}
  list.slice(0,10).forEach((e,i)=>{const m=MOTOS.find(x=>x.id===e.moto)||MOTOS[0];const li=document.createElement('li');li.className='rk'+(lastHl&&e.at===lastHl?' me':'');li.style.setProperty('--sc',m.ui);
-  const a=document.createElement('span');a.className='pos';a.textContent=(i+1)+'º';const n=document.createElement('span');n.className='nm';n.textContent=String(e.name||'PILOTO').slice(0,12);const mt=document.createElement('span');mt.className='meta';mt.textContent=(e.mname?String(e.mname).slice(0,12)+' · ':'')+m.name+' · zona '+((e.zone|0)||1)+(e.lap>0?' · dificultad '+((e.lap|0)+1):'');n.append(mt);const sc=document.createElement('span');sc.className='sc';sc.textContent=pts(e.score);li.append(a,n,sc);ol.append(li);});}
+  const a=document.createElement('span');a.className='pos';a.textContent=(i+1)+'º';const n=document.createElement('span');n.className='nm';n.textContent=String(e.name||'PILOTO').slice(0,12);const mt=document.createElement('span');mt.className='meta';mt.textContent=(e.mname?String(e.mname).slice(0,12)+' · ':'')+m.name+(e.cup?' · '+String((CUPS.find(C=>C.id===e.cup)||{nm:e.cup}).nm).slice(0,20):' · zona '+((e.zone|0)||1))+(e.lap>0?' · dificultad '+((e.lap|0)+1):'');n.append(mt);const sc=document.createElement('span');sc.className='sc';sc.textContent=pts(e.score);li.append(a,n,sc);ol.append(li);});}
 (async()=>{try{if(!window.claude||!window.claude.use)return;db=await window.claude.use('db');if(!db)return;db.collection('scores').orderBy('score','desc').limit(10).onSnapshot(s=>{globalScores=s.docs.map(d=>d.data()).filter(validEntry);if(!$('#scrRank').hidden)renderRank();},()=>{globalScores=null;});}catch(e){db=null;}})();
 
 /* ================= BOTONES ================= */
@@ -2998,7 +3048,7 @@ $('#aName').addEventListener('input',e=>{G.pname=e.target.value.toUpperCase().re
 on('#bSet',()=>{Snd.click();show('scrSet');labels();});on('#setBk',()=>{Snd.click();goTitle();});
 on('#sSnd',()=>{Snd.setOn(!Snd.on);Snd.click();});on('#sMus',()=>{Snd.setMus(!Snd.musOn);if(Snd.musOn)Music.play('menu');});
 on('#sVib',()=>{VIB_ON=!VIB_ON;store.set('ct_vib',VIB_ON);labels();if(VIB_ON)vibNow(80);});on('#pSnd',()=>Snd.setOn(!Snd.on));on('#pMus',()=>Snd.setMus(!Snd.musOn));
-on('#gBack',()=>{Snd.click();goPilot();});
+on('#gBack',()=>{Snd.click();goPilot();});on('#cuBk',()=>{Snd.click();goGarage();});
 const paintM=()=>MOTOS[shopI]||MOTOS[G.moto];
 function paintChanged(){const a=G._draft,b=paintOf(paintM());return['colors','hull','deck','hood','stripe','seat'].some(k=>String(a[k])!==String(b[k]));}
 function paintBtn(){const ch=paintChanged(),b=$('#pSave');b.textContent=ch?'GUARDAR · '+PAINT_PRICE+' PTA':'GUARDAR';b.disabled=ch&&G.money<PAINT_PRICE;}
@@ -3013,7 +3063,13 @@ on('#gPaint',()=>{Snd.click();goShop('garage');});
 on('#pBack',()=>{Snd.click();backShop();});
 on('#pReset',()=>{const m=paintM();G._draft=Object.assign(defaultPaint(m),{name:G._draft.name});Snd.click();paintRows();paintPreview();});
 on('#pSave',()=>{const m=paintM(),ch=paintChanged();if(ch&&G.money<PAINT_PRICE)return;if(ch){G.money-=PAINT_PRICE;saveWallet();}paintStore[m.id]=Object.assign({},G._draft);store.set('ct_paint',paintStore);SP.jet[m.id]=sprite(32,68,g=>drawJet(g,skOf(m)));SP.jetP=sprite(32,68,g=>drawJet(g,playerSk()));Snd.cash();backShop();});on('#gPrev',()=>changeMoto(-1));on('#gNext',()=>changeMoto(1));
-on('#gGo',()=>{Snd.click();const m=MOTOS[G.moto];if(!owns(m)){goShop('garage');return;}store.set('ct_moto',G.moto);if(G.free)goFree();else if(G._champOn){G.parts=partsOf(MOTOS[G.moto]);goMap();}else newGame();});
+on('#gGo',()=>{Snd.click();const m=MOTOS[G.moto];if(!owns(m)){goShop('garage');return;}store.set('ct_moto',G.moto);if(G.free)goFree();else if(G._champOn){G.parts=partsOf(MOTOS[G.moto]);goMap();}else goCups();});
+function goCups(){show('scrCups');renderCups();Music.play('menu');}
+function renderCups(){const L=$('#cuList');L.textContent='';CUPS.forEach((C,ci)=>{const S=cupS(C.id),lv=cupLv(ci),lock=!!C.fin&&!finalOpen(),b=document.createElement('button');b.className='cupc'+(lock?' lk':'');b.style.setProperty('--cc',C.c);
+ b.innerHTML='<i class="ci"></i><div class="cm"><b></b><small></small><span class="cz"></span></div><div class="cr"><em></em><span class="ct"></span></div>';
+ b.querySelector('.ci').textContent=C.ic;b.querySelector('b').textContent=C.n;b.querySelector('small').textContent=C.d+(C.fin?'':' · 5 carreras');b.querySelector('.cz').textContent=lock?('Gana las 4 copas'+(lv>1?' en dificultad '+lv:'')+' para desbloquearla'):C.zs;
+ b.querySelector('em').textContent=lock?'🔒 BLOQUEADA':'DIFICULTAD '+lv+'/5';const k=cupTrofN(C);b.querySelector('.ct').textContent=lock?'':k?'🏆 '+k+' de 5':'Sin trofeos';
+ b.addEventListener('click',()=>{Snd.init();if(lock){Snd.miss();return;}Snd.click();newGame(ci);});L.append(b);});}
 /* ---- taller ---- */
 let shopI=0,shopFrom='title';
 function goShop(from){shopFrom=from||'title';shopI=G.moto;show('scrShop');renderShop();Music.play('menu');}
@@ -3068,8 +3124,8 @@ on('#mBk',()=>{Snd.click();if(G.free)goFree();else goGarage();});
 on('#rBk',()=>{Snd.click();const n=G._next;G._next=null;n&&n();});
 on('#psBk',()=>resume());on('#oBk',()=>{Snd.click();goTitle();});on('#rkBk',()=>{Snd.click();rankBack();});
 on('#bMed',()=>{Snd.click();show('scrMedals');renderMedals();});on('#bTrof',()=>{Snd.click();G._trFrom=null;show('scrTrof');renderTrof();});on('#trBk',()=>{Snd.click();trofBack();});on('#mdBk',()=>{Snd.click();toTitle();});
-on('#cNext',()=>{Snd.click();G._champDone=false;G.zi=0;G.lap=difLv()-1;goMap();});on('#cTr',()=>{Snd.click();G._trFrom='champ';show('scrTrof');renderTrof();});on('#cRk',()=>{Snd.click();show('scrRank');renderRank();});on('#cMenu',()=>{Snd.click();goTitle();});on('#cBk',()=>{Snd.click();goTitle();});
-function midChamp(){return !!G._champOn&&!G._champDone&&!G.free&&(G.zi>0||G.lap>0)&&G.mode!=='over';}
+on('#cNext',()=>{Snd.click();G._champDone=false;G._champOn=false;goCups();});on('#cTr',()=>{Snd.click();G._trFrom='champ';show('scrTrof');renderTrof();});on('#cRk',()=>{Snd.click();show('scrRank');renderRank();});on('#cMenu',()=>{Snd.click();goTitle();});on('#cBk',()=>{Snd.click();goTitle();});
+function midChamp(){return !!G._champOn&&!G._champDone&&!G.free&&(G.cpos|0)>0&&G.mode!=='over';}
 function goHome(){if(midChamp()&&!confirm('¿Volver al inicio? Dejas el campeonato a medias.'))return;Snd.click();goTitle();}
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[data-home]');if(!b)return;e.preventDefault();Snd.init();goHome();});
 on('#mGo',()=>startRace());on('#btnPause',()=>togglePause());on('#pResume',()=>resume());on('#pQuit',()=>goTitle());
@@ -3084,7 +3140,7 @@ function tryFull(){if(fsOK&&!(document.fullscreenElement||document.webkitFullscr
 on('#bFull',()=>goFull());
 let wl=null;async function wake(v){try{if(v&&navigator.wakeLock&&!wl)wl=await navigator.wakeLock.request('screen');else if(!v&&wl){await wl.release();wl=null;}}catch(_){wl=null;}}
 $('#nameForm').addEventListener('submit',e=>{e.preventDefault();const inp=$('#nameIn');const name=(inp.value.toUpperCase().replace(/[^A-Z0-9ÁÉÍÓÚÜÑ .\-_]/g,'').trim()||'PILOTO').slice(0,12);
- const en={name,score:G.score|0,zone:G.zi+1,lap:G.lap,moto:MOTOS[G.moto].id,mname:paintOf(MOTOS[G.moto]).name||'',at:G.runId||Date.now()};store.set('ct_name',name);lastHl=en.at;inp.blur();$('#nameForm').hidden=true;Snd.win();saveScore(en);show('scrRank');renderRank();});
+ const en={name,score:G.score|0,zone:(G.cpos|0)+1,cup:(CUPS[G.cup|0]||{}).id,lap:G.lap,moto:MOTOS[G.moto].id,mname:paintOf(MOTOS[G.moto]).name||'',at:G.runId||Date.now()};store.set('ct_name',name);lastHl=en.at;inp.blur();$('#nameForm').hidden=true;Snd.win();saveScore(en);show('scrRank');renderRank();});
 
 /* ================= MANDOS ================= */
 const mz=$('#mz'),arL=$('#arL'),arR=$('#arR'),keys={};let padDir=0,padAcc=false,padRev=false,padDrift=false;const mzP=new Map();
@@ -3128,7 +3184,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=76;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=77;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
