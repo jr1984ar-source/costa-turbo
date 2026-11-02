@@ -17,9 +17,9 @@ rows=np.arange(H)[:,None];cols=np.arange(W)[None,:]
 # costa norte
 en=(300+55*noise(W,seed=1)).astype(int)
 land(rows<en[None,:])
-# costa sur (deja libre la salida a la izquierda)
+# costa sur
 es=(H-60-18*noise(W,seed=3)).astype(int)
-land((rows>=es[None,:])&(cols>420))
+land(rows>=es[None,:])   # cerrado del todo (también junto a la salida)
 def blob(cx,cy,rx,ry,seed,amp=.18):
     a=np.arctan2((rows-cy)/ry,(cols-cx)/rx);rr=np.hypot((rows-cy)/ry,(cols-cx)/rx)
     r=np.random.default_rng(seed);k=1.0

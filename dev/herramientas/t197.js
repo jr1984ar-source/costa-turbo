@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+ await p.goto('file://'+process.cwd()+'/ct-wrapped2.html');await p.waitForTimeout(1800);
+ await p.evaluate(()=>{localStorage.clear();});await p.reload();await p.waitForTimeout(1500);
+ await p.evaluate(()=>__T.startFree(22));await p.waitForTimeout(500);await p.evaluate(()=>__T.startRace());await p.waitForTimeout(4200);
+ await p.screenshot({path:'v102-salida.png'});
+ await p.evaluate(()=>{const P=__G.P;P.h=Math.PI;P.va=Math.PI;P.v=0;});await p.waitForTimeout(2500);await p.screenshot({path:'v102-sur.png'});
+ await p.evaluate(()=>{const P=__G.P,o=__G.zone.objs.find(o=>o.t==='pgbar'&&o.k==='jj');P.x=o.x+250;P.y=o.y+500;P.h=P.va=0;P.v=0;});await p.waitForTimeout(1500);await p.screenshot({path:'v102-jj.png'});
+ console.log('lane',JSON.stringify(await p.evaluate(()=>__G.zone.lane)));
+ console.log('errs',JSON.stringify(errs));await b.close();})();
