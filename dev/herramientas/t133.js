@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a),sh=n=>p.screenshot({path:`v68-${n}.png`});
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1200);await E(()=>{__G.money=60000;});
+ await p.click('#bShop');await W(600);
+ await p.click('#sPaint');await W(600);await p.fill('#pName','La Perla');await W(500);await sh('pintar');
+ await p.click('#pSave');await W(500);await sh('taller');
+ for(let i=0;i<7;i++){await p.click('#sNext');await W(150);} await W(400);await sh('sombra');
+ await p.click('#sNext');await W(400);await sh('tiburon');await p.click('#sNext');await W(400);await sh('dorada');
+ console.log(JSON.stringify(errs));await b.close();})();

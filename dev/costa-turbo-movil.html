@@ -1077,7 +1077,16 @@ function skiPaint(p){const key=[p.hull,p.deck,p.hood,p.stripe,p.seat].join(',');
   if(lu(c)<.12){const k=s[i+1]/90;r=Math.max(r,30*k);g=Math.max(g,33*k);b=Math.max(b,38*k);}
   o[i]=r;o[i+1]=g;o[i+2]=b;}
  if(SKI_CACHE.size>16)SKI_CACHE.delete(SKI_CACHE.keys().next().value);SKI_CACHE.set(key,out);return out;}
-function motoArt(cv,m,p){const box=cv.parentElement;let c2=box.querySelector('canvas.mph');if(!c2){c2=document.createElement('canvas');c2.className='mph';box.insertBefore(c2,cv);}cv.hidden=true;c2.hidden=false;p=p||paintOf(m);const tok=(c2._tok=(c2._tok|0)+1);skiMapLoad(()=>{if(c2._tok!==tok)return;const d=skiPaint(p);if(c2.width!==d.width){c2.width=d.width;c2.height=d.height;}c2.getContext('2d').putImageData(d,0,0);});}
+// Nombre de la moto en el costado y pegatina Riva Racing
+function skiDecor(g,m,p){const lu=c=>(parseInt(c.slice(1,3),16)*.299+parseInt(c.slice(3,5),16)*.587+parseInt(c.slice(5,7),16)*.114)/255;
+ const nm=(p&&p.name||'').trim();
+ if(nm){g.save();g.translate(560,372);g.rotate(.43);g.transform(1,0,-.28,1,0,0);g.font='italic 800 60px "Saira Condensed",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';const lt=lu(p.deck)>.6;
+  g.lineJoin='round';g.lineWidth=8;g.strokeStyle=lt?'rgba(255,255,255,.8)':'rgba(0,0,0,.6)';g.strokeText(nm.toUpperCase(),0,0,330);g.fillStyle=lt?'#16181d':'#ffffff';g.fillText(nm.toUpperCase(),0,0,330);g.restore();}
+ if(m&&m.riva){g.save();g.translate(880,500);g.rotate(.36);g.scale(1.45,1.45);g.transform(1,0,-.25,1,0,0);
+  g.fillStyle='#16181d';g.beginPath();g.moveTo(-104,-24);g.lineTo(110,-24);g.lineTo(104,24);g.lineTo(-110,24);g.closePath();g.fill();
+  g.fillStyle='#e3202b';g.beginPath();g.moveTo(-98,-18);g.lineTo(104,-18);g.lineTo(98,18);g.lineTo(-104,18);g.closePath();g.fill();
+  g.fillStyle='#ffffff';g.font='italic 800 30px "Saira Condensed",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('RIVA RACING',0,2);g.restore();}}
+function motoArt(cv,m,p){const box=cv.parentElement;let c2=box.querySelector('canvas.mph');if(!c2){c2=document.createElement('canvas');c2.className='mph';box.insertBefore(c2,cv);}cv.hidden=true;c2.hidden=false;p=p||paintOf(m);const tok=(c2._tok=(c2._tok|0)+1);skiMapLoad(()=>{if(c2._tok!==tok)return;const d=skiPaint(p);if(c2.width!==d.width){c2.width=d.width;c2.height=d.height;}const cx2=c2.getContext('2d');cx2.putImageData(d,0,0);skiDecor(cx2,m,p);});}
 const MOTO_DESC={brava:'Equilibrada y fiable.',inferno:'Pura potencia. Acelera como nadie.',avispa:'Agresiva en las curvas. Pica fuerte.',oceano:'La más rápida en recta.',marea:'Gira y salta como nadie.',solar:'Turbo largo y mucha cabeza.',veneno:'Ligera y nerviosa. Sale disparada.',sombra:'Kit Riva Racing: rápida, fina y fría en las curvas.',gris:'Kit Riva Racing: la moto del Tiburón. La más bestia.',dorada:'Kit Riva Racing: la joya del taller. La más cara.'};
 const TOD={
  morning:{deep:'#1384c8',deep2:'#0b5aa8',tint:null},
@@ -3094,7 +3103,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=67;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=68;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
