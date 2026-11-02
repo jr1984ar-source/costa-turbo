@@ -43,6 +43,16 @@ lab[red & ~low] = 2
 lab[HOODM | (poly(HOOD) & dark)] = 3
 lab[(poly(SEAT) & dark) | SEATM] = 5
 lab[DETM] = 4
+# retrovisores fuera de la tapa: siempre negros
+hz = ((lab == 3) & (L > .1)).astype(np.uint8)
+nh, lh, sh2, _ = cv2.connectedComponentsWithStats(hz, connectivity=4)
+for i in range(1, nh):
+    x, y, w, h_, a_ = sh2[i]
+    if x > 940 and x + w < 1045 and y + h_ < 260: lab[(lh == i) | ((lab == 3) & (np.abs(np.arange(W)[None, :] - (x + w / 2)) < w / 2 + 3) & (np.abs(np.arange(H)[:, None] - (y + h_ / 2)) < h_ / 2 + 3) & (L <= .1))] = 6
+    elif w * h_ < 2000: lab[lh == i] = 6
+yy_, xx_ = np.mgrid[0:H, 0:W]
+mirL = (lab == 3) & (xx_ < 838 + (yy_ - 165) * (60 / 143)) & (yy_ < 322)
+lab[mirL] = 6
 # contornos negros finos dentro de piezas: se quedan como líneas (factor bajo)
 lab[~on] = 0
 # luz relativa a la mediana de cada pieza
