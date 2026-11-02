@@ -1,4 +1,4 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Carreras de motos de agua por la costa."><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Costa Turbo"><meta name="theme-color" content="#0a1630"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" type="image/png" href="icon-192.png"><style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body><title>Costa Turbo</title>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="description" content="Carreras de motos de agua por la costa."><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="Costa Turbo"><meta name="theme-color" content="#0a1630"><link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png"><link rel="icon" type="image/png" href="icon-192.png"><style>:root{padding-top:env(safe-area-inset-top,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body><title>Costa Turbo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700;800&family=Saira:wght@400;500;600;700&display=swap">
@@ -11,7 +11,7 @@
   --cond:"Saira Condensed","Arial Narrow",system-ui,sans-serif; --body:Saira,system-ui,sans-serif;
   color-scheme:dark;
 }
-html{box-sizing:border-box;height:100%;background:linear-gradient(#0b4f8f 50%,var(--navy) 50%)}
+html{box-sizing:border-box;height:100%;height:100dvh;background:linear-gradient(#0b4f8f 50%,var(--navy) 50%)}
 *,*::before,*::after{box-sizing:inherit}
 body{height:100%;margin:0;overflow:hidden;background:var(--navy);color:var(--ink);font-family:var(--body);font-size:16px;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior:none}
@@ -78,7 +78,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 @keyframes cnt{0%{transform:scale(2);opacity:0}20%{transform:scale(1);opacity:1}100%{transform:scale(.9);opacity:0}}
 
 /* mandos */
-.pad{display:flex;align-items:center;gap:10px;padding-block:16px 18px;background:linear-gradient(var(--navy2),var(--navy));border-top:1px solid rgba(255,255,255,.12);position:relative;touch-action:none}
+.pad{display:flex;align-items:center;gap:10px;padding-block:14px max(8px,env(safe-area-inset-bottom,0px));background:linear-gradient(var(--navy2),var(--navy));border-top:1px solid rgba(255,255,255,.12);position:relative;touch-action:none}
 #padL{grid-area:L;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:6px}
 #padR{grid-area:R;padding-right:max(14px,env(safe-area-inset-right,0px));padding-left:4px;justify-content:flex-end}
 .pad-tag{position:absolute;top:4px;left:50%;transform:translateX(-50%);font-family:var(--cond);font-weight:600;font-size:11px;color:var(--dim);letter-spacing:.2em;pointer-events:none}
@@ -119,7 +119,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 
 /* pantallas */
 .screen{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-  padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:16px max(16px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   background:linear-gradient(rgba(10,22,48,.82),rgba(10,22,48,.94));overflow-y:auto;touch-action:pan-y;text-align:center}
 .screen.see{background:linear-gradient(rgba(10,22,48,.12),rgba(10,22,48,.35) 40%,rgba(10,22,48,.85))}
 .logo{margin:0;display:flex;flex-direction:column;align-items:center;line-height:.82;font-family:var(--cond);font-weight:800;transform:skewX(-8deg)}
@@ -3260,6 +3260,8 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden&&(G.mode===
 window.addEventListener('pagehide',()=>Snd.bg(true));window.addEventListener('pageshow',()=>{if(!document.hidden)Snd.bg(false);});
 document.addEventListener('touchstart',()=>{if(Snd.ctx&&!document.hidden&&Snd.ctx.state!=='running'){Snd.bg(false);}},{passive:true});
 
+function fitH(){const hh=window.innerHeight;if(hh>200)document.documentElement.style.height=hh+'px';}
+fitH();addEventListener('resize',fitH);addEventListener('orientationchange',()=>setTimeout(fitH,350));
 /* ================= BUCLE ================= */
 function resize(){const r=stage.getBoundingClientRect();if(r.width<10||r.height<10)return;DPR=Math.min(2,window.devicePixelRatio||1);cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
  S=Math.min(r.width/WG,r.height/560);VW=r.width/S;VH=r.height/S;K=S*DPR;buildSprites();chunks=new Map();nightC=null;camX=VW>WG?-(VW-WG)/2:0;if(G.P)camTop=G.P.y-VH*.73;}
@@ -3269,7 +3271,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=82;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=83;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
