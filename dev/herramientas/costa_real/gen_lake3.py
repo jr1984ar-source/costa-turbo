@@ -92,6 +92,36 @@ M[(dist<14)&beachzones&(M>0)&((M==F)|inv)]=2
 M[islet]=2
 urb=inv&(M==F)&(((rows<330)&(cols<1200))|((rows>H-120)&(cols<1600)))
 M[urb]=4
+# ---- zonas del lago: 1 agua profunda, 2 tropical (tipo Bahamas), 3 pueblo ----
+zr=np.random.default_rng(401)
+tro=blob(1950,4950,430,560,401,.15)
+wdist=cv2.distanceTransform((M==0).astype(np.uint8),cv2.DIST_L2,5)
+cays=[]
+for t in range(400):
+    if len(cays)>=6:break
+    c=int(1950+zr.uniform(-330,330));r=int(4950+zr.uniform(-430,430))
+    if not tro[r,c] or wdist[r,c]<70:continue
+    if any(np.hypot(c-a,r-b)<170 for a,b,_ in cays):continue
+    rad=int(zr.uniform(10,17));m=blob(c,r,rad*1.3,rad,410+t,.2)&(M==0);M[m]=2;cays.append((c,r,rad))
+pigc=max(cays,key=lambda q:q[2])
+wdist=cv2.distanceTransform((M==0).astype(np.uint8),cv2.DIST_L2,5)
+sb=[]
+for t in range(600):
+    if len(sb)>=9:break
+    c=int(1950+zr.uniform(-380,380));r=int(4950+zr.uniform(-480,480))
+    if not tro[r,c] or wdist[r,c]<55:continue
+    if any(np.hypot(c-q[0],r-q[1])<120 for q in sb):continue
+    sb.append((c,r,zr.uniform(22,42),zr.uniform(12,22),zr.uniform(0,3.14)))
+deep=(wdist>110)&blob(1250,1500,650,950,420,.22)&~tro
+town=(M==4)&(rows<420)&(cols>250)&(cols<1350)
+ZN=np.zeros((H,W),np.uint8);ZN[deep]=1;ZN[tro&(M==0)]=2;ZN[town]=3
+S8=6;Hz=(H+S8-1)//S8;Wz=(W+S8-1)//S8
+def fld(m,sig):
+    f=cv2.resize(m.astype(np.float32),(Wz,Hz),interpolation=cv2.INTER_AREA)
+    return np.clip(cv2.GaussianBlur(f,(0,0),sig)*1.25,0,1) if sig else f
+ZS=np.dstack([fld(deep,9),fld(tro&(M==0),6),fld(town,0)])
+ZS=(ZS*255).round().astype(np.uint8)
+zim=Image.fromarray(ZS,'RGB');zb=io.BytesIO();zim.save(zb,'PNG',optimize=True)
 # premios escondidos (coordenadas del mundo)
 TOP=520-H*3
 def w(c,r):return [int(c*3+1.5),int(TOP+r*3+1.5)]
@@ -158,13 +188,18 @@ spots['piri']=path
 # gasolineras: en el puerto de la izquierda y en su copia de la derecha
 g=gasL;spots['gas']=[w(g[1],g[0])+w(g[3],g[2]),w(W-1-g[1],H-1-g[0])+w(W-1-g[3],H-1-g[2])]
 print('gas',spots['gas'])
+spots['cays']=[w(c,r)+[rad*3] for c,r,rad in cays]
+spots['pigb']=w(pigc[0],pigc[1])+[pigc[2]*3]
+spots['sb']=[w(c,r)+[round(a*3),round(b*3),round(t,2)] for c,r,a,b,t in sb]
+print('cayos',len(cays),'bancos',len(sb),'zona',ZS.shape,'KB',len(zb.getvalue())//1024)
 print({k:(len(v) if isinstance(v,list) and v and isinstance(v[0],list) else v) for k,v in spots.items() if k!='piri'})
 im=Image.fromarray((M*25).astype(np.uint8),'L');b=io.BytesIO();im.save(b,'PNG',optimize=True)
 cor=[W*3]*len(d['cor'])
-json.dump({'w':W,'h':H,'cor':cor,'spots':spots,'src':'data:image/png;base64,'+base64.b64encode(b.getvalue()).decode()},open('realmap5.json','w'))
+json.dump({'w':W,'h':H,'cor':cor,'spots':spots,'zones':{'w':int(Wz),'h':int(Hz),'s':S8,'src':'data:image/png;base64,'+base64.b64encode(zb.getvalue()).decode()},'src':'data:image/png;base64,'+base64.b64encode(b.getvalue()).decode()},open('realmap5.json','w'))
 pal=np.zeros((11,3),np.uint8);pal[8]=[120,120,120];pal[9]=[250,250,250];pal[10]=[255,80,160];pal[0]=[30,120,200];pal[1]=[196,124,70];pal[2]=[243,220,174];pal[3]=[150,190,90];pal[4]=[226,220,208];pal[7]=[70,120,60]
-vis=pal[M];sm=cv2.resize(vis,(W//4,H//4),interpolation=cv2.INTER_AREA)
+vis=pal[M].copy();vis[(ZN==1)&(M==0)]=[15,70,150];vis[(ZN==2)&(M==0)]=[60,210,210];vis[(ZN==3)]=[230,120,60];sm=cv2.resize(vis,(W//4,H//4),interpolation=cv2.INTER_AREA)
 for k,v in spots.items():
+    if k in('cays','pigb','sb'):continue
     if k in('faro','gold','roxy','jj'):v=[v]
     if k=='gas':v=[p[:2] for p in v]
     col={'gear':(255,0,255),'gold':(255,170,0),'heart':(255,60,60),'can':(0,255,255),'coins':(255,215,0),'girls':(255,120,200),'palms':(0,90,0),'faro':(255,255,255),'roxy':(120,60,20),'jj':(200,0,0),'piri':(255,255,0),'gas':(255,255,255)}[k]
