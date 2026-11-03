@@ -1115,7 +1115,7 @@ const ZONES=[
  {name:'BAHÍA DE PALMA',obj:'race3',goal:'Circuito de 3 vueltas en la bahía de Palma, con la catedral al fondo. La pantalla gira con tu moto. Termina entre los 3 primeros; si te sales de las boyas, frenas.',len:13000,riv:5,bar:null,theme:'circ',tod:'afternoon',skill:.92,circ:'palma',laps:3},
  {name:'BAHÍA DE ALCÚDIA',obj:'race2',goal:'Circuito de 3 vueltas en la bahía de Alcúdia, con la playa de pinos y el Cap des Pinar. La pantalla gira con tu moto. Termina entre los 2 primeros.',len:13000,riv:5,bar:null,theme:'circ',tod:'morning',skill:.94,circ:'alcudia',laps:3},
  {name:'LA FINAL',obj:'win',goal:'Gana a El Tiburón: tienes que llegar el primero.',len:17000,riv:5,bar:null,theme:'port',tod:'golden',skill:.95,boss:1},
- {name:'SON MATÍAS · MODO LIBRE',realMap:1,playground:1,water:['#22b3d6','#0b6fb3'],obj:'free',goal:'Modo libre: un lago enorme para explorar. Islas, calas escondidas, un faro, rampas, olas, lanchas con esquí y una recta larguísima. Busca los premios escondidos. Para salir, pulsa pausa.',len:10000,riv:0,bar:null,theme:'cove',tod:'noon',skill:.9,finish:'ILLETES'}
+ {name:'MODO LIBRE',realMap:1,playground:1,water:['#22b3d6','#0b6fb3'],obj:'free',goal:'Modo libre: un lago enorme para explorar. Islas, calas escondidas, un faro, rampas, olas, lanchas con esquí y una recta larguísima. Busca los premios escondidos. Para salir, pulsa pausa.',len:10000,riv:0,bar:null,theme:'cove',tod:'noon',skill:.9,finish:'ILLETES'}
 ];
 const AVATARS=[
  {id:'alex',name:'Álex',face:{skin:'#e8b48c',hair:'#4a2a14',style:'short',vest:'#ff7a1a'}},
@@ -3412,7 +3412,7 @@ function renderGear(){cashUI();gearPreview();
  for(const it of GEAR[gearCat]){if(it.b!==lastB){lastB=it.b;const hd=document.createElement('div');hd.className='ghd';hd.textContent=it.b.toUpperCase();L.append(hd);}
   const own=gearStore.own.includes(it.id),on=eq===it.id,tryOn=!!(gearTry&&gearTry.id===it.id);
   const row=document.createElement('div');row.className='prt gr'+(tryOn?' try':'')+(on?' eq':'');if(gearCat==='helm'||gearCat==='gog'||gearCat==='glove'){const ic=document.createElement('span');ic.className='gico';ic.innerHTML=gearCat==='helm'?`<img alt="" src="${HELM_IMG[it.paint]||HELM_IMG.serie}">`:gearCat==='gog'?gogIcon(it):gloveIcon({c:it.c,a:it.a||'#3a3f4a',t:it.t||''},'gl'+it.id);row.append(ic);}else row.append(iconCanvas(g=>gearIcon(g,gearCat,it)));
-  const inf=document.createElement('div');inf.innerHTML='<div class="nm"></div><div class="ef"></div>';inf.querySelector('.nm').textContent=(it.b==='De serie'||it.b==='Neopreno'||it.b==='Exclusivo'?'':it.b+' ')+it.n;inf.querySelector('.ef').textContent=(it.hid&&!own?'Escondido en el lago de Son Matías':gearDesc(gearCat,it))+(tryOn&&!own?' · probándolo':'');row.append(inf);
+  const inf=document.createElement('div');inf.innerHTML='<div class="nm"></div><div class="ef"></div>';inf.querySelector('.nm').textContent=(it.b==='De serie'||it.b==='Neopreno'||it.b==='Exclusivo'?'':it.b+' ')+it.n;inf.querySelector('.ef').textContent=(it.hid&&!own?'Escondido en el lago del Modo libre':gearDesc(gearCat,it))+(tryOn&&!own?' · probándolo':'');row.append(inf);
   const b=document.createElement('button');b.className='btn'+(on?' max':own?'':' p');
   if(on){b.textContent='EN USO';b.disabled=true;}else if(own){b.textContent='USAR';}else if(it.hid){b.textContent='ESCONDIDO';b.disabled=true;}else{b.innerHTML='<i class="coin"></i>'+pts(it.p);b.disabled=G.money<it.p;}
   b.addEventListener('click',e=>{e.stopPropagation();if(on||(it.hid&&!own))return;if(!own){if(G.money<it.p)return;G.money-=it.p;gearStore.own.push(it.id);saveWallet();Snd.cash();}else Snd.click();gearStore.eq[gearCat]=it.id;saveGear();gearTry=null;SP.jetP=sprite(32,68,g=>drawJet(g,playerSk()));renderGear();});
@@ -3490,7 +3490,7 @@ function frame(now){const dt=Math.min(.034,Math.max(0,(now-last)/1000));last=now
  else if(G.mode==='map'||G.mode==='bar'||G.mode==='result'||G.mode==='over'){G.t+=dt;}
  render();requestAnimationFrame(frame);}
 new ResizeObserver(()=>resize()).observe(stage);
-const APP_VER=102;$('#verTag').textContent='VERSIÓN '+APP_VER;
+const APP_VER=103;$('#verTag').textContent='VERSIÓN '+APP_VER;
 resize();labels();demoStart();show('scrTitle');renderUser();fontsOK.then(()=>renderUser());Music.play('menu');
 requestAnimationFrame(frame);
 })();
