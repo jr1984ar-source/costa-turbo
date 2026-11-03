@@ -169,7 +169,7 @@ def shoreN(c):
         if (M[r:r+12,c]==0).all():return r
 rc=800;rr=shoreN(rc);spots['roxy']=[int(rc*3+1.5),int(TOP+rr*3)]
 best=None
-for r in range(5150,5560,5):
+for r in range(1500,2700,5):
     sc_=[next((c for c in range(0,600) if (M[r2,c:c+15]==0).all()),None) for r2 in range(r-25,r+26,5)]
     if None in sc_:continue
     sd=np.std(sc_);x=int(np.median(sc_))
