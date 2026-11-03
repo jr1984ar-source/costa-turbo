@@ -2,6 +2,7 @@ import json,base64,io,numpy as np,cv2
 from PIL import Image
 d=json.load(open('realmap3.json'));M=np.array(Image.open(io.BytesIO(base64.b64decode(d['src'].split(',')[1])))).astype(np.int32)
 M=np.rint(M/36).astype(np.uint8);H,W=M.shape;M[M==5]=0;M[M==6]=0
+exec(open('marina.py').read());gasL=marina(M)
 # lado derecho: la costa real del lado izquierdo girada 180° (mismo estilo de calles, chalets y calas)
 W2=2740;S=M[:,:520][::-1,::-1];M2=np.zeros((H,W2),np.uint8);M2[:,:W]=M;reg=M2[:,W2-520:];reg[S>0]=S[S>0];M=M2;W=W2
 rng=np.random.default_rng(42)
@@ -64,7 +65,7 @@ def cove(x0,r0,depth,w0,w1,bulb,seed,ang=0.0):
     return bc,(mk>0)|bl,bl
 # calas escondidas entre bosques en la costa de la derecha (acaban en playita)
 calas=[];woods=np.zeros_like(inv)
-for r0,dep,w0,w1,bu,sd,an in [(1000,95,24,15,40,61,.2),(2150,105,24,15,42,63,-.25),(3350,95,26,16,40,64,.25),(4550,100,24,15,40,66,-.2)]:
+for r0,dep,w0,w1,bu,sd,an in [(1000,95,24,15,40,61,.2),(2950,105,24,15,42,63,-.25),(3350,95,26,16,40,64,.25),(4550,100,24,15,40,66,-.2)]:
     e=shoreE(r0)
     if e is None or e+dep+bu*2>W-25:print('cala sin sitio',r0,e);continue
     bc,m,bl=cove(e-25,r0,dep,w0,w1,bu,sd,an);carve(m);calas.append((bc[0],bc[1],bu,bl))
@@ -79,7 +80,7 @@ islet=blob(lc[0],lc[1],28,22,52,.05);land(islet);isl=(int(lc[0]),int(lc[1]))
 woods|=(cv2.dilate((lag|(mk>0)).astype(np.uint8),cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(101,101)))>0)
 ens=[(c[0],c[1],c[2]) for c in calas]
 # bosque alrededor de calas y laguna
-M[woods&(M>0)&(M!=2)&~islet]=F
+M[woods&(M>0)&(M<8)&(M!=2)&~islet]=F
 # arena
 dist=cv2.distanceTransform((M==0).astype(np.uint8)^1,cv2.DIST_L2,5)
 beachzones=np.zeros_like(M,bool)
@@ -154,14 +155,18 @@ for RB in (91,111,71,61,131,51):
     if not bad:break
 path=[w(p[0],p[1]) for p in pts]
 spots['piri']=path
+# gasolineras: en el puerto de la izquierda y en su copia de la derecha
+g=gasL;spots['gas']=[w(g[1],g[0])+w(g[3],g[2]),w(W-1-g[1],H-1-g[0])+w(W-1-g[3],H-1-g[2])]
+print('gas',spots['gas'])
 print({k:(len(v) if isinstance(v,list) and v and isinstance(v[0],list) else v) for k,v in spots.items() if k!='piri'})
-im=Image.fromarray((M*36).astype(np.uint8),'L');b=io.BytesIO();im.save(b,'PNG',optimize=True)
+im=Image.fromarray((M*25).astype(np.uint8),'L');b=io.BytesIO();im.save(b,'PNG',optimize=True)
 cor=[W*3]*len(d['cor'])
 json.dump({'w':W,'h':H,'cor':cor,'spots':spots,'src':'data:image/png;base64,'+base64.b64encode(b.getvalue()).decode()},open('realmap5.json','w'))
-pal=np.zeros((9,3),np.uint8);pal[0]=[30,120,200];pal[1]=[196,124,70];pal[2]=[243,220,174];pal[3]=[150,190,90];pal[4]=[226,220,208];pal[7]=[70,120,60]
+pal=np.zeros((11,3),np.uint8);pal[8]=[120,120,120];pal[9]=[250,250,250];pal[10]=[255,80,160];pal[0]=[30,120,200];pal[1]=[196,124,70];pal[2]=[243,220,174];pal[3]=[150,190,90];pal[4]=[226,220,208];pal[7]=[70,120,60]
 vis=pal[M];sm=cv2.resize(vis,(W//4,H//4),interpolation=cv2.INTER_AREA)
 for k,v in spots.items():
     if k in('faro','gold','roxy','jj'):v=[v]
-    col={'gear':(255,0,255),'gold':(255,170,0),'heart':(255,60,60),'can':(0,255,255),'coins':(255,215,0),'girls':(255,120,200),'palms':(0,90,0),'faro':(255,255,255),'roxy':(120,60,20),'jj':(200,0,0),'piri':(255,255,0)}[k]
+    if k=='gas':v=[p[:2] for p in v]
+    col={'gear':(255,0,255),'gold':(255,170,0),'heart':(255,60,60),'can':(0,255,255),'coins':(255,215,0),'girls':(255,120,200),'palms':(0,90,0),'faro':(255,255,255),'roxy':(120,60,20),'jj':(200,0,0),'piri':(255,255,0),'gas':(255,255,255)}[k]
     for x,y in v:cv2.circle(sm,(int(x/3/4),int((y-TOP)/3/4)),3,col,-1)
 Image.fromarray(sm).save('lake_vis5.png');print('png KB',len(b.getvalue())//1024,sm.shape)
