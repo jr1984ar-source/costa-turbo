@@ -1,0 +1,22 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const errs=[];
+ const A=await (await b.newContext({viewport:{width:393,height:852},deviceScaleFactor:2})).newPage();A.on('pageerror',e=>errs.push('A '+e.message));
+ await A.goto('file://'+process.cwd()+'/ct-wrapped2.html');await A.waitForTimeout(1500);
+ await A.evaluate(()=>{localStorage.clear();const s=(k,v)=>localStorage.setItem(k,JSON.stringify(v));s('ct_wallet',87650);s('ct_own',['brava','avispa','sombra','charger']);s('ct_moto',3);s('ct_paint',{brava:{colors:true,hull:'#1e5eff',deck:'#ffd21a',hood:'#e3202b',stripe:'#16181d',seat:'#16181d',name:'JRAR',num:7,vinyl:'llamas',vcol:'#ffd21a',logo:'jj'}});s('ct_gear',{own:['s0','v0','h0','h7'],eq:{helm:'h7'}});s('ct_cups',{c1:{lv:3}});s('ct_pg_vmax',142);s('ct_hidectl',false);s('ct_ghost2_3',{t:61.2,p:Array.from({length:600},(_,i)=>[i*3,i*-20,0.1])});});
+ await A.reload();await A.waitForTimeout(1500);
+ await A.evaluate(()=>document.querySelector('#bSet').click());await A.waitForTimeout(800);await A.evaluate(()=>document.querySelector('#sCopy').click());await A.waitForTimeout(800);
+ const code=await A.evaluate(()=>document.querySelector('#sCode').value);console.log('código',code.slice(0,12)+'…','largo',code.length,'msg',await A.evaluate(()=>document.querySelector('#sMsg').textContent));
+ await A.screenshot({path:'v113-copiar.png',fullPage:false});
+ const dataA=await A.evaluate(()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);o[k]=localStorage.getItem(k);}return o;});
+ const B=await (await b.newContext({viewport:{width:1280,height:800}})).newPage();B.on('pageerror',e=>errs.push('B '+e.message));
+ await B.goto('file://'+process.cwd()+'/ct-wrapped2.html');await B.waitForTimeout(1500);await B.evaluate(()=>{localStorage.clear();localStorage.setItem('ct_hidectl','true');localStorage.setItem('ct_wallet','1500');});await B.reload();await B.waitForTimeout(1500);
+ await B.evaluate(()=>document.querySelector('#bSet').click());await B.waitForTimeout(500);
+ await B.fill('#sCode','\n '+code.slice(0,500)+'\n'+code.slice(500)+' \n');await B.waitForTimeout(200);console.log('botón cargar visible',await B.evaluate(()=>!document.querySelector('#sLoad').hidden));
+ await B.evaluate(()=>document.querySelector('#sLoad').click());await B.waitForTimeout(200);console.log('confirmar',await B.evaluate(()=>document.querySelector('#sLoad').textContent));
+ await B.evaluate(()=>document.querySelector('#sLoad').click());await B.waitForTimeout(2500);
+ const dataB=await B.evaluate(()=>{const o={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);o[k]=localStorage.getItem(k);}return o;});
+ const diff=Object.keys(dataA).filter(k=>!['ct_snd','ct_mus','ct_vib','ct_hidectl'].includes(k)&&dataA[k]!==dataB[k]);console.log('distintos',JSON.stringify(diff),'hidectl B',dataB.ct_hidectl,'pesetas B',dataB.ct_wallet);
+ console.log('pantalla B tras recargar',await B.evaluate(()=>document.querySelector('#uCash')&&document.querySelector('#uCash').textContent));
+ // código malo
+ await B.evaluate(()=>document.querySelector('#bSet').click());await B.waitForTimeout(400);await B.fill('#sCode','CT1:abc');await B.evaluate(()=>{document.querySelector('#sLoad').click();document.querySelector('#sLoad').click();});await B.waitForTimeout(600);console.log('código malo',await B.evaluate(()=>document.querySelector('#sMsg').textContent),await B.evaluate(()=>localStorage.getItem('ct_wallet')));
+ console.log('errs',JSON.stringify(errs));await b.close();})();
