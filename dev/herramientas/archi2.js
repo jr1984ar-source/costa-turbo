@@ -89,6 +89,20 @@ function buildArchi(Z,zi,lap,seed){const r=rng(seed),def=CIRCS[Z.circ],ST=def.st
  O.sort((a,b)=>a.y-b.y);
  return{Z,zi,lap,len:Lp,lenK:Math.max(1,Lp/16000),seed,shore:()=>-1e7,kind:()=>'open',barY:1e9,bar:null,objs:O,movers:[],decos:[],gatesTotal:0,finishY:-1e9,checks:[],big:[],ring:null,swimX:()=>null,cliffK:()=>0,rwall:null,waves:[],circ:C,lands,strips:[],cbig:big,cars:[],walk:[],labels};}
 
+function planeSpr(){return cspr('plane2',240,220,g=>{const q=rng(808);
+ const hg=g.createRadialGradient(0,0,20,0,0,118);hg.addColorStop(0,'rgba(245,240,215,.75)');hg.addColorStop(.7,'rgba(240,235,210,.45)');hg.addColorStop(1,'rgba(240,235,210,0)');g.fillStyle=hg;g.beginPath();g.ellipse(0,0,118,104,0,0,TAU);g.fill();
+ for(let k=0;k<40;k++){g.fillStyle='rgba(150,140,110,.18)';g.beginPath();g.arc(-100+q()*200,-90+q()*180,2+q()*5,0,TAU);g.fill();}
+ const wing=(sg,cut)=>{g.beginPath();g.moveTo(-18,sg*7);g.lineTo(-10,sg*(cut?72:98));g.quadraticCurveTo(-4,sg*(cut?78:106),6,sg*(cut?76:104));g.lineTo(22,sg*7);g.closePath();g.fillStyle='#dfe2dd';g.fill();g.strokeStyle='rgba(90,90,80,.35)';g.lineWidth=1.2;g.stroke();
+  g.fillStyle='rgba(120,105,80,.22)';for(let k=0;k<6;k++){g.beginPath();g.ellipse(-6+q()*22,sg*(14+q()*(cut?54:82)),3+q()*5,2+q()*3,q()*3,0,TAU);g.fill();}
+  g.fillStyle='#5e4030';g.beginPath();g.roundRect(-24,sg*34-5,22,10,4);g.fill();g.fillStyle='#3b2a20';g.beginPath();g.arc(-25,sg*34,4,0,TAU);g.fill();
+  if(cut){g.fillStyle='rgba(225,222,212,.55)';g.beginPath();g.moveTo(-8,sg*80);g.lineTo(2,sg*92);g.lineTo(8,sg*84);g.closePath();g.fill();}};
+ wing(-1,false);wing(1,true);
+ g.fillStyle='#d9dcd6';g.beginPath();g.moveTo(66,-3);g.lineTo(72,-30);g.lineTo(80,-30);g.lineTo(80,-3);g.closePath();g.fill();g.beginPath();g.moveTo(66,3);g.lineTo(72,30);g.lineTo(80,30);g.lineTo(80,3);g.closePath();g.fill();
+ g.fillStyle='#4a3326';g.beginPath();g.moveTo(-96,0);g.quadraticCurveTo(-94,-9,-80,-9);g.lineTo(78,-5);g.lineTo(86,0);g.lineTo(78,5);g.lineTo(-80,9);g.quadraticCurveTo(-94,9,-96,0);g.closePath();g.fill();
+ g.fillStyle='#7a5438';for(let k=0;k<14;k++){g.beginPath();g.ellipse(-86+q()*160,(q()-.5)*10,3+q()*7,1.5+q()*2.5,0,0,TAU);g.fill();}
+ g.fillStyle='rgba(40,28,20,.9)';for(let k=0;k<5;k++){g.fillRect(-70+k*30+q()*8,-7,3,14);}
+ g.fillStyle='rgba(240,235,210,.85)';g.beginPath();g.moveTo(30,-8);g.lineTo(38,-3);g.lineTo(34,6);g.lineTo(26,8);g.lineTo(24,0);g.closePath();g.fill();g.beginPath();g.moveTo(-50,-9);g.lineTo(-44,-2);g.lineTo(-52,4);g.lineTo(-58,-4);g.closePath();g.fill();
+ g.fillStyle='rgba(60,120,80,.45)';for(let k=0;k<10;k++){g.beginPath();g.arc(-80+q()*150,(q()-.5)*14,1.5+q()*2.5,0,TAU);g.fill();}});}
 function drawShallows(Zn){const C=Zn.circ,V=G._vis,TR=C.style==='trenc';let i0=1e9,i1=-1;const m=C.W+380,x0=camX,x1=camX+VW,y0=camTop,y1=camTop+VH,vis=b=>!(b[2]<x0-80||b[0]>x1+80||b[3]<y0-80||b[1]>y1+80);
  for(let i=0;i<C.n;i+=3){const x=C.x[i],y=C.y[i];if(V?V(x,y,m):(x>camX-m&&x<camX+VW+m&&y>camTop-m&&y<camTop+VH+m)){if(i<i0)i0=i;if(i>i1)i1=i;}}
  if(i1<0){i0=0;i1=C.n-1;}const a=Math.max(0,i0-10),b=Math.min(C.n-1,i1+10);

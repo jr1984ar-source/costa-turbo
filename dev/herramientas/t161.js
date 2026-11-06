@@ -15,7 +15,7 @@ const {chromium}=require('playwright');
  console.log('copa:',await txt('#cH'),'|',await txt('#cInfo'),'|',await txt('#cTrofTxt'));await p.screenshot({path:'v77-ganada.png'});
  console.log('store',JSON.stringify(await E(()=>__C.cupStore)));
  await p.click('#cNext');await W(500);
- await E(()=>{for(const id of ['paraiso','circuitos','retos'])__C.cupS(id).won=1;__C.renderCups();});await W(300);
+ await E(()=>{for(const id of ['paraiso','retos','circuitos'])__C.cupS(id).won=1;__C.renderCups();});await W(300);
  console.log('final abierta:',await E(()=>__C.finalOpen()));await p.screenshot({path:'v77-copas2.png',fullPage:true});
  // jugar la final y una carrera real en Paraíso
  await E(()=>document.querySelectorAll('#cuList .cupc')[4].click());await W(700);console.log('final mapa:',await txt('#mZoneN'),'|',await txt('#mZoneName'));

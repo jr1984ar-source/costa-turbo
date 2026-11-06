@@ -1,0 +1,15 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const ctx=await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2});await ctx.addInitScript(()=>{try{if(!sessionStorage.getItem('x')){localStorage.setItem('ct_wallet','30000');sessionStorage.setItem('x',1);}}catch(e){}});const p=await ctx.newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a),out={};
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);
+ out.own=await E(()=>localStorage.getItem('ct_own'));
+ await E(()=>__T.goShop('title'));await W(300);
+ for(let i=0;i<7;i++){await p.click('#sNext');}await W(300);await p.screenshot({path:'r-01-sombra-tienda.png'});
+ await p.click('#sMain');await W(300);await p.screenshot({path:'r-02-sombra-comprada.png'});
+ await p.click('#sNext');await W(300);await p.screenshot({path:'r-03-gris-tienda.png'});await p.click('#sMain');await W(300);await p.screenshot({path:'r-04-gris-comprada.png'});
+ out.parts=await E(()=>localStorage.getItem('ct_parts'));out.money=await E(()=>__G.money);
+ await p.click('#sBack');await W(200);await p.click('#bPlay');await p.click('#aGo');await W(300);
+ for(let i=0;i<8;i++){const n=await E(()=>document.getElementById('gName').textContent);if(n==='TIBURÓN')break;await p.click('#gNext');}await W(300);await p.screenshot({path:'r-05-garaje-gris.png'});
+ await p.click('#gGo');await W(300);await E(()=>{__G.zi=3;__goMap();});await p.click('#mGo');await W(3700);await p.keyboard.down('ArrowUp');await W(2500);await p.screenshot({path:'r-06-carrera.png'});
+ out.riv=await E(()=>__G.rivals.map(c=>c.id).join(','));out.pst=await E(()=>JSON.stringify(__G.P.st));
+ console.log(JSON.stringify(out),JSON.stringify(errs));await b.close();})();

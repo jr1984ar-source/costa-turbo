@@ -1,0 +1,22 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:3})).newPage();
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(n=>{__T.newGame();__G.zi=__Z.findIndex(z=>z.name===n);__goMap();},'BAHÍA DE PALMA');await W(300);await E(()=>__T.startRace());await W(3800);
+ const r=await E(()=>{window.requestAnimationFrame=()=>0;const G=__G,Zn=G.zone,C=Zn.circ,P=G.P;const out={};
+  for(const s of[60,1400]){const i=Math.round(s/8)%C.n;P.x=C.x[i];P.y=C.y[i];P.h=P.va=C.h[i];G.camA=P.h;
+   const meas=()=>{for(let k=0;k<3;k++)__render();const t0=performance.now();for(let k=0;k<30;k++){G.t+=1/60;__render();}return+((performance.now()-t0)/30).toFixed(1);};
+   const sv={lands:Zn.lands,strips:Zn.strips,cars:Zn.cars,walk:Zn.walk,cbig:Zn.cbig,objs:Zn.objs,rv:G.rivals};
+   const res={base:meas()};
+   Zn.lands=[];res.noLands=meas();Zn.lands=sv.lands;
+   Zn.strips=[];res.noStrips=meas();Zn.strips=sv.strips;
+   Zn.cars=[];Zn.walk=[];res.noCarsWalk=meas();Zn.cars=sv.cars;Zn.walk=sv.walk;
+   Zn.cbig=[];res.noBig=meas();Zn.cbig=sv.cbig;
+   Zn.objs=Zn.objs.filter(o=>o.t!=='cdeco');res.noDeco=meas();Zn.objs=sv.objs;
+   Zn.objs=Zn.objs.filter(o=>o.t!=='cbld');res.noBld=meas();Zn.objs=sv.objs;
+   Zn.objs=Zn.objs.filter(o=>o.t!=='cbuoy');res.noBuoy=meas();Zn.objs=sv.objs;
+   Zn.objs=[];res.noObjs=meas();Zn.objs=sv.objs;
+   G.rivals=[];res.noRiv=meas();G.rivals=sv.rv;
+   out[s]=res;}
+  return out;});
+ console.log(JSON.stringify(r));await b.close();})();

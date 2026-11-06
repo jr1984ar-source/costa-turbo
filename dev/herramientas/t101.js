@@ -1,0 +1,12 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:1})).newPage();
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(n=>{__T.newGame();__G.zi=__Z.findIndex(z=>z.name===n);__goMap();},'BAHAMAS');await W(300);await E(()=>__T.startRace());await W(3800);
+ await E(()=>{window.requestAnimationFrame=()=>0;const G=__G,P=G.P,dt=1/30;let t=0;while(t<18&&G.mode==='play'){const a=__aiCirc(P,dt);__input.acc=a.thr;__input.left=a.turn<0;__input.right=a.turn>0;__upd(dt);t+=dt;}__render();});
+ await p.screenshot({path:'bx-0.png'});
+ const info=await E(()=>{const G=__G,out={};for(const k of Object.keys(G)){const v=G[k];if(Array.isArray(v)&&v.length>3&&v.length<5000)out[k]=v.length;}out.rivals=G.rivals.map(c=>({x:Math.round(c.x),y:Math.round(c.y),col:c.m&&c.m.col,keys:Object.keys(c).filter(k=>Array.isArray(c[k])).join(',')}));return out;});
+ console.log(JSON.stringify(info));
+ await E(()=>{for(const k of Object.keys(__G)){const v=__G[k];if(Array.isArray(v)&&k!=='rivals'&&k!=='police'&&k!=='lands')__G['_bak_'+k]=v;}__G.parts_fx=[];__render();});
+ await p.screenshot({path:'bx-1.png'});
+ await b.close();})();

@@ -1,0 +1,10 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ await E(()=>{__G.free=true;__G.zi=10;__goMap();__T.startRace();window.__pen=0;window.__seen=new Set();setInterval(()=>{__G.rivals.forEach((c,i)=>{const k=i+':'+Math.round(c.stuckY||0);if(c.stuckT>0&&!__seen.has(k)){__seen.add(k);__pen++;}});},50);});
+ const bu=await E(()=>__G.zone.objs.filter(o=>o.t==='tbuoy').slice(-6).map(o=>Math.round(o.x)+(o.side<0?'L':'R')).join(' '));
+ await W(3600);await p.keyboard.down('ArrowUp');await W(2200);
+ await E(()=>{const b=__G.zone.objs.filter(o=>o.t==='tbuoy').sort((a,c)=>c.y-a.y)[1],P=__G.P;P.y=b.y+330;P.x=200;P.v=0;});await W(400);await p.screenshot({path:'z-boyas2.png'});
+ await W(25000);const r=await E(()=>({pen:__pen,passed:__G.zone.objs.filter(o=>o.t==='tbuoy'&&o.y>Math.max(...__G.rivals.map(c=>c.y))).length*5,riv:__G.rivals.map(c=>Math.round(-c.y)).join(',')}));
+ console.log(bu,JSON.stringify(r),JSON.stringify(errs));await b.close();})();

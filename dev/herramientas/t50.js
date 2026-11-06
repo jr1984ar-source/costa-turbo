@@ -1,0 +1,12 @@
+const {chromium}=require('playwright');
+(async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:2})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
+ const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a),out={};
+ await p.goto('file://'+process.cwd()+'/ct-wrapped.html');await W(1000);await p.click('#bPlay');await W(200);
+ out.lens=await E(()=>{const r=[];for(let i=0;i<__Z.length;i++){__G.free=true;__G.zi=i;__goMap();r.push(i+':'+__Z[i].name.slice(0,10)+':'+__G.zone.len+(__G.time?'/t'+Math.round(__G.time):''));}return r.join(' | ');});
+ const vi=await E(()=>__Z.findIndex(z=>z.name==='ES VEDRÀ'));
+ await E(zi=>{__G.zi=zi;__goMap();},vi);await W(400);await p.screenshot({path:'v-map.png'});
+ await E(()=>__T.startRace());await W(3600);await p.keyboard.down('ArrowUp');await W(2000);
+ await E(()=>{const o=__G.zone.movers.find(o=>o.t==='cata');o.x=200;__G.P.y=o.y+300;__G.P.x=200;__G.P.v=0;});await W(600);await p.screenshot({path:'v-cata.png'});
+ await E(()=>{const o=__G.zone.objs.find(o=>o.t==='island');__G.P.y=o.y+o.ry+320;__G.P.x=200;__G.P.v=0;});await W(600);await p.screenshot({path:'v-isla.png'});
+ await p.keyboard.up('ArrowUp');
+ console.log(JSON.stringify(out),JSON.stringify(errs));await b.close();})();

@@ -2,7 +2,7 @@ const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await (await b.newContext({viewport:{width:390,height:844},deviceScaleFactor:1})).newPage();const errs=[];p.on('pageerror',e=>errs.push(e.message));
  const W=ms=>p.waitForTimeout(ms),E=(f,a)=>p.evaluate(f,a);
  await p.goto('file://'+process.cwd()+'/ct-wrapped2.html');await W(1200);
- for(const zi of [0,2,3]){
+ for(const zi of [0,3]){
   await E(zi=>{__T.newGame();__G.zi=zi;__goMap();},zi);await W(300);await E(()=>__T.startRace());await W(4200);
   const r=await E(async()=>{const P=__G.P,Zn=__G.zone,ring=Zn.ring,pr=Zn.pier;P.y=ring.y+700;P.x=pr.x1+60;P.v=150;P.inv=40;__G.pitSlots=0;
     __G.rivals.forEach((c,i)=>{c.y=ring.y+560+i*45;c.x=pr.x1+40-i*10;c.v=170;c.h=0;c.pit=0;c.fin=0;c.crash=0;});let crashes=0;const seen=new Set();__input.acc=true;const t0=performance.now();

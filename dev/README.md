@@ -2,6 +2,8 @@
 
 Todo lo necesario para seguir trabajando en el juego. La web que se juega es `../index.html`; esta carpeta no la cambia.
 
+**Para seguir desde otro ordenador, empieza por `TRASPASO.md`.**
+
 - `costa-turbo.html` — el juego, versión original de la que sale todo.
 - `rebuild.js` — genera `../index.html` y `costa-turbo-movil.html` desde `costa-turbo.html` (`node dev/rebuild.js`). Después hay que subir la versión de caché en `../sw.js`.
 - `costa-turbo-movil.html` — el juego en un solo archivo, para descargar.

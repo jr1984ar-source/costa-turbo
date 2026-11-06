@@ -1,0 +1,6 @@
+# copias que generan las pruebas (se crean al probar, no hace falta guardarlas)
+/dev/ct-wrapped*.html
+/dev/*.png
+/dev/*.out
+/dev/node_modules/
+/dev/package-lock.json
