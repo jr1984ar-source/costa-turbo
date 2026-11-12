@@ -153,7 +153,7 @@ function input() {
 }
 
 // estado de la moto
-const P = { x: x0, z: z0, th: th0, v: 0, slip: 0, steer: 0, energy: 1, t: 0 };
+const P = { x: x0, z: z0 - 22, th: Math.PI, v: 0, slip: 0, steer: 0, energy: 1, t: 0 }; window.__P = P;
 const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), tmp = new THREE.Vector3(); let camInit = false;
 const spd = hud.querySelector('.sp');
 const clock = new THREE.Clock();
@@ -169,7 +169,15 @@ function step(dt) {
   P.th += P.steer * rate * dt;
   const targetSlip = I.drift ? -P.steer * P.v * 0.22 : 0; P.slip += (targetSlip - P.slip) * Math.min(1, dt * 3);
   const nx = P.x + (f.x * P.v + side.x * P.slip) * dt, nz = P.z + (f.z * P.v + side.z * P.slip) * dt;
-  if (heightAt(nx, nz) > -0.35 || Math.abs(nx) > 340 || nz < -340) { P.v *= 0.5; P.slip *= 0.5; P.th += 0.9 * dt * Math.sign(P.steer || 1); } else { P.x = nx; P.z = nz; }
+  const wall = heightAt(nx, nz) > -0.35, far = Math.abs(nx) > 330 || nz < -330 || nz > 330;
+  if (wall || far) { // orilla o borde del mapa: la moto se desliza y se gira hacia mar abierto
+    let ax, az;
+    if (far) { ax = -P.x; az = -P.z; } else { const e = 1.5; ax = heightAt(P.x - e, P.z) - heightAt(P.x + e, P.z); az = heightAt(P.x, P.z - e) - heightAt(P.x, P.z + e); if (Math.abs(ax) + Math.abs(az) < 1e-4) { ax = 0; az = -1; } }
+    const L = Math.hypot(ax, az); ax /= L; az /= L;
+    const d = Math.atan2(Math.sin(Math.atan2(ax, az) - P.th), Math.cos(Math.atan2(ax, az) - P.th));
+    P.th += d * Math.min(1, dt * 3); P.v = Math.max(P.v * (1 - dt * 2.5), 4); P.slip *= 0.5;
+    P.x += ax * 4 * dt; P.z += az * 4 * dt;
+  } else { P.x = nx; P.z = nz; }
   P.t += dt; env.time.value += dt;
   // moto
   ski.root.position.set(P.x, 0, P.z); ski.root.rotation.y = P.th;
