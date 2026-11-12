@@ -478,6 +478,14 @@ export async function createGame(ctx) {
     for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 8, 8), new THREE.MeshStandardMaterial({ color: 0x6b4a2c })); p.position.set(sg.position.x - q.tz * s * 4.3, 1.2, sg.position.z + q.tx * s * 4); add(p); }
     // barcos fondeados antes de la meta, dejando el canal libre
     const boats = R.boats = [];
+    // barco Piri-Piri: al pasar a su lado, +1 corazón y +2 turbos (una vez por carrera)
+    { const p0 = at(path, path.L * .3), x = p0.x - p0.tz * -22, z = p0.z + p0.tx * -22, b = riva.clone(); b.position.set(x, -.32, z); b.rotation.y = Math.atan2(p0.tx, p0.tz); b.userData.bob = { y: -.32, ph: 1, k: 1 }; add(b); boats.push(b);
+      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(['PIRI-PIRI'], 512, 128, '#ff3f8e', '#ffffff'), transparent: true, depthWrite: false, sizeAttenuation: false })); tag.scale.set(.12, .03, 1); tag.position.set(0, 3.2, 0); b.add(tag);
+      R.piri = { x, z, got: false }; for (let k = -1; k <= 1; k++) solid(x + p0.tx * k * 3.4, z + p0.tz * k * 3.4, 1.6); }
+    // letrero EL MAGO en la meta
+    { const e = at(path, path.L - 4), m = new THREE.Mesh(new THREE.PlaneGeometry(10, 2.4), new THREE.MeshStandardMaterial({ map: textTex(['EL MAGO'], 1024, 256, '#0b1630', '#ffe14d'), roughness: .5, side: THREE.DoubleSide }));
+      m.position.set(e.x - e.tz * 22, 5.2, e.z + e.tx * 22); m.rotation.y = Math.atan2(e.tx, e.tz) + Math.PI; add(m);
+      for (const s of [-1, 1]) { const pl = new THREE.Mesh(new THREE.CylinderGeometry(.2, .2, 9, 8), new THREE.MeshStandardMaterial({ color: 0xffffff })); pl.position.set(m.position.x + e.tx * s * 4.6, 1.5, m.position.z + e.tz * s * 4.6); add(pl); solid(pl.position.x, pl.position.z, .6); } }
     [[yate, 150, 34, .4, -1.3, 4.2], [pesca, 118, -26, 1.2, -.55, 2.2], [barca, 96, 23, -.6, -.18, 1], [riva, 80, -24, 2.2, -.32, 1.6], [pesca2, 64, 27, -1.4, -.5, 2], [barca, 52, -22, .9, -.18, 1], [riva, 40, 25, -2.6, -.32, 1.6], [pesca, 170, -30, -.2, -.55, 2.2]].forEach(([src, back, lat, ry, y, r]) => {
       const p0 = at(path, path.L - back), x = p0.x - p0.tz * lat, z = p0.z + p0.tx * lat, b = src.clone(); b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .3, k: src === yate ? .4 : 1 }; add(b); boats.push(b);
       const L = r * 2.2; for (let k = -1; k <= 1; k++) solid(x + Math.sin(ry) * k * L, z + Math.cos(ry) * k * L, r); });
@@ -519,6 +527,7 @@ export async function createGame(ctx) {
     if (Z.id === 'puerto') await puertoScene();
     if (Z.id === 'cala') await calaScene();
     if (Z.id === 'mago') await magoScene();
+    if (Z.id === 'mago') jjBar();   // la salida de EL MAGO es desde el muelle del JJ'S
     if (Z.obj === 'time') { jjBar(); R.time = [14, 11, 10][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [8, 7, 6][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
@@ -639,6 +648,7 @@ export async function createGame(ctx) {
     if (!R || state === 'pause' || state === 'loading' || R.done) return;   // mientras carga la pantalla no corre el tiempo
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k + (window.__swell ? window.__swell(b.position.x, b.position.z) * (u.k > .5 ? .8 : .4) : 0); b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
+    if (R.piri && !R.piri.got && state === 'race' && Math.hypot(P.x - R.piri.x, P.z - R.piri.z) < 8) { R.piri.got = true; S.lives = Math.min(6, S.lives + 1); P.turboU = Math.min(5, (P.turboU ?? 3) + 2); save(); hud(); flash('¡PIRI-PIRI! +1 ♥ +2 TURBOS', 1.4, true, '#ff3f8e'); if (Snd.ok()) Snd.pickup(); }
     if (state === 'race' && !window.__autoQ && S.set.q === 'alta') { R.fpsT = (R.fpsT || 0) + dt; R.fpsN = (R.fpsN || 0) + 1;   // calidad automática: si va lento, baja los gráficos
       if (R.fpsT > 5) { window.__autoQ = 1; if (R.fpsN / R.fpsT < 38) { S.set.q = 'baja'; save(); applySettings(); toast('GRÁFICOS EN BAJA PARA IR MÁS FLUIDO', true); } } }
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
