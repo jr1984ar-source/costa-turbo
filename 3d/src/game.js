@@ -121,6 +121,10 @@ const CSS = `
 #ui table{border-collapse:collapse;font-size:20px;font-weight:700;min-width:300px}
 #ui td{padding:2px 10px}#ui tr.me td{color:#ffe14d}
 #ui input{font:800 24px "Saira Condensed","Arial Narrow",Arial;padding:6px 14px;border-radius:12px;border:3px solid #ffe14d;background:#0b1630;color:#fff;text-align:center;width:240px}
+#ui .podio{display:none;align-items:flex-end;gap:8px;justify-content:center}
+#ui .podio div{width:130px;text-align:center;font-weight:900;font-size:16px}
+#ui .podio div b{display:block;border-radius:10px 10px 0 0;font-size:34px;color:#0b1630;padding-top:6px}
+#ui .podio div.me span{color:#ffe14d}
 #rh{position:fixed;left:0;right:0;top:10px;z-index:15;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;color:#fff;display:none;text-align:center}
 #rh .t{font-weight:900;font-size:54px;line-height:1;text-shadow:0 3px 0 #0b1630,0 0 18px rgba(0,0,0,.4)}
 #rh .z{font-weight:800;font-size:16px;letter-spacing:.2em;opacity:.9}
@@ -176,6 +180,7 @@ export async function createGame(ctx) {
   // ---------- resultados ----------
   mk('result', `<div class="md" style="display:none;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em"></div><h2 class="rt"></h2><div class="sub rs" style="font-size:24px"></div><div class="sub rp" style="color:#ffe14d;font-size:30px;font-weight:900"></div>
     <div class="nm" style="display:none;text-align:center"><div class="sub" style="font-weight:800">¡TOP 10! TU NOMBRE:</div><input maxlength="12"><div class="row" style="margin-top:8px"><button class="btn" data-a="savename">GUARDAR</button></div></div>
+    <div class="podio"></div>
     <div><div class="sub" style="font-weight:900;letter-spacing:.1em">TOP 10</div><table class="tt"></table></div>
     <div class="row"><button class="btn main" data-a="retry">REPETIR</button><button class="btn nx" data-a="next">SIGUIENTE PANTALLA</button><button class="btn" data-a="map">MAPA</button></div>`);
   // ---------- ajustes ----------
@@ -495,6 +500,11 @@ export async function createGame(ctx) {
     if (md >= 0 && (S.medal[Z.id] == null || md < S.medal[Z.id])) S.medal[Z.id] = md;
     const mdE = scr.result.querySelector('.md'); mdE.style.display = md >= 0 || rec ? 'block' : 'none';
     mdE.innerHTML = (md >= 0 ? `<i class="ti ti-medal" style="font-size:64px;color:${MEDAL_C[md]};filter:drop-shadow(0 4px 0 #0b1630)"></i><div style="color:${MEDAL_C[md]}">MEDALLA DE ${MEDAL_N[md]}</div>` : '') + (rec ? '<div style="color:#5be37a">¡NUEVO RÉCORD!</div>' : '');
+    // podio de EL MAGO: los que han llegado por tiempo y el resto por lo que les falta
+    const pod = scr.result.querySelector('.podio'); pod.style.display = 'none';
+    if (Z.obj === 'race3') { const all = [{ n: S.name || 'TÚ', me: 1, f: R.pfin ?? null, s: R.s }].concat(R.rivals.map(r => ({ n: r.name, f: r.fin, s: r.s })));
+      const key = o => o.f != null ? o.f : 1e4 - o.s; all.sort((a, b) => key(a) - key(b));
+      const top = all.slice(0, 3); pod.innerHTML = [1, 0, 2].map(k => top[k] ? `<div class="${top[k].me ? 'me' : ''}"><span>${top[k].n}</span><b style="height:${[96, 70, 52][k]}px;background:${MEDAL_C[k]}">${k + 1}</b></div>` : '').join(''); pod.style.display = 'flex'; }
     save();
     scr.result.querySelector('.rt').textContent = title; scr.result.querySelector('.rs').textContent = line + coinTxt;
     scr.result.querySelector('.rp').textContent = ok ? '+' + prize.toLocaleString('es-ES') + ' PTA' : '';
