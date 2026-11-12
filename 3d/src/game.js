@@ -180,7 +180,7 @@ export async function createGame(ctx) {
   const homeB = document.createElement('button'); homeB.className = 'btn'; homeB.dataset.a = 'menu'; homeB.innerHTML = '<i class="ti ti-home"></i>INICIO'; Object.assign(homeB.style, { position: 'absolute', top: '14px', left: '18px', minWidth: '0', fontSize: '18px', padding: '6px 16px', zIndex: 2 }); ui.appendChild(homeB);   // botón INICIO en todas las pantallas
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
-  const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
+  const show = id => { if (id === 'menu' && typeof renderCard === 'function') try { renderCard(); } catch (e) {} for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
   const flash = (txt, t = 1.2, small = false, col = '') => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.color = col; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
   const pop = (txt, col = '#ffe14d', dx = 0) => { const e = document.createElement('div'); e.className = 'pop'; e.textContent = txt; e.style.color = col; e.style.marginLeft = dx + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 1000); };   // puntos emergentes
@@ -190,10 +190,10 @@ export async function createGame(ctx) {
   const noCash = p => { toast('NO TIENES BASTANTES PTA · TE FALTAN ' + (p - S.cash).toLocaleString('es-ES'), false); if (Snd.ok()) Snd.miss(); };
 
   // ---------- portada ----------
-  mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
-    <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button><button class="btn main" data-a="champ"><i class="ti ti-trophy"></i>CAMPEONATO</button></div>
+  mk('menu', `<div class="pcard" style="position:absolute;top:14px;left:18px;display:flex;gap:12px;align-items:center;background:rgba(11,22,48,.65);border:2px solid rgba(255,255,255,.35);border-radius:16px;padding:8px 14px 8px 8px;text-align:left"></div><img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
+    <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button><button class="btn main" data-a="champ"><i class="ti ti-trophy"></i>CAMPEONATO</button><button class="btn main" data-a="map"><i class="ti ti-ghost-2"></i>CARRERA LIBRE</button></div>
     <div class="row"><button class="btn" data-a="pilot"><i class="ti ti-user"></i>PILOTO Y MOTO</button><button class="btn" data-a="taller"><i class="ti ti-tools"></i>TALLER</button></div>
-    <div class="row"><button class="btn" data-a="ach"><i class="ti ti-trophy"></i>MEDALLAS</button><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button><button class="btn" data-a="fs"><i class="ti ti-maximize"></i>PANTALLA COMPLETA</button></div>
+    <div class="row"><button class="btn" data-a="rank"><i class="ti ti-list-numbers"></i>RANKING</button><button class="btn" data-a="ach"><i class="ti ti-trophy"></i>MEDALLAS</button><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button><button class="btn" data-a="fs"><i class="ti ti-maximize"></i>PANTALLA COMPLETA</button></div>
     <div style="position:absolute;bottom:10px;right:16px;font-weight:800;font-size:14px;opacity:.6">v${VERSION}</div>`);
   // ---------- mapa ----------
   mk('map', `<h2>ELIGE PANTALLA</h2><div class="cash"></div><div class="zone"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
@@ -214,6 +214,11 @@ export async function createGame(ctx) {
     <div class="podio"></div>
     <div><div class="sub" style="font-weight:900;letter-spacing:.1em">TOP 10</div><table class="tt"></table></div>
     <div class="row"><button class="btn main" data-a="retry">REPETIR</button><button class="btn nx" data-a="next">SIGUIENTE PANTALLA</button><button class="btn" data-a="map">MAPA</button></div>`);
+  // ---------- ranking: TOP 10 de las tres pantallas ----------
+  mk('rank', `<h2>RANKING</h2><div class="zone rk"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
+  function renderRank() { scr.rank.querySelector('.rk').innerHTML = ZONES.map(Z => { const l = S.top[Z.id] || []; return `<div class="card" style="text-align:left"><b>${Z.name}</b><table style="font-size:15px;min-width:0;width:100%">${l.length ? l.map((e, k) => `<tr><td>${k + 1}.</td><td>${e.n}</td><td>${fmtT(e.t)}</td><td style="color:#ffe14d">${e.p != null ? e.p.toLocaleString('es-ES') : ''}</td></tr>`).join('') : '<tr><td>Aún no hay tiempos</td></tr>'}</table></div>`; }).join(''); }
+  function renderCard() { const A = AVATARS[S.pilot], won = Object.keys(S.done).length, nA = Object.keys(S.ach || {}).length, tr = TROF.filter(t => nA >= t[0]).pop();
+    scr.menu.querySelector('.pcard').innerHTML = `<div style="width:58px;height:58px;border-radius:12px;background:#05070b url('assets/taller/p_${A.id}.jpg') center/cover"></div><div><b style="font-size:20px;display:block">${S.name || 'JUGADOR'}</b><span style="color:#ffe14d;font-weight:900">${S.cash.toLocaleString('es-ES')} PTA</span><br><span style="font-size:14px;opacity:.85">Pantallas ${won}/${ZONES.length} · Medallas ${nA}/13${tr ? ' · Trofeo ' + tr[1] : ''}</span></div>`; }
   // ---------- medallas y trofeos ----------
   mk('ach', `<h2>MEDALLAS Y TROFEOS</h2><div class="cash"></div><div class="tro row"></div><div class="grid ach" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   function renderAch() { const n = Object.keys(S.ach).length;
@@ -702,6 +707,7 @@ export async function createGame(ctx) {
     if (a === 'taller') { state = 'taller'; renderTaller(); show('taller'); }
     if (a === 'set') { state = 'set'; renderSet(); show('set'); }
     if (a === 'ach') { state = 'ach'; renderAch(); show('ach'); }
+    if (a === 'rank') { state = 'rank'; renderRank(); show('rank'); }
     if (a === 'ctrl') { state = 'ctrl'; show('ctrl'); }
     if (a === 'cred') { state = 'cred'; show('cred'); }
     if (a === 'tsnd') { S.set.snd = S.set.snd ? 0 : 1; save(); applySettings(); }
@@ -724,7 +730,7 @@ export async function createGame(ctx) {
   function nav(d) { const f = focusables(); if (!f.length) return; let i = f.indexOf(document.activeElement); i = i < 0 ? 0 : (i + d + f.length) % f.length; f[i].focus(); }
   function back() { if (state === 'pause') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); return; }
     if (state === 'jj') { scr[scr.roxy.classList.contains('on') ? 'roxy' : 'jj'].querySelector('[data-a=jjout]').click(); return; }
-    if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred', 'ach'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
+    if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred', 'ach', 'rank'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
   addEventListener('keydown', e => { if (!ui.classList.contains('on') || document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (['ArrowDown', 'ArrowRight'].includes(e.code)) { nav(1); e.preventDefault(); } if (['ArrowUp', 'ArrowLeft'].includes(e.code)) { nav(-1); e.preventDefault(); }
     if (e.code === 'Escape' || e.code === 'Backspace' || e.code === 'KeyP') { back(); e.preventDefault(); }
