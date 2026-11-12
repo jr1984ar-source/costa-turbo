@@ -59,7 +59,7 @@ function recolorVest(mat, hex) {
   cx.putImageData(id, 0, 0); const t = new THREE.CanvasTexture(cv); t.flipY = mat.map.flipY; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; mat.map = t; mat.needsUpdate = true;
 }
 
-export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = null, body: bodyModel = 'piloto_eric', skin = 1, base = 'models/' } = {}) {
+export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = null, body: bodyModel = 'piloto_eric', skin = 1, gog = '#1d2027', glove = '#1d2027', boot = '#16181d', base = 'models/' } = {}) {
   const gl = new GLTFLoader();
   const [pg, hg, vg] = await Promise.all([gl.loadAsync(base + bodyModel + '.glb'), gl.loadAsync(base + 'casco_motocross.glb'), gl.loadAsync(base + 'chaleco.glb')]);
   const root = new THREE.Group(), body = pg.scene; root.add(body);
@@ -73,7 +73,19 @@ export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = n
   const hw = new THREE.Group(); hw.add(helm); helm.position.set(0, -0.12, -0.01); helm.scale.setScalar(1.32); root.add(hw);
   const ch = vg.scene; ch.traverse(o => { if (o.isMesh) { o.castShadow = true; o.material = o.material.clone(); recolorVest(o.material, vest); } });
   const cw = new THREE.Group(); cw.add(ch); ch.position.set(0, -0.27, -0.01); ch.scale.setScalar(0.9); root.add(cw);
-  const Y = V(0, 1, 0), qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+  // gafas de motocross sobre el casco: montura del color elegido, lente espejada y correa alrededor
+  const gogM = new THREE.MeshStandardMaterial({ color: gog, roughness: .45 }), lensM = new THREE.MeshPhysicalMaterial({ color: 0x9fb4c8, metalness: 1, roughness: .08, clearcoat: 1 });
+  const gw = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(.20, .075, .045), gogM); frame.castShadow = true; gw.add(frame);
+  const lens = new THREE.Mesh(new THREE.BoxGeometry(.175, .052, .012), lensM); lens.position.z = .024; gw.add(lens);
+  const strap = new THREE.Mesh(new THREE.TorusGeometry(.142, .013, 6, 36), gogM); strap.rotation.x = Math.PI / 2; strap.scale.set(1, 1.15, 1); strap.position.z = -.115; gw.add(strap);
+  gw.position.set(0, .06, .175); gw.rotation.x = -.12; gw.scale.setScalar(1.15); hw.add(gw);
+  // guantes y escarpines: piezas que siguen a manos y pies en cada pose
+  const rb = (w, h, d, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d, 2, 2, 2), new THREE.MeshStandardMaterial({ color: c, roughness: .7 }));
+    const pa = m.geometry.attributes.position; for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i); const k = 0.82 + 0.18 * (1 - Math.max(Math.abs(x) / (w / 2), Math.abs(y) / (h / 2))); pa.setXYZ(i, x * (Math.abs(z) > d * .4 ? k : 1), y, z); }
+    m.geometry.computeVertexNormals(); m.castShadow = true; root.add(m); return m; };
+  const gloves = [1, -1].map(() => rb(.085, .045, .12, glove)), boots = [1, -1].map(() => rb(.10, .085, .25, boot));
+  const Y = V(0, 1, 0), qa = new THREE.Quaternion(), qb = new THREE.Quaternion(), Z = V(0, 0, 1);
   const S = { hip: bn('hip_'), s1: bn('spine_01'), s2: bn('spine_02'), s3: bn('spine_03'), neck: bn('neck_'), head: bn('head_0') };
   // pose viva: st = { steer -1..1 (+ = izquierda), k velocidad 0..1, drift 0/1, t tiempo }
   function pose(st = {}) {
@@ -100,6 +112,12 @@ export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = n
     qa.setFromUnitVectors(Y, V(steer * 0.18, 1, 0.22 - 0.12 * k).normalize()); qb.setFromAxisAngle(Y, steer * 0.42); hw.quaternion.copy(qb.multiply(qa));
     // chaleco sobre el torso
     cw.position.copy(root.worldToLocal(wp(S.s2))); cw.quaternion.setFromUnitVectors(Y, sd);
+    // guantes en las manos (en la dirección del antebrazo) y escarpines en los pies
+    [1, -1].forEach((s, i) => { const side = s > 0 ? '_l' : '_r';
+      const h = root.worldToLocal(wp(bn('hand' + side))), e = root.worldToLocal(wp(bn('lowerarm' + side))), dir = h.clone().sub(e).normalize();
+      gloves[i].position.copy(h).addScaledVector(dir, .045); gloves[i].quaternion.setFromUnitVectors(Z, dir);
+      const f = root.worldToLocal(wp(bn('foot' + side))), bl = bn('ball' + side), toe = root.worldToLocal(wp(bl)), fd = toe.clone().sub(f); fd.y = 0; if (fd.lengthSq() < 1e-6) fd.set(0, 0, 1); fd.normalize();
+      boots[i].position.copy(f).addScaledVector(fd, .05).add(V(0, -.02, 0)); boots[i].quaternion.setFromUnitVectors(Z, fd); });
   }
   pose({});
   root.userData = { bones: B, helm: hw, vest: cw, pose };

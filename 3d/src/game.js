@@ -218,7 +218,7 @@ export async function createGame(ctx) {
     const r = box.querySelector('[data-range]'); r.oninput = () => { s.vol = +r.value; save(); applySettings(); };
     const nm = box.querySelector('[data-name]'); nm.addEventListener('keydown', e => e.stopPropagation()); nm.onchange = () => { S.name = (nm.value || 'JUGADOR').toUpperCase().slice(0, 12); save(); }; }
   const gearLook = () => { const v = gearById(S.eq.vest), h = gearById(S.eq.helm), s = gearById(S.eq.suit);
-    const A = AVATARS[S.pilot]; return { vest: (v && v.c) || A.vest, helmet: h && h.id !== 'h0' ? h.c : null, suit: s && s.c ? s.c : null, body: A.body, skin: A.skin }; };
+    const A = AVATARS[S.pilot], go = gearById(S.eq.gog), gv = gearById(S.eq.glove); return { vest: (v && v.c) || A.vest, helmet: h && h.id !== 'h0' ? h.c : null, suit: s && s.c ? s.c : null, body: A.body, skin: A.skin, gog: go ? go.c : '#1d2027', glove: gv ? gv.c : '#1d2027', boot: s && s.c ? s.c : '#16181d' }; };
 
   function openBrief(i) { zone = i; const Z = ZONES[i];
     scr.brief.querySelector('.zn').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; scr.brief.querySelector('.zg').textContent = Z.goal;

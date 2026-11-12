@@ -131,7 +131,7 @@ const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
 const wake = new Wake(env); scene.add(wake.mesh); window.__wake = wake;
 const spray = new Spray(env, 7000); scene.add(spray.points);
-import { makeRider } from './src/rider.js?v=11';
+import { makeRider } from './src/rider.js?v=13';
 let rider = await makeRider({ vest: '#ff7a1a' }); const RP = [0, 0.74, -0.75, 0.13]; rider.position.set(RP[0], RP[1], RP[2]); rider.userData.barY = RP[3]; ski.body.add(rider); window.__rider = rider;
 scene.add(ski.root);
 const PR = renderer.getPixelRatio();
@@ -184,9 +184,9 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=10';
+import { createGame } from './src/game.js?v=11';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
-  const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
+  const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
   ski.body.remove(rider); ski.body.add(nr); rider = nr; window.__rider = nr; }
 const setQuality = q => { const hi = q !== 'baja'; gtao.enabled = hi; bloomPass.enabled = hi; renderer.setPixelRatio(hi ? Math.min(devicePixelRatio, 1.5) : 1); comp.setPixelRatio(renderer.getPixelRatio()); comp.setSize(innerWidth, innerHeight); };
 const setHideControls = v => { hud.querySelectorAll('.pad').forEach(e => e.style.display = v ? 'none' : ''); };
