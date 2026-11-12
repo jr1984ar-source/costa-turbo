@@ -391,6 +391,11 @@ export async function createGame(ctx) {
       const bm = new THREE.Mesh(new THREE.ConeGeometry(2.5, 40, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff2c0, transparent: true, opacity: .1, depthWrite: false, side: THREE.DoubleSide }));
       bm.geometry.translate(0, -20, 0); bm.rotation.z = Math.PI / 2; const piv = new THREE.Group(); piv.position.set(x, 14.2, z1 - 4); piv.add(bm); add(piv); R.beam = piv;
       boat(pesca2, x + 9, coastZ(x) - 30, .1, -.5, 2); boat(barca, x + 8.4, coastZ(x) - 50, -.1, -.18, 1, 1.4); boat(pesca, x + 9.6, coastZ(x) - 66, Math.PI + .1, -.55, 2.2); }
+    // barcos que entran y salen del puerto cruzando el recorrido (con choque y estela)
+    R.movers = [[pesca, 182, 7, 2.2, .3, -.55], [riva, -118, 11, 1.6, .65, -.32], [pesca2, 40, 6, 2, .1, -.5]].map(([src, x, sp, r, u, y]) => {
+      const o = src.clone(); o.position.y = y; add(o); const wk = new Wake(env); add(wk.mesh); wk.pts.length = 0;
+      const cols = [-1, 0, 1].map(() => { const c = { x: 0, z: 0, r }; window.__COLZ.push(c); return c; });
+      return { o, wk, cols, x, za: coastZ(x) - 9, zb: coastZ(x) - 105, sp, r, u, dir: 1, wait: 0, y, ry: 0 }; });
     // yate grande fondeado mar adentro
     boat(yate, 150, coastZ(150) - 92, .35, -1.3, 4.2, .4);
   }
@@ -495,6 +500,12 @@ export async function createGame(ctx) {
     if (!R || state === 'pause' || R.done) return;
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k; b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
+    if (R.movers) for (const m of R.movers) { const L = Math.abs(m.zb - m.za);
+      if (m.wait > 0) { m.wait -= dt; m.ry += (m.dir > 0 ? Math.PI : 0) - m.ry > 0 ? Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)) : -Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)); }
+      else { m.u += m.dir * m.sp * dt / L; if (m.u >= 1 || m.u <= 0) { m.u = Math.max(0, Math.min(1, m.u)); m.dir *= -1; m.wait = 3; } else m.ry = m.dir > 0 ? Math.PI : 0; }
+      const z = m.za + (m.zb - m.za) * m.u, mv = m.wait > 0 ? 0 : m.sp; m.o.position.set(m.x, m.y + Math.sin(P.t * 1.3 + m.x) * .05, z); m.o.rotation.set(Math.sin(P.t + m.x) * .015, m.ry, Math.sin(P.t * .9) * .02);
+      const fx = Math.sin(m.ry), fz = Math.cos(m.ry); m.cols.forEach((c, k) => { c.x = m.x + fx * (k - 1) * m.r * 2.2; c.z = z + fz * (k - 1) * m.r * 2.2; });
+      m.wk.update(dt, m.x - fx * m.r * 2.6, z - fz * m.r * 2.6, Math.min(1, mv / 8), mv); }
     const Z = R.Z, path = R.path;
     if (state === 'count') { R.count -= dt; const c = Math.ceil(R.count - .6);
       if (c !== R.lastCount && c >= 0) { R.lastCount = c; if (c > 0) { flash(String(c), .9); if (Snd.ok()) Snd.beep(false); } else { flash('¡YA!', .8); if (Snd.ok()) Snd.beep(true); state = 'race'; R.started = true; } }
