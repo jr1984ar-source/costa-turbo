@@ -129,6 +129,7 @@ const CSS = `
 #rh .t{font-weight:900;font-size:54px;line-height:1;text-shadow:0 3px 0 #0b1630,0 0 18px rgba(0,0,0,.4)}
 #rh .z{font-weight:800;font-size:16px;letter-spacing:.2em;opacity:.9}
 #rh .pos{position:fixed;right:20px;top:12px;font-weight:900;font-size:44px;text-shadow:0 3px 0 #0b1630}
+#rh .mini{position:fixed;right:16px;top:70px;width:190px;height:120px;border-radius:14px;background:rgba(6,30,52,.55);border:2px solid rgba(255,255,255,.55)}
 #rh .pos small{font-size:22px;opacity:.8}
 #rh .lf{position:fixed;left:20px;top:14px;text-align:left;font-weight:900}
 #rh .hp{font-size:26px;color:#ff3b4e;text-shadow:0 2px 0 #0b1630;letter-spacing:2px}#rh .hp .off{color:rgba(255,255,255,.25)}
@@ -151,7 +152,7 @@ export async function createGame(ctx) {
   const { scene, P, env, heightAt, coastZ, makeBuoy, Wake, Snd } = ctx;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
-  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div></div>'; document.body.appendChild(rh);
+  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><canvas class="mini" width="380" height="240"></canvas><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
   const sem = document.createElement('div'); sem.id = 'sem'; sem.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(sem);   // semáforo de salida
   const semSet = n => { sem.style.display = 'flex'; [...sem.children].forEach((l, k) => l.className = n < 0 ? 'g' : k < n ? 'r' : ''); };
@@ -595,6 +596,19 @@ export async function createGame(ctx) {
     if (R.jjPos) { const dj = Math.hypot(P.x - R.jjPos.x, P.z - R.jjPos.z);
       if (dj > 16) R.jjIn = false;
       else if (!R.jjIn && dj < 9 && P.v < 4) { R.jjIn = true; R.time = Math.max(.5, R.time - 3); ctx.setPaused(true); state = 'jj'; save(); renderJJ(); show('jj'); return; } }
+    if ((R.miniT = (R.miniT || 0) - dt) <= 0) { R.miniT = .1; const cv = rh.querySelector('.mini'), c = cv.getContext('2d'), pts = R.path.pts || null;
+      if (!R.mb) { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let s = 0; s <= R.path.L; s += 8) { const q = at(R.path, s); x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); z0 = Math.min(z0, q.z); z1 = Math.max(z1, q.z); }
+        const k = Math.min(340 / (x1 - x0 + 1), 200 / (z1 - z0 + 1)); R.mb = { x0, z0, k, ox: (380 - (x1 - x0) * k) / 2, oz: (240 - (z1 - z0) * k) / 2 }; }
+      const mb = R.mb, X = x => 380 - (mb.ox + (x - mb.x0) * mb.k), Y = z => 240 - (mb.oz + (z - mb.z0) * mb.k);   // la costa queda arriba y se avanza de izquierda a derecha, como se ve desde el dron
+      c.clearRect(0, 0, 380, 240); c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineCap = 'round'; c.beginPath();
+      for (let s = 0; s <= R.path.L; s += 6) { const q = at(R.path, s); s ? c.lineTo(X(q.x), Y(q.z)) : c.moveTo(X(q.x), Y(q.z)); } c.stroke();
+      const dot = (x, z, r, col) => { c.fillStyle = col; c.beginPath(); c.arc(X(x), Y(z), r, 0, 7); c.fill(); };
+      const e = at(R.path, R.path.L - 4); dot(e.x, e.z, 9, '#ffffff');
+      const nc = R.cps.find(q => !q.hit) || R.gates.find(q => !q.done); if (nc) { const q = at(R.path, nc.s); dot(q.x - q.tz * (nc.c || 0), q.z + q.tx * (nc.c || 0), 8, '#2bd94f'); }
+      for (const r of R.rivals) dot(r.sk.root.position.x, r.sk.root.position.z, 7, r.fin ? 'rgba(255,255,255,.4)' : '#ff5a5a');
+      c.save(); c.translate(X(P.x), Y(P.z)); c.rotate(Math.atan2(-Math.cos(P.th), -Math.sin(P.th))); c.fillStyle = '#ffe14d'; c.strokeStyle = '#0b1630'; c.lineWidth = 3; c.beginPath(); c.moveTo(14, 0); c.lineTo(-9, 9); c.lineTo(-5, 0); c.lineTo(-9, -9); c.closePath(); c.stroke(); c.fill(); c.restore(); }
+    { const q = at(R.path, R.s), fx = Math.sin(P.th), fz = Math.cos(P.th); R.wrongT = (fx * q.tx + fz * q.tz < -.35 && P.v > 5) ? (R.wrongT || 0) + dt : 0;
+      if (R.wrongT > 1 && msgT <= 0) flash('DIRECCIÓN CONTRARIA', 1, true, '#ff3b4e'); }
     // jugador en el recorrido
     const L = locate(path, P.x, P.z, R.hint); R.hint = L.i; const prevS = R.s; R.s = L.s; R.lat = L.lat; R.maxS = Math.max(R.maxS, R.s);
     if (Z.obj === 'time') { R.time -= dt; R.t += dt;
