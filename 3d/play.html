@@ -29,7 +29,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { makeGrass, makePalms, makeGull, makeYacht, makeBuoy, makeUmbrella } from './src/props.js';
-import { Wake, Spray } from './src/fx.js?v=8';
+import { Wake, Spray } from './src/fx.js?v=9';
 
 const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = 'kawasaki';
 const W = innerWidth, H = innerHeight;
@@ -184,7 +184,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=24';
+import { createGame } from './src/game.js?v=26';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;

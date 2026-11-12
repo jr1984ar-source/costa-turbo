@@ -146,7 +146,7 @@ export async function createGame(ctx) {
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
   const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
-  const flash = (txt, t = 1.2, small = false) => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.display = 'block'; msgT = t; };
+  const flash = (txt, t = 1.2, small = false, col = '') => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.color = col; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
   // aviso de compra, equipado o dinero insuficiente (por encima de los menús)
   const tst = document.createElement('div'); tst.id = 'toast'; document.body.appendChild(tst); let tstT = 0;
@@ -438,8 +438,8 @@ export async function createGame(ctx) {
     if (Z.obj === 'time') { jjBar(); R.time = [14, 11, 10][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [8, 7, 6][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
-    if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5; R.gates.push({ s, c, done: false });
-        for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); solid(b.position.x, b.position.z, .75); } } }
+    if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5, gt = { s, c, done: false, b: [] }; R.gates.push(gt);
+        for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); gt.b.push(b); solid(b.position.x, b.position.z, .75); } } }
     { const cg = new THREE.CylinderGeometry(.6, .6, .12, 28), cm = new THREE.MeshStandardMaterial({ color: 0xffc21a, metalness: .85, roughness: .22, emissive: 0x5a3a00, emissiveIntensity: .6 }); cg.rotateX(Math.PI / 2);
       R.coins = []; R.coinN = 0; let k = 0;
       for (let s = 50; s < R.path.L - 30; s += 64, k++) { const lat0 = [-9, 0, 9, -5, 5][k % 5], ln = Z.obj === 'slalom' ? (R.gates.find(q => Math.abs(q.s - s - 10) < 23)?.c ?? lat0) : lat0;
@@ -551,7 +551,9 @@ export async function createGame(ctx) {
       if (R.time <= 0) { R.time = 0; return finishRace(false, '¡SE ACABÓ EL TIEMPO!'); } }
     else R.t += dt;
     if (Z.obj === 'slalom') for (const g of R.gates) if (!g.done && prevS < g.s && R.s >= g.s) { g.done = true;
-      if (Math.abs(R.lat - g.c) <= 4.6) { if (Snd.ok()) Snd.gate(); } else { g.miss = true; R.pen += 1; flash('+1 s', .9, true); if (Snd.ok()) Snd.miss(); } }
+      const okG = Math.abs(R.lat - g.c) <= 4.6, tint = okG ? 0x2bd94f : 0xff2b3a;
+      for (const b of g.b) b.traverse(o => { if (o.isMesh && o.material && o.material.color && ['ff7a1a', 'ffd21a'].includes(o.material.color.getHexString())) { o.material = o.material.clone(); o.material.color.setHex(tint); if (o.material.emissive) { o.material.emissive.setHex(tint); o.material.emissiveIntensity = .55; } } });
+      if (okG) { flash('¡BIEN!', .7, true, '#5be37a'); if (Snd.ok()) Snd.gate(); } else { g.miss = true; R.pen += 1; flash('+1 s', .9, true, '#ff3b4e'); if (Snd.ok()) Snd.miss(); } }
     // rivales
     if (R.rivals.length) {
       for (const r of R.rivals) {
