@@ -182,11 +182,17 @@ float ct_caustic(vec2 p, float t){
     vec3 T = exp(-path * uAbsorb);
     outgoingLight = outgoingLight * T + uScatter * (1.0 - T);
   } else {
-    float sw = 0.13 + 0.09 * sin(uTime * 0.9 + vWPos.x * 0.045 + vWPos.z * 0.02);
-    float film = 1.0 - smoothstep(sw - 0.05, sw, hh);
-    outgoingLight = mix(outgoingLight, outgoingLight * vec3(0.70, 0.88, 0.90) + uScatter * 0.15, film * 0.45);
-    float rim = (1.0 - smoothstep(0.0, 0.025, abs(hh - sw + 0.01))) * smoothstep(0.4, 0.75, ct_n(vWPos.xz * 2.2 + uTime * 0.5) * 0.6 + ct_n(vWPos.xz * 7.0) * 0.4);
-    outgoingLight += vec3(1.3) * rim;
+    // orilla: el agua sube por la arena rápido y baja despacio, cada tramo con su ritmo
+    float ph = fract(uTime * 0.10 + ct_n(vWPos.xz * 0.025) * 0.7);
+    float up = smoothstep(0.0, 0.30, ph), down = 1.0 - smoothstep(0.30, 1.0, ph);
+    float sw = 0.015 + 0.20 * min(up, down) * (0.7 + 0.6 * ct_n(vWPos.xz * 0.07));
+    float wet = 1.0 - smoothstep(0.0, 0.24, hh);                                       // arena mojada
+    outgoingLight *= 1.0 - 0.26 * wet;
+    float film = 1.0 - smoothstep(sw - 0.035, sw, hh);                                 // lámina de agua sobre la arena
+    outgoingLight = mix(outgoingLight, outgoingLight * vec3(0.74, 0.90, 0.92) + uScatter * 0.16, film * 0.55);
+    float lace = smoothstep(0.42, 0.74, ct_n(vWPos.xz * 3.0 + uTime * 0.35) * 0.6 + ct_n(vWPos.xz * 9.0 - uTime * 0.5) * 0.4);
+    float lead = (1.0 - smoothstep(0.0, 0.05, abs(hh - sw + 0.012))) * lace * (0.4 + 0.6 * up * (1.0 - 0.6 * (1.0 - down)));
+    outgoingLight = mix(outgoingLight, vec3(0.86, 0.90, 0.92), lead * 0.65);         // espuma rota del borde, sin línea blanca dura
   }
 }
 #include <opaque_fragment>`);
@@ -245,11 +251,12 @@ export function makeWater(env, hdTex, waveTex) {
         float a = clamp(F + dot(spec, vec3(0.05)), 0.0, 1.0);
         // espuma de la orilla
         float fn = ct_n(wp * 0.55 + vec2(uTime * 0.15, 0.0)) * 0.55 + ct_n(wp * 1.9 - uTime * 0.2) * 0.45;
-        float shore = 1.0 - smoothstep(0.0, 9.0, -sd);
-        float band = smoothstep(0.62, 1.0, sin(sd * 0.75 + uTime * 1.5 + ct_n(wp * 0.04) * 5.0)) * shore * shore;
-        float edge = 1.0 - smoothstep(0.0, 0.16, dep);
+        float shore = 1.0 - smoothstep(0.0, 7.0, -sd);
+        float wv = sin(sd * 0.55 + uTime * 1.2 + ct_n(wp * 0.05) * 6.0);
+        float band = smoothstep(0.82, 1.0, wv) * shore * smoothstep(0.38, 0.72, fn);       // crestas rotas cerca de la orilla, no rayas
+        float edge = 1.0 - smoothstep(0.0, 0.10, dep);
         float fe = ct_n(wp * 2.6 + uTime * 0.3) * 0.5 + ct_n(wp * 7.0 - uTime * 0.4) * 0.3 + ct_n(wp * 0.6) * 0.2;
-        float foam = clamp(band * smoothstep(0.40, 0.72, fn) * 0.55 + edge * smoothstep(0.30, 0.62, fe), 0.0, 1.0);
+        float foam = clamp(band * 0.38 + edge * smoothstep(0.38, 0.66, fe) * 0.75, 0.0, 1.0);
         vec3 foamCol = vec3(0.95, 0.97, 1.0) * (uSunCol.g * 0.42 + 0.35);
         col = col * (1.0 - foam) + foamCol * foam;
         a = a * (1.0 - foam) + foam;
