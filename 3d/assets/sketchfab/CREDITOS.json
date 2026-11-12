@@ -148,5 +148,29 @@
   "autor": "Fadly.W",
   "licencia": "CC Attribution",
   "url": "https://sketchfab.com"
+ },
+ "delfin": {
+  "titulo": "Game-Ready dolphin (Swimming)",
+  "autor": "Allie2k",
+  "licencia": "CC Attribution",
+  "url": "https://sketchfab.com/3d-models/game-ready-dolphin-swimming-b621ec8894734bc79c04338edff3cd0d"
+ },
+ "tortuga": {
+  "titulo": "Model 53A - Flatback Sea Turtle",
+  "autor": "DigitalLife3D",
+  "licencia": "CC Attribution",
+  "url": "https://sketchfab.com/3d-models/model-53a-flatback-sea-turtle-442372b7f02b4730882d41d959726156"
+ },
+ "kayak": {
+  "titulo": "Day3_kayak",
+  "autor": "muru",
+  "licencia": "CC Attribution",
+  "url": "https://sketchfab.com/3d-models/day3-kayak-8af477241e61413785ec8906f08bd2e9"
+ },
+ "velero": {
+  "titulo": "Sailboat",
+  "autor": "mr00T",
+  "licencia": "CC Attribution",
+  "url": "https://sketchfab.com/3d-models/sailboat-d59913994a44444b8d054f4de5f519bc"
  }
 }

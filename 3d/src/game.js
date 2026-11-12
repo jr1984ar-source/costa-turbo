@@ -4,7 +4,9 @@ import * as THREE from 'three';
 import { PAINTS } from './paint.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 const GL = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), GLC = {};
+const GLA = {}, glbAnim = n => GLA[n] || (GLA[n] = GL.loadAsync('models/' + n + '.glb'));   // modelos con animación (delfines, tortugas)
 const glb = n => GLC[n] || (GLC[n] = GL.loadAsync('models/' + n + '.glb').then(r => { r.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; const m = o.material; if (m && m.metalness > .9 && !m.metalnessMap) m.metalness = 0;
   if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
   if (/^acantilado/.test(n) && m) o.material = new THREE.MeshStandardMaterial({ map: m.map, normalMap: m.normalMap || null, roughness: 1, metalness: 0, emissive: 0xffffff, emissiveMap: m.map, emissiveIntensity: .2 }); } }); return r.scene; }));
@@ -234,7 +236,7 @@ export async function createGame(ctx) {
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
-    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br><br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br>· Game-Ready dolphin (Swimming) — Allie2k<br>· Model 53A - Flatback Sea Turtle — DigitalLife3D<br>· Day3_kayak — muru<br>· Sailboat — mr00T<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   let wl = null; const keepAwake = on => { try { if (on && !wl && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wl = l; l.addEventListener('release', () => wl = null); }).catch(() => {}); else if (!on && wl) { wl.release(); wl = null; } } catch (e) {} };
@@ -592,6 +594,16 @@ export async function createGame(ctx) {
     R.free = freeMode; R.rec = []; R.recT = 0;
     if (freeMode) { if (!ghostSki) { ghostSki = await ctx.loadSki('kawasaki'); ghostSki.root.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = .38; o.material.depthWrite = false; o.castShadow = false; } }); }
       const gh = S.ghost && S.ghost[Z.id]; R.ghost = gh || null; ghostSki.root.visible = !!gh; if (gh) scene.add(ghostSki.root); }
+    // vida en el mar: delfines que saltan (+1 turbo si los sigues), tortugas (no las pises), un velero y un kayak
+    { const [dg, tg, vel, kay] = await Promise.all([glbAnim('delfin'), glbAnim('tortuga'), glb('velero'), glb('kayak')]); const sh = R.shore || 1; R.mixers = []; R.fauna = [];
+      const anim = (gl, sc) => { const o = SkeletonUtils.clone(gl.scene); o.scale.setScalar(sc); o.traverse(m => { if (m.isMesh) { m.castShadow = true; m.frustumCulled = false; } }); const mx = new THREE.AnimationMixer(o); if (gl.animations[0]) mx.clipAction(gl.animations[0]).play(); R.mixers.push(mx); return o; };
+      for (let k = 0; k < 3; k++) { const d = anim(dg, .0026); add(d); R.fauna.push({ k: 'delfin', o: d, s: R.path.L * .3 + k * 5, lat: -24 * sh - k * 3, v: 30, ph: k * 1.1 }); }
+      const tm = new THREE.MeshStandardMaterial({ color: 0x5d6b3a, roughness: .7 });
+      for (let k = 0; k < 2; k++) { const t = anim(tg, 1.3); t.traverse(m => { if (m.isMesh) m.material = tm; }); add(t); R.fauna.push({ k: 'tortuga', o: t, s: R.path.L * (.55 + k * .25), lat: (k ? 9 : -9) * sh, v: 1.2, ph: k }); }
+      const v = vel.clone(); add(v); const kk = kay.clone(); add(kk); const wv = new Wake(env); add(wv.mesh); wv.pts.length = 0; const wk2 = new Wake(env); add(wk2.mesh); wk2.pts.length = 0;
+      R.traffic = (R.traffic || []).concat([{ o: v, wk: wv, s: R.path.L * .6, lat: -75 * sh, v: 3, dir: -1, y: -2.1, cols: [{ x: 0, z: 0, r: 3 }, { x: 0, z: 0, r: 3 }, { x: 0, z: 0, r: 3 }] },
+        { o: kk, wk: wk2, s: R.path.L * .45, lat: 16 * sh, v: 1.6, dir: 1, y: -.1, cols: [{ x: 0, z: 0, r: .9 }, { x: 0, z: 0, r: .9 }, { x: 0, z: 0, r: .9 }] }]);
+      for (const t of R.traffic.slice(-2)) for (const c of t.cols) window.__COLZ.push(c); }
     if (Z.riv && !freeMode) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -726,6 +738,13 @@ export async function createGame(ctx) {
         if (d < 5) { S.cash = Math.max(0, S.cash - 500); save(); flash('¡MULTA! −500 PTA', 1.5, true, '#ff3b4e'); if (Snd.ok()) Snd.fine(); pl.on = false; }
         else if (!inB && pl.t > 4) { pl.on = false; flash('¡TE HAS ESCAPADO!', 1, true, '#5be37a'); }
         if (!pl.on) { pl.cd = R.t + 8; pl.o.visible = false; pl.lamp.intensity = 0; if (Snd.sirenStop) Snd.sirenStop(); } } }
+    if (R.mixers) for (const mx of R.mixers) mx.update(dt);
+    if (R.fauna) for (const f of R.fauna) { f.s += f.v * dt * (f.k === 'delfin' ? 1 : .6); if (f.s > R.path.L + 30) f.s = -30;
+      const q = at(R.path, Math.max(0, Math.min(R.path.L, f.s))), x = q.x - q.tz * f.lat, z = q.z + q.tx * f.lat, ry = Math.atan2(q.tx, q.tz);
+      if (f.k === 'delfin') { const ph = (P.t * .9 + f.ph) % 3, jy = ph < 1 ? Math.sin(ph * Math.PI) * 2.2 - .3 : -1.2; f.o.position.set(x, jy, z); f.o.rotation.set(ph < 1 ? -Math.cos(ph * Math.PI) * .7 : 0, ry, 0);
+        if (state === 'race' && Math.hypot(x - P.x, z - P.z) < 16) { R.dolT = (R.dolT || 0) + dt / 3; if (R.dolT > 3 && !R.dolGot) { R.dolGot = true; P.turboU = Math.min(5, (P.turboU ?? 2) + 1); S.cash += 300; save(); flash('¡AMIGO DE LOS DELFINES! +300 PTA +1 TURBO', 1.6, true, '#33d6ff'); if (Snd.ok()) Snd.pickup(); } } }
+      else { f.o.position.set(x, -.25 + (window.__swell ? window.__swell(x, z) : 0), z); f.o.rotation.y = ry;
+        if (state === 'race' && Math.hypot(x - P.x, z - P.z) < 2 && !(f.t > R.t)) { f.t = R.t + 3; P.v *= .45; flash('¡CUIDADO CON LA TORTUGA!', 1.1, true, '#5be37a'); if (Snd.ok()) Snd.bump(); } } }
     if (R.traffic) for (const t of R.traffic) { t.s += t.v * t.dir * dt; if (t.s > R.path.L + 40 || t.s < -40) t.dir *= -1;
       const q = at(R.path, Math.max(0, Math.min(R.path.L, t.s))), x = q.x - q.tz * t.lat, z = q.z + q.tx * t.lat, ry = Math.atan2(q.tx * t.dir, q.tz * t.dir);
       t.o.position.set(x, t.y + (window.__swell ? window.__swell(x, z) * .5 : 0), z); t.o.rotation.y = ry; const fx = Math.sin(ry), fz = Math.cos(ry), L = t.girls ? 8.5 : 3.5;

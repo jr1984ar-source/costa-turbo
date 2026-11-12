@@ -6,7 +6,7 @@ import { MeshoptEncoder, MeshoptDecoder } from 'meshoptimizer';
 import fs from 'fs';
 await MeshoptEncoder.ready; await MeshoptDecoder.ready;
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.encoder': MeshoptEncoder, 'meshopt.decoder': MeshoptDecoder });
-for (const f of fs.readdirSync('models').filter(f => f.endsWith('.glb'))) {
+for (const f of fs.readdirSync('models').filter(f => f.endsWith('.glb') && !/^(piloto_|delfin|tortuga)/.test(f))) {   // los modelos con huesos no se tocan
   const p = 'models/' + f, before = fs.statSync(p).size; const doc = await io.read(p);
   if (doc.getRoot().listExtensionsUsed().some(e => e.extensionName === 'EXT_meshopt_compression')) { console.log('ya', f); continue; }
   await doc.transform(reorder({ encoder: MeshoptEncoder }), quantize());
