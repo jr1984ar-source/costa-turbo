@@ -4,10 +4,10 @@ import * as THREE from 'three';
 
 // ---------- datos (nombres y precios del juego 2D) ----------
 export const AVATARS = [
-  { id: 'alex', name: 'Álex', vest: '#ff7a1a' }, { id: 'dani', name: 'Dani', vest: '#33d6ff' },
-  { id: 'marc', name: 'Marc', vest: '#7be35a' }, { id: 'leo', name: 'Leo', vest: '#e3202b' },
-  { id: 'lucia', name: 'Lucía', vest: '#ff3f8e' }, { id: 'sara', name: 'Sara', vest: '#1e5eff' },
-  { id: 'nerea', name: 'Nerea', vest: '#ffd21a' }, { id: 'vega', name: 'Vega', vest: '#7b3fe4' }];
+  { id: 'alex', name: 'Álex', vest: '#ff7a1a', bio: 'Rápido en la salida. Corre en el puerto desde niño.' }, { id: 'dani', name: 'Dani', vest: '#33d6ff', bio: 'Le encantan las curvas cerradas.' },
+  { id: 'marc', name: 'Marc', vest: '#7be35a', bio: 'Turbo largo y mucha cabeza.' }, { id: 'leo', name: 'Leo', vest: '#e3202b', bio: 'Duro en los choques, no se rinde nunca.' },
+  { id: 'lucia', name: 'Lucía', vest: '#ff3f8e', bio: 'Reina del slalom: no falla una boya.' }, { id: 'sara', name: 'Sara', vest: '#1e5eff', bio: 'La más rápida en recta.' },
+  { id: 'nerea', name: 'Nerea', vest: '#ffd21a', bio: 'Derrapes perfectos.' }, { id: 'vega', name: 'Vega', vest: '#7b3fe4', bio: 'Arriesga en cada curva.' }];
 export const GEAR = {
   helm: [{ id: 'h0', n: 'Casco de serie', b: 'De serie', p: 0, c: '#f4f6f9' },
     { id: 'h1', n: 'S-M3 Morado', b: 'Alpinestars', p: 3000, c: '#7b5cff' }, { id: 'h2', n: 'S-M5 Rojo', b: 'Alpinestars', p: 4500, c: '#d0151f' },
@@ -171,7 +171,7 @@ export async function createGame(ctx) {
   function renderPilot() {
     const g = scr.pilot.querySelector('.av'); g.innerHTML = '';
     AVATARS.forEach((A, i) => { const b = document.createElement('button'); b.className = 'card' + (S.pilot === i ? ' sel' : '');
-      b.innerHTML = `<div class="img" style="background:radial-gradient(circle at 50% 40%,${A.vest} 0 34%,#05070b 35%)"></div><b>${A.name}</b><i>Chaleco ${A.vest.toUpperCase()}</i>`;
+      b.innerHTML = `<div class="img" style="background-image:url('assets/taller/p_${A.id}.jpg')"></div><b>${A.name}</b><i>${A.bio}</i>`;
       b.onclick = async () => { click(); S.pilot = i; save(); renderPilot(); await ctx.applyGear(gearLook()); }; g.appendChild(b); });
     const mo = scr.pilot.querySelector('.mo'); mo.innerHTML = '';
     MOTOS.forEach(([k, n]) => { const b = document.createElement('button'); b.className = 'btn' + (ctx.PAINT === k ? ' sel' : ''); b.textContent = n;
