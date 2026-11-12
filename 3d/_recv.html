@@ -1,9 +1,0 @@
-<!doctype html><html><head><meta charset="utf-8"><title>Receptor</title></head><body style="background:#111;color:#ccc;font:14px Arial"><div id="l">Esperando…</div>
-<script>
-addEventListener('message', async e => {
-  if (e.origin !== 'https://gemini.google.com' && e.origin !== 'https://sketchfab.com') return;
-  const { name, blob } = e.data || {}; if (!name || !blob) return;
-  try { const r = await fetch('http://localhost:8766/' + name, { method: 'POST', body: blob }); document.getElementById('l').textContent = 'Guardada ' + name; e.source.postMessage({ ok: name, status: r.status }, e.origin); }
-  catch (err) { e.source.postMessage({ ok: name, error: String(err) }, e.origin); }
-});
-</script></body></html>

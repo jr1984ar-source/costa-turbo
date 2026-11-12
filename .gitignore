@@ -8,3 +8,5 @@
 # 3D: descargas en bruto y dependencias (se regeneran con fetch_sf.py y npm i)
 /3d/node_modules/
 /3d/assets/sketchfab/*/
+3d/_recv.html
+3d/assets/models/
