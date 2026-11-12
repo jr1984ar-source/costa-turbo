@@ -207,9 +207,9 @@ function step(dt) {
   const look = new THREE.Vector3();
   if (camMode === 'dron') {
     camTh += Math.atan2(Math.sin(P.th - camTh), Math.cos(P.th - camTh)) * Math.min(1, dt * 1.6);
-    const cf = fwdOf(camTh), cs = new THREE.Vector3(-cf.z, 0, cf.x), asp = innerWidth / innerHeight, hgt = (asp < 1 ? 42 : 27) + P.v * 0.2;
+    const cf = fwdOf(camTh), cs = new THREE.Vector3(-cf.z, 0, cf.x), asp = innerWidth / innerHeight, hgt = (asp < 1 ? 38 : 23) + P.v * 0.2;
     // alta e inclinada, desde un lado y algo por detrás (como el reel), no cenital
-    tmp.set(P.x - cf.x * 15 - cs.x * 9 + f.x * P.v * 0.2, hgt, P.z - cf.z * 15 - cs.z * 9 + f.z * P.v * 0.2);
+    tmp.set(P.x - cf.x * 22 - cs.x * 9 + f.x * P.v * 0.2, hgt, P.z - cf.z * 22 - cs.z * 9 + f.z * P.v * 0.2);
     look.set(P.x + cf.x * 6 + f.x * P.v * 0.2, 0, P.z + cf.z * 6 + f.z * P.v * 0.2);
     cam.up.set(0, 1, 0);
   } else {
