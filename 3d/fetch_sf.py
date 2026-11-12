@@ -2,6 +2,7 @@
 import json, os, sys, io, zipfile, urllib.request
 UA = {'User-Agent': 'CostaTurbo3D-asset-fetch/1.0'}
 _tk = os.path.expanduser('~/Desktop/API token.txt')
+if not os.path.exists(_tk): _tk = os.path.expanduser('~/Desktop/COSTA TURBO/API token.txt')
 if os.path.exists(_tk): UA['Authorization'] = 'Token ' + open(_tk).read().strip()
 import time
 def get(u, t=120):

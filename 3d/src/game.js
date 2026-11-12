@@ -256,7 +256,7 @@ export async function createGame(ctx) {
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
-    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br>· Game-Ready dolphin (Swimming) — Allie2k<br>· Model 53A - Flatback Sea Turtle — DigitalLife3D<br>· Day3_kayak — muru<br>· Sailboat — mr00T<br>· pine — local.yany<br><br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br>· Game-Ready dolphin (Swimming) — Allie2k<br>· Model 53A - Flatback Sea Turtle — DigitalLife3D<br>· Day3_kayak — muru<br>· Sailboat — mr00T<br>· pine — local.yany<br>· Mediterranean Home — shirlanne<br>· Modern luxury villa house building — saeedakbari<br>· Lifeguard Tower — Sololopenko<br>· Old olive tree — massive-graphisme<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   let wl = null; const keepAwake = on => { try { if (on && !wl && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wl = l; l.addEventListener('release', () => wl = null); }).catch(() => {}); else if (!on && wl) { wl.release(); wl = null; } } catch (e) {} };
@@ -565,6 +565,15 @@ export async function createGame(ctx) {
       const L = r * 2.2; for (let k = -1; k <= 1; k++) solid(x + Math.sin(ry) * k * L, z + Math.cos(ry) * k * L, r); });
   }
 
+  // ---------- tierra de cada pantalla: casas, villas, torre de socorrista y olivos, distintos en cada una ----------
+  async function landScene(id) {
+    const L = { puerto: [['villa1', -30, 64, 1, 3.3], ['torre_soc', 62, 9, 1, 3.0], ['olivo', -66, 58, 1.1, .4], ['olivo', 8, 60, .85, 2.1], ['olivo', -50, 80, .95, 4.4]],
+      cala: [['casa_med', -128, 46, 1, 3.1], ['torre_soc', -64, 8, .95, 3.4], ['olivo', -96, 44, 1, 1.2], ['olivo', -160, 52, .8, 3.7], ['olivo', 70, 48, 1.15, .2], ['olivo', 104, 58, .9, 5.1], ['olivo', -112, 70, 1.05, 2.6]],
+      mago: [['casa_med', 96, 38, 1.05, 3.3], ['villa1', -84, 66, .9, 3.5], ['torre_soc', 20, 8, 1, 2.8], ['olivo', 128, 50, .9, 4.2], ['olivo', -40, 54, 1.1, 1.6], ['olivo', 54, 62, .95, .7]] }[id] || [];
+    for (const [n, x, dz, s, ry] of L) { const src = await glb(n), o = src.clone(), z = coastZ(x) + dz, r = n === 'villa1' ? 9 : n === 'casa_med' ? 6 : 2.5;
+      let y = Infinity; for (const [a, b] of [[0, 0], [r, r], [-r, r], [r, -r], [-r, -r]]) y = Math.min(y, heightAt(x + a, z + b));   // apoyada en el punto más bajo, sin flotar
+      o.position.set(x, y - .15, z); o.scale.setScalar(s); o.rotation.y = ry; add(o); } }
+
   // ---------- rampas de salto (la física del salto está en play.html) ----------
   const RAMPC = { amarilla: ['#ffb21a', 7, 1.4], naranja: ['#ff7a1a', 8, 2], roja: ['#e3202b', 9, 2.7], mega: ['#9b30ff', 12, 4] };
   function ramp(path, s, lat, kind = 'amarilla', w = 4.2) { const [rc, len, h] = RAMPC[kind];
@@ -602,6 +611,7 @@ export async function createGame(ctx) {
     if (Z.id === 'puerto') await puertoScene();
     if (Z.id === 'cala') await calaScene();
     if (Z.id === 'mago') await magoScene();
+    await landScene(Z.id);
     if (Z.id === 'mago') jjBar();   // la salida de EL MAGO es desde el muelle del JJ'S
     if (Z.obj === 'time') { jjBar(); R.time = [16, 14, 11, 10, 9][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [9, 8, 7, 6, 5.5][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
