@@ -51,6 +51,13 @@ const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 // pantallas: recorridos comprobados en agua profunda
 const MEDAL_T = { puerto: [21, 23.5, 99], cala: [22, 26, 32] }, MEDAL_C = ['#ffd21a', '#d9dde3', '#d08a4a'], MEDAL_N = ['ORO', 'PLATA', 'BRONCE'];
 export const VERSION = '1.0.0';   // número de versión (cambios en LEEME.md)
+// 13 medallas con premio y 5 trofeos, como en el 2D
+const ACH = [['win1', 'Primera victoria', 'Gana una pantalla', 300, 'flag'], ['oroP', 'Oro en EL PUERTO', 'Medalla de oro en EL PUERTO', 500, 'medal'], ['oroC', 'Oro en LA CALA', 'Medalla de oro en LA CALA', 500, 'medal'],
+  ['oroM', 'Rey del Mago', 'Gana EL MAGO', 800, 'crown'], ['perf', 'Slalom perfecto', 'LA CALA sin fallar ni una boya', 600, 'target'], ['jump', 'A volar', 'Tu primer salto en rampa', 200, 'arrow-up-right'],
+  ['combo', 'Acróbata', 'Haz un combo de trucos', 500, 'rotate-360'], ['coins', 'Hucha llena', 'Coge 100 monedas en total', 400, 'coin'], ['piri', 'Amigo del Piri-Piri', 'Pasa junto al Piri-Piri', 300, 'ship'],
+  ['clean', 'Sin un rasguño', 'Acaba una carrera sin chocar', 500, 'shield-check'], ['stage3', 'Motor a tope', 'Sube una pieza a STAGE 3', 700, 'engine'], ['gear', 'Equipado', 'Lleva casco, gafas, guantes, chaleco y neopreno comprados', 400, 'shirt-sport'],
+  ['turbo5', 'Turbo a reventar', 'Ten 5 turbos a la vez', 300, 'bolt']];
+const TROF = [[3, 'BRONCE', '#d08a4a'], [6, 'PLATA', '#d9dde3'], [9, 'ORO', '#ffd21a'], [11, 'PLATINO', '#a8f0e8'], [13, 'DIAMANTE', '#9fe6ff']];
 export const ZONES = [
   { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 5, posPrize: [1500, 1000, 500] },
   { id: 'cala', name: 'LA CALA', obj: 'slalom', goal: 'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.', xa: -290, xb: 270, off: 42, amp: 0, per: 1, prize: 1200, riv: 0 },
@@ -61,7 +68,7 @@ const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 1500, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
-S.medal = S.medal || {}; S.best = S.best || {};
+S.medal = S.medal || {}; S.best = S.best || {}; S.ach = S.ach || {}; S.coinsTot = S.coinsTot || 0;
 S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, mt: 'suno', vol: 0.8, vib: 1, dif: 2, hide: 0, q: 'alta' }, S.set || {});
@@ -183,7 +190,7 @@ export async function createGame(ctx) {
   mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
     <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button></div>
     <div class="row"><button class="btn" data-a="pilot"><i class="ti ti-user"></i>PILOTO Y MOTO</button><button class="btn" data-a="taller"><i class="ti ti-tools"></i>TALLER</button></div>
-    <div class="row"><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button><button class="btn" data-a="fs"><i class="ti ti-maximize"></i>PANTALLA COMPLETA</button></div>
+    <div class="row"><button class="btn" data-a="ach"><i class="ti ti-trophy"></i>MEDALLAS</button><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button><button class="btn" data-a="fs"><i class="ti ti-maximize"></i>PANTALLA COMPLETA</button></div>
     <div style="position:absolute;bottom:10px;right:16px;font-weight:800;font-size:14px;opacity:.6">v${VERSION}</div>`);
   // ---------- mapa ----------
   mk('map', `<h2>ELIGE PANTALLA</h2><div class="cash"></div><div class="zone"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
@@ -204,6 +211,13 @@ export async function createGame(ctx) {
     <div class="podio"></div>
     <div><div class="sub" style="font-weight:900;letter-spacing:.1em">TOP 10</div><table class="tt"></table></div>
     <div class="row"><button class="btn main" data-a="retry">REPETIR</button><button class="btn nx" data-a="next">SIGUIENTE PANTALLA</button><button class="btn" data-a="map">MAPA</button></div>`);
+  // ---------- medallas y trofeos ----------
+  mk('ach', `<h2>MEDALLAS Y TROFEOS</h2><div class="cash"></div><div class="tro row"></div><div class="grid ach" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
+  function renderAch() { const n = Object.keys(S.ach).length;
+    scr.ach.querySelector('.tro').innerHTML = TROF.map(([k, nm, c]) => `<div class="card" style="min-width:110px;${n >= k ? '' : 'opacity:.35'}"><i class="ti ti-trophy" style="font-size:40px;color:${c};opacity:1"></i><b>${nm}</b><i>${k} medallas</i></div>`).join('');
+    scr.ach.querySelector('.ach').innerHTML = ACH.map(([id, nm, d, p, ic]) => `<div class="card" style="${S.ach[id] ? 'border-color:#ffe14d' : 'opacity:.45'}"><i class="ti ti-${ic}" style="font-size:38px;color:${S.ach[id] ? '#ffe14d' : '#fff'};opacity:1"></i><b>${nm}</b><i>${d}</i><em>${S.ach[id] ? 'CONSEGUIDA' : '+' + p + ' PTA'}</em></div>`).join(''); refreshCash(); }
+  const award = id => { if (S.ach[id]) return; const a = ACH.find(x => x[0] === id); if (!a) return; S.ach[id] = 1; S.cash += a[3]; save(); toast('MEDALLA: ' + a[1].toUpperCase() + ' +' + a[3] + ' PTA', true); if (Snd.ok()) Snd.win();
+    const n = Object.keys(S.ach).length, t = TROF.find(x => x[0] === n); if (t) setTimeout(() => toast('¡TROFEO DE ' + t[1] + '!', true), 1900); };
   // ---------- ajustes ----------
   mk('set', `<h2>AJUSTES</h2><div class="setrows"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-check"></i>LISTO</button></div>`);
   // ---------- controles ----------
@@ -250,12 +264,12 @@ export async function createGame(ctx) {
   window.__onTrick = (spins, flips, sup) => { if (state !== 'race' || !R) return;
     if (spins < 0) { if (Snd.ok()) Snd.miss(); return loseLife(2 / 3, '¡VUELCO! −⅔ ♥'); }
     const names = []; if (flips) names.push(flips > 1 ? flips + ' MORTALES' : 'MORTAL'); if (spins) names.push(spins > 1 ? spins * 360 + '' : '360');
-    if (sup) names.push('SUPERMAN'); let p = flips * 300 + spins * 200 + (sup ? 250 : 0); if ((flips > 0) + (spins > 0) + !!sup > 1) { p = Math.round(p * 1.5); names.push('COMBO ×1,5'); }
+    if (sup) names.push('SUPERMAN'); if ((flips > 0) + (spins > 0) + !!sup > 1) award('combo'); let p = flips * 300 + spins * 200 + (sup ? 250 : 0); if ((flips > 0) + (spins > 0) + !!sup > 1) { p = Math.round(p * 1.5); names.push('COMBO ×1,5'); }
     R.pts = (R.pts || 0) + p; R.tricks = (R.tricks || 0) + 1; flash(names.join(' + '), 1.1, true, '#ffb02e'); pop('+' + p + ' PUNTOS', '#ffb02e'); if (Snd.ok()) Snd.cash(); };
-  window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
+  window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; if (window.__P && window.__P.y > 1) award('jump'); flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   // vidas como en el 2D: 1/3 de corazón por choque y 2/3 por volcar; sin corazones, GAME OVER
-  const loseLife = (k, txt) => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.6; S.lives = Math.max(0, S.lives - k); save(); hud();
+  const loseLife = (k, txt) => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.crashed = true; R.invT = R.t + 1.6; S.lives = Math.max(0, S.lives - k); save(); hud();
     if (S.lives <= .01) { S.lives = 3; save(); return finishRace(false, 'GAME OVER'); } flash(txt, 1, true, '#ff3b4e'); };
   window.__onCrash = () => loseLife(1 / 3, '¡CHOQUE! −⅓ ♥');
 
@@ -297,7 +311,7 @@ export async function createGame(ctx) {
         b.className = 'card' + (lv ? ' sel' : '');
         b.innerHTML = `<div class="img" style="display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#1d2b44,#05070b 70%)"><i class="ti ti-${pt.ic}" style="font-size:64px;color:#ffe14d"></i></div><b>${pt.n}</b><i>${pt.ef}</i><i>STAGE ${lv}/3 ${'●'.repeat(lv)}${'○'.repeat(3 - lv)}</i><em>${lv >= 3 ? 'STAGE 3 · MÁX' : lock ? 'Gana ' + need + ' pantalla' + (need > 1 ? 's' : '') : 'STAGE ' + (lv + 1) + ' · ' + nxt.toLocaleString('es-ES') + ' PTA'}</em>`;
         b.onclick = () => { if (lv >= 3) { toast(pt.n.toUpperCase() + ' YA ESTÁ AL MÁXIMO', false); if (Snd.ok()) Snd.miss(); return; } if (lock) { toast('GANA ' + need + ' PANTALLA' + (need > 1 ? 'S' : '') + ' PARA DESBLOQUEARLO', false); if (Snd.ok()) Snd.miss(); return; } if (S.cash < nxt) return noCash(nxt);
-          toast('COMPRADO: ' + pt.n.toUpperCase() + ' STAGE ' + (lv + 1), true); S.cash -= nxt; S.parts[pt.id] = lv + 1; window.__parts = S.parts; save(); if (Snd.ok()) Snd.cash(); renderTaller(); };
+          toast('COMPRADO: ' + pt.n.toUpperCase() + ' STAGE ' + (lv + 1), true); S.cash -= nxt; S.parts[pt.id] = lv + 1; if (lv + 1 >= 3) award('stage3'); window.__parts = S.parts; save(); if (Snd.ok()) Snd.cash(); renderTaller(); };
         g.appendChild(b); });
       refreshCash(); return; }
     GEAR[tCat].forEach(it => { const own = S.own.includes(it.id), eq = S.eq[tCat] === it.id; const b = document.createElement('button'); b.className = 'card' + (eq ? ' sel' : '');
@@ -306,7 +320,7 @@ export async function createGame(ctx) {
       b.onclick = async () => {
         if (!own) { if (S.cash < it.p) return noCash(it.p); S.cash -= it.p; S.own.push(it.id); if (Snd.ok()) Snd.cash(); toast('COMPRADO Y EQUIPADO: ' + it.n.toUpperCase(), true); }
         else { click(); toast(eq ? 'YA LO LLEVAS PUESTO' : 'EQUIPADO: ' + it.n.toUpperCase(), true); }
-        S.eq[tCat] = it.id; save(); renderTaller(); await ctx.applyGear(gearLook()); };
+        S.eq[tCat] = it.id; save(); if (['helm', 'gog', 'glove', 'vest', 'suit'].every(k => S.eq[k] && !/0$/.test(S.eq[k]))) award('gear'); renderTaller(); await ctx.applyGear(gearLook()); };
       g.appendChild(b); });
     refreshCash();
   }
@@ -599,11 +613,13 @@ export async function createGame(ctx) {
     if (R.free) prize = 0;   // la carrera libre no da premio
     const tBonus = !ok || R.free ? 0 : Z.obj === 'time' ? Math.round(R.time) * 50 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
     const unl = ok && zone + 1 < ZONES.length && !S.done[ZONES[zone + 1].id] && !S.done[Z.id] ? ZONES[zone + 1].name : '';
+    if (ok && !R.free) { award('win1'); if (Z.id === 'mago' && R.pos === 1) award('oroM'); if (Z.obj === 'slalom' && !R.gates.some(q => q.miss)) award('perf'); if (!R.crashed) award('clean'); }
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
     // medalla y récord
     let md = -1; if (ok) { if (Z.obj === 'race3') md = R.pos - 1; else { const k = [1.2, 1.12, 1, .92, .86][S.set.dif]; md = MEDAL_T[Z.id].findIndex(v => t <= v * k); } }
     const rec = ok && (S.best[Z.id] == null || t < S.best[Z.id]) && Z.obj !== 'race3'; if (rec) S.best[Z.id] = t;
     if (md >= 0 && (S.medal[Z.id] == null || md < S.medal[Z.id])) S.medal[Z.id] = md;
+    if (md === 0 && Z.id === 'puerto') award('oroP'); if (md === 0 && Z.id === 'cala') award('oroC');
     const mdE = scr.result.querySelector('.md'); mdE.style.display = md >= 0 || rec ? 'block' : 'none';
     mdE.innerHTML = (md >= 0 ? `<i class="ti ti-medal" style="font-size:64px;color:${MEDAL_C[md]};filter:drop-shadow(0 4px 0 #0b1630)"></i><div style="color:${MEDAL_C[md]}">MEDALLA DE ${MEDAL_N[md]}</div>` : '') + (rec ? '<div style="color:#5be37a">¡NUEVO RÉCORD!</div>' : '');
     // desglose como en el 2D
@@ -640,6 +656,7 @@ export async function createGame(ctx) {
     if (a === 'pilot') { state = 'pilot'; renderPilot(); show('pilot'); }
     if (a === 'taller') { state = 'taller'; renderTaller(); show('taller'); }
     if (a === 'set') { state = 'set'; renderSet(); show('set'); }
+    if (a === 'ach') { state = 'ach'; renderAch(); show('ach'); }
     if (a === 'ctrl') { state = 'ctrl'; show('ctrl'); }
     if (a === 'cred') { state = 'cred'; show('cred'); }
     if (a === 'tsnd') { S.set.snd = S.set.snd ? 0 : 1; save(); applySettings(); }
@@ -661,7 +678,7 @@ export async function createGame(ctx) {
   function nav(d) { const f = focusables(); if (!f.length) return; let i = f.indexOf(document.activeElement); i = i < 0 ? 0 : (i + d + f.length) % f.length; f[i].focus(); }
   function back() { if (state === 'pause') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); return; }
     if (state === 'jj') { scr.jj.querySelector('[data-a=jjout]').click(); return; }
-    if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
+    if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred', 'ach'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
   addEventListener('keydown', e => { if (!ui.classList.contains('on') || document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (['ArrowDown', 'ArrowRight'].includes(e.code)) { nav(1); e.preventDefault(); } if (['ArrowUp', 'ArrowLeft'].includes(e.code)) { nav(-1); e.preventDefault(); }
     if (e.code === 'Escape' || e.code === 'Backspace' || e.code === 'KeyP') { back(); e.preventDefault(); }
@@ -685,7 +702,7 @@ export async function createGame(ctx) {
     if (!R || state === 'pause' || state === 'loading' || R.done) return;   // mientras carga la pantalla no corre el tiempo
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k + (window.__swell ? window.__swell(b.position.x, b.position.z) * (u.k > .5 ? .8 : .4) : 0); b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
-    if (R.piri && !R.piri.got && state === 'race' && Math.hypot(P.x - R.piri.x, P.z - R.piri.z) < 8) { R.piri.got = true; S.lives = Math.min(6, S.lives + 1); P.turboU = Math.min(5, (P.turboU ?? 3) + 2); save(); hud(); flash('¡PIRI-PIRI! +1 ♥ +2 TURBOS', 1.4, true, '#ff3f8e'); if (Snd.ok()) Snd.pickup(); }
+    if (R.piri && !R.piri.got && state === 'race' && Math.hypot(P.x - R.piri.x, P.z - R.piri.z) < 8) { R.piri.got = true; award('piri'); S.lives = Math.min(6, S.lives + 1); P.turboU = Math.min(5, (P.turboU ?? 3) + 2); save(); hud(); flash('¡PIRI-PIRI! +1 ♥ +2 TURBOS', 1.4, true, '#ff3f8e'); if (Snd.ok()) Snd.pickup(); }
     if (state === 'race' && !window.__autoQ && S.set.q === 'alta') { R.fpsT = (R.fpsT || 0) + dt; R.fpsN = (R.fpsN || 0) + 1;   // calidad automática: si va lento, baja los gráficos
       if (R.fpsT > 5) { window.__autoQ = 1; if (R.fpsN / R.fpsT < 38) { S.set.q = 'baja'; save(); applySettings(); toast('GRÁFICOS EN BAJA PARA IR MÁS FLUIDO', true); } } }
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
@@ -716,7 +733,7 @@ export async function createGame(ctx) {
       if (t.girls && !t.gave && state === 'race' && Math.hypot(x - P.x, z - P.z) < 26) { t.gave = true; P.turboU = Math.min(5, (P.turboU ?? 2) + 1); flash('¡LAS CHICAS DEL YATE TE REGALAN UN REFRESCO! +1 TURBO', 1.8, true, '#ff7ad9'); if (Snd.ok()) Snd.girls(); } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
-      if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }
+      if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (++S.coinsTot >= 100) award('coins'); if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }
     if (R.movers) for (const m of R.movers) { const L = Math.abs(m.zb - m.za);
       if (m.wait > 0) { m.wait -= dt; m.ry += (m.dir > 0 ? Math.PI : 0) - m.ry > 0 ? Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)) : -Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)); }
       else { m.u += m.dir * m.sp * dt / L; if (m.u >= 1 || m.u <= 0) { m.u = Math.max(0, Math.min(1, m.u)); m.dir *= -1; m.wait = 3; } else m.ry = m.dir > 0 ? Math.PI : 0; }
@@ -731,7 +748,7 @@ export async function createGame(ctx) {
     if (S.fuel > 0) { S.fuel = Math.max(0, S.fuel - (.12 + 1.13 * Math.min(1, P.v / 33)) * (P.v > 35 ? 2.2 : 1) * dt);
       if (S.fuel <= 0) { flash(R.jjPos ? '¡SIN GASOLINA! PARA EN EL JJ\'S' : '¡SIN GASOLINA!', 2.2, true); save(); } }
     window.__noFuel = S.fuel <= 0; R.lowT = (R.lowT || 0) - dt; if (S.fuel > 0 && S.fuel < 18 && R.lowT <= 0) { R.lowT = 4; if (Snd.ok()) Snd.warn(); }
-    if ((R.hudT = (R.hudT || 0) - dt) <= 0) { R.hudT = .25; hud(); }
+    if ((R.hudT = (R.hudT || 0) - dt) <= 0) { R.hudT = .25; hud(); if ((P.turboU ?? 0) >= 5) award('turbo5'); }
     if (R.jjPos) { const dj = Math.hypot(P.x - R.jjPos.x, P.z - R.jjPos.z);
       if (dj > 16) R.jjIn = false;
       else if (!R.jjIn && dj < 9 && P.v < 4) { R.jjIn = true; R.time = Math.max(.5, R.time - 3); ctx.setPaused(true); state = 'jj'; save(); renderJJ(); show('jj'); return; } }
