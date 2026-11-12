@@ -640,7 +640,7 @@ export async function createGame(ctx) {
       if (Z.obj === 'time') rows.push(['Tiempo sobrante', ok ? fmtT(R.time) : '—', tBonus]);
       if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; rows.push(['Boyas', (R.gates.length - miss) + ' de ' + R.gates.length, null], ['Bonus de tiempo', '', tBonus]); }
       rows.push(['Saltos', String(R.jumps || 0), null], ['Trucos', String(R.tricks || 0), null], ['Derrapes', String(R.drifts || 0), null], ['Premio', '', base]);
-      const pts = R.coinN * 25 + prize + (R.pts || 0); rows.push(['PUNTOS', String(pts), null]); if (unl) rows.push(['Desbloqueado', unl, null]);
+      const pts = R.coinN * 25 + prize + (R.pts || 0); R.points = pts; rows.push(['PUNTOS', String(pts), null]); if (unl) rows.push(['Desbloqueado', unl, null]);
       scr.result.querySelector('.desg').innerHTML = rows.map(([a, b, c]) => `<tr><td style="text-align:left">${a}</td><td>${b}</td><td style="text-align:right;color:#ffe14d">${c == null ? '' : '+' + c.toLocaleString('es-ES') + ' PTA'}</td></tr>`).join(''); }
     // podio de EL MAGO: los que han llegado por tiempo y el resto por lo que les falta
     const pod = scr.result.querySelector('.podio'); pod.style.display = 'none';
@@ -656,9 +656,9 @@ export async function createGame(ctx) {
     const inp = scr.result.querySelector('input'); inp.value = S.name || 'JUGADOR';
     renderTop(); show('result'); if (qual) setTimeout(() => inp.focus(), 60);
   }
-  function renderTop(me) { const list = S.top[R.Z.id] || []; scr.result.querySelector('.tt').innerHTML = list.length ? list.map((e, k) => `<tr class="${k === me ? 'me' : ''}"><td>${k + 1}.</td><td>${e.n}</td><td>${fmtT(e.t)}</td></tr>`).join('') : '<tr><td>Aún no hay tiempos</td></tr>'; }
+  function renderTop(me) { const list = S.top[R.Z.id] || []; scr.result.querySelector('.tt').innerHTML = list.length ? list.map((e, k) => `<tr class="${k === me ? 'me' : ''}"><td>${k + 1}.</td><td>${e.n}</td><td>${fmtT(e.t)}</td><td style="color:#ffe14d">${e.p != null ? e.p.toLocaleString('es-ES') + ' pts' : ''}</td><td style="opacity:.7">${e.m || ''}</td></tr>`).join('') : '<tr><td>Aún no hay tiempos</td></tr>'; }
   function saveName() { if (!R || !R.qual) return; const n = (scr.result.querySelector('input').value || 'JUGADOR').toUpperCase().slice(0, 12); S.name = n;
-    const list = S.top[R.Z.id] || (S.top[R.Z.id] = []); list.push({ n, t: R.final }); list.sort((a, b) => a.t - b.t); list.length = Math.min(10, list.length);
+    const list = S.top[R.Z.id] || (S.top[R.Z.id] = []); list.push({ n, t: R.final, p: R.points || 0, m: 'Kawasaki Ultra 310' }); list.sort((a, b) => a.t - b.t); list.length = Math.min(10, list.length);
     const me = list.findIndex(e => e.n === n && e.t === R.final); save(); R.qual = false; scr.result.querySelector('.nm').style.display = 'none'; renderTop(me); scr.result.querySelector('.btn.main').focus(); }
 
   // ---------- acciones de botones ----------
