@@ -419,7 +419,7 @@ export async function createGame(ctx) {
     // salida y meta
     arch('META', path, path.L - 4, 16, true); arch('SALIDA', path, 22, 16, false);
     if (Z.id === 'puerto') await puertoScene();
-    if (Z.obj === 'time') { jjBar(); R.time = 14 + [4, 0, -2][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 11 }));
+    if (Z.obj === 'time') { jjBar(); R.time = [14, 11, 10][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [8, 7, 6][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
     if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5; R.gates.push({ s, c, done: false });
