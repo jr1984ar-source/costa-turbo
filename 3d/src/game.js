@@ -237,7 +237,7 @@ export async function createGame(ctx) {
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
-    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br>· Game-Ready dolphin (Swimming) — Allie2k<br>· Model 53A - Flatback Sea Turtle — DigitalLife3D<br>· Day3_kayak — muru<br>· Sailboat — mr00T<br><br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br>· Game-Ready dolphin (Swimming) — Allie2k<br>· Model 53A - Flatback Sea Turtle — DigitalLife3D<br>· Day3_kayak — muru<br>· Sailboat — mr00T<br>· pine — local.yany<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   let wl = null; const keepAwake = on => { try { if (on && !wl && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wl = l; l.addEventListener('release', () => wl = null); }).catch(() => {}); else if (!on && wl) { wl.release(); wl = null; } } catch (e) {} };
@@ -249,6 +249,15 @@ export async function createGame(ctx) {
   // ---------- JJ'S SPORTS LOUNGE (bar del muelle en EL PUERTO) ----------
   mk('jj', `<h2>JJ'S SPORTS LOUNGE</h2><div class="cash"></div><div class="sub">Cada parada cuesta 3 s</div><div class="grid jjl" style="width:min(720px,94vw)"></div>
     <div class="row"><button class="btn main" data-a="jjout"><i class="ti ti-player-play-filled"></i>SEGUIR CORRIENDO</button></div>`);
+  mk('roxy', `<h2>ROXY BAR</h2><div class="cash"></div><div class="sub">Piezas STAGE y gasolina · cada parada cuesta 3 s</div><div class="grid rxl" style="width:min(900px,94vw)"></div>
+    <div class="row"><button class="btn main" data-a="jjout"><i class="ti ti-player-play-filled"></i>SEGUIR CORRIENDO</button></div>`);
+  function renderRoxy() { const L0 = scr.roxy.querySelector('.rxl'); L0.innerHTML = ''; const won = Object.keys(S.done).length;
+    const fb = document.createElement('button'); const fFull = S.fuel >= 99; fb.className = 'card' + (fFull ? ' sel' : ''); fb.innerHTML = `<div class="img" style="display:grid;place-items:center;aspect-ratio:1.4;background:radial-gradient(circle at 50% 45%,#3a1230,#05070b 70%)"><i class="ti ti-gas-station" style="font-size:56px;color:#ffe14d"></i></div><b>Llenar el depósito</b><i>Ahora: ${Math.ceil(S.fuel)} %</i><em>${fFull ? 'LLENO' : '300 PTA'}</em>`;
+    fb.onclick = () => { if (fFull) return; if (S.cash < 300) return noCash(300); S.cash -= 300; S.fuel = 100; save(); toast('DEPÓSITO LLENO', true); if (Snd.ok()) Snd.cash(); hud(); renderRoxy(); }; L0.appendChild(fb);
+    PARTS.forEach(pt => { const lv = S.parts[pt.id] | 0, nxt = lv < 3 ? pt.price[lv] : 0, lock = lv < 3 && won < PART_NEED[lv], b = document.createElement('button'); b.className = 'card' + (lv ? ' sel' : '');
+      b.innerHTML = `<div class="img" style="display:grid;place-items:center;aspect-ratio:1.4;background:radial-gradient(circle at 50% 45%,#1d2b44,#05070b 70%)"><i class="ti ti-${pt.ic}" style="font-size:56px;color:#ffe14d"></i></div><b>${pt.n}</b><i>STAGE ${lv}/3</i><em>${lv >= 3 ? 'MÁX' : lock ? 'BLOQUEADA' : nxt.toLocaleString('es-ES') + ' PTA'}</em>`;
+      b.onclick = () => { if (lv >= 3 || lock) { if (Snd.ok()) Snd.miss(); return; } if (S.cash < nxt) return noCash(nxt); S.cash -= nxt; S.parts[pt.id] = lv + 1; window.__parts = S.parts; save(); toast('COMPRADO: ' + pt.n.toUpperCase() + ' STAGE ' + (lv + 1), true); if (Snd.ok()) Snd.cash(); if (lv + 1 >= 3) award('stage3'); renderRoxy(); };
+      L0.appendChild(b); }); refreshCash(); }
   const JJ_ITEMS = [{ id: 'fuel', n: 'Llenar el depósito', ef: 'Gasolina al 100 %', p: 300, ic: 'gas-station' }, { id: 'life', n: 'Vida extra', ef: '+1 corazón', p: 1500, ic: 'heart' }, { id: 'turbo', n: 'Refresco turbo', ef: '+1 turbo', p: 500, ic: 'bottle' }];
   function renderJJ() { const L0 = scr.jj.querySelector('.jjl'); L0.innerHTML = '';
     for (const it of JJ_ITEMS) { const full = it.id === 'fuel' ? S.fuel >= 99 : it.id === 'life' ? S.lives >= 6 : (P.turboU ?? 3) >= 5, b = document.createElement('button');
@@ -469,6 +478,18 @@ export async function createGame(ctx) {
     boat(yate, 150, coastZ(150) - 92, .35, -1.3, 4.2, .4);
   }
 
+  // ---------- BAR ROXY (LA CALA): tienda de piezas y gasolina, como en el 2D ----------
+  function roxyBar() {
+    const g0 = new THREE.Group(), x = 20, z = coastZ(x) + 14, y = heightAt(x, z);
+    const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .75 }), box = (w, h, d, c, px, py, pz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M(c)); m.position.set(px, py, pz); m.castShadow = m.receiveShadow = true; g0.add(m); return m; };
+    box(12, 3.6, 7, 0xfdf0f4, 0, 1.8, 0); box(12.6, .35, 7.6, 0xff3f8e, 0, 3.75, 0);
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(8, 1.4), new THREE.MeshStandardMaterial({ map: textTex(['ROXY BAR'], 1024, 180, '#ff3f8e', '#ffffff'), roughness: .5, emissive: 0x220011 })); sg.position.set(0, 2.9, -3.56); sg.rotation.y = Math.PI; g0.add(sg);
+    box(11, 1.2, .15, 0x141416, 0, 1.4, -3.55);
+    for (const tx of [-3.5, 0, 3.5]) { const um = new THREE.Mesh(new THREE.ConeGeometry(1.6, .8, 10, 1, true), new THREE.MeshStandardMaterial({ color: tx ? 0xffffff : 0xff3f8e, side: THREE.DoubleSide })); um.position.set(tx, 2.4, -5.8); g0.add(um); box(.08, 2.4, .08, 0xcccccc, tx, 1.2, -5.8); box(.9, .06, .9, 0xffffff, tx, .8, -5.8); }
+    for (let k = 0; k < 8; k++) box(2.6, .2, 2, 0xa57a4c, 0, -.05 + Math.max(0, .35 - k * .1), -8 - k * 2);
+    for (let k = 0; k < 8; k += 2) for (const s of [-1, 1]) box(.22, 2.2, .22, 0x6b4a2c, s * 1.3, -.7, -8 - k * 2);
+    g0.position.set(x, y, z); add(g0); for (let k = 0; k < 8; k++) solid(x, z - 8 - k * 2, 1.5); R.roxyPos = { x: x + 4, z: z - 20 }; }
+
   // ---------- escenario de LA CALA: rocas a los lados de la entrada y barcas fondeadas ----------
   async function calaScene() {
     const [roca, barca, pesca2, riva, acan5, acan7] = await Promise.all(['namaqualand_boulder_02', 'barca', 'barco_pesca2', 'barco_riva', 'acantilado_n5', 'acantilado_n7'].map(glb));
@@ -481,6 +502,9 @@ export async function createGame(ctx) {
       for (let k = 0; k < 9; k++) { const h = (k * 37 % 11) / 11, x = xc + (h - .5) * len * .9; rock(x, coastZ(x) - 5 - (k % 3) * 1.8, 1.3 + h * 1.5, k * .41 + h); } }   // acantilados reales a los lados de la cala
     // rocas sueltas por la orilla
     for (let k = 0; k < 10; k++) { const x = -200 + k * 43 + (k % 2) * 9, z = coastZ(x) + 1.5 + (k % 3); rock(x, z, 1.2 + (k % 4) * .35, k * .53); }
+    // pinos sobre las rocas de los lados de la cala
+    { const pino = await glb('pino'); for (const [x, dz, s, r] of [[-236, 9, 1, .3], [-222, 14, .85, 2], [-248, 18, 1.1, 4], [226, 10, .95, 1], [238, 16, 1.05, 3.3], [214, 19, .8, 5]]) { const p = pino.clone(); const z = coastZ(x) + dz; p.position.set(x, heightAt(x, z) - .2, z); p.scale.setScalar(s); p.rotation.y = r; add(p); } }
+    roxyBar();
     // barcas y llaüts fondeados, fuera del recorrido
     const anch = (src, x, dz, ry, y, k = 1) => { const b = src.clone(); const z = coastZ(x) - dz; b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .3, k }; add(b); boats.push(b); const r = src === barca ? 1.1 : src === riva ? 1.6 : 2.1; for (let j = -1; j <= 1; j++) solid(x + Math.sin(ry) * j * r * 2.2, z + Math.cos(ry) * j * r * 2.2, r); };
     anch(barca, -150, 16, .6, -.18, 1.4); anch(barca, -40, 14, -.8, -.18, 1.4); anch(pesca2, 60, 78, 2.2, -.5); anch(barca, 130, 15, 1.9, -.18, 1.4); anch(riva, 200, 74, -1.1, -.32); anch(pesca2, -210, 80, .9, -.5);
@@ -573,7 +597,7 @@ export async function createGame(ctx) {
       const kinds = [['heart', mkHeart, .35, 0], ['fuel', mkCan, .55, 5], ['drink', mkDrink, .7, -5], ['box', mkBox, .85, 30]];
       for (const [k, mk, f, lat] of kinds) { const o = mk(); o.traverse(m => m.castShadow = true); place(o, R.path, R.path.L * f + (k === 'box' ? 0 : 23), lat); o.position.y = 1.2; o.scale.setScalar(1.3); add(o); R.picks.push({ k, o, got: false }); } }
     // penalizaciones como en el 2D: zona de baño con policía y multa, medusas, red de pesca y posidonia
-    { const path = R.path, q0 = at(path, path.L * .58), sh = Math.sign(q0.tx) || 1; R.shore = sh; R.bano = { s0: path.L * .52, s1: path.L * .64, lat: 13 * sh };
+    { const path = R.path, q0 = at(path, path.L * .8), sh = Math.sign(q0.tx) || 1; R.shore = sh; R.bano = { s0: path.L * .74, s1: path.L * .86, lat: 13 * sh };
       for (let s = R.bano.s0; s <= R.bano.s1; s += 9) { const b = makeBuoy('#ffe14d'); b.scale.setScalar(.8); place(b, path, s, R.bano.lat, .05); add(b); }
       const pol = (await glb('barco_riva')).clone(); pol.traverse(m => { if (m.isMesh) { m.material = m.material.clone(); m.material.color.lerp(new THREE.Color(0x1e5eff), .6); } }); pol.visible = false; add(pol);
       const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(['POLICÍA'], 512, 128, '#1e5eff', '#ffffff'), transparent: true, depthWrite: false, sizeAttenuation: false })); tag.scale.set(.1, .025, 1); tag.position.y = 3; pol.add(tag);
@@ -699,7 +723,7 @@ export async function createGame(ctx) {
   const focusables = () => [...ui.querySelectorAll('.scr.on .btn:not([disabled]), .scr.on .card:not(.lock), .scr.on input')].filter(e => e.offsetParent !== null);
   function nav(d) { const f = focusables(); if (!f.length) return; let i = f.indexOf(document.activeElement); i = i < 0 ? 0 : (i + d + f.length) % f.length; f[i].focus(); }
   function back() { if (state === 'pause') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); return; }
-    if (state === 'jj') { scr.jj.querySelector('[data-a=jjout]').click(); return; }
+    if (state === 'jj') { scr[scr.roxy.classList.contains('on') ? 'roxy' : 'jj'].querySelector('[data-a=jjout]').click(); return; }
     if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred', 'ach'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
   addEventListener('keydown', e => { if (!ui.classList.contains('on') || document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (['ArrowDown', 'ArrowRight'].includes(e.code)) { nav(1); e.preventDefault(); } if (['ArrowUp', 'ArrowLeft'].includes(e.code)) { nav(-1); e.preventDefault(); }
@@ -778,6 +802,8 @@ export async function createGame(ctx) {
       if (S.fuel <= 0) { flash(R.jjPos ? '¡SIN GASOLINA! PARA EN EL JJ\'S' : '¡SIN GASOLINA!', 2.2, true); save(); } }
     window.__noFuel = S.fuel <= 0; R.lowT = (R.lowT || 0) - dt; if (S.fuel > 0 && S.fuel < 18 && R.lowT <= 0) { R.lowT = 4; if (Snd.ok()) Snd.warn(); }
     if ((R.hudT = (R.hudT || 0) - dt) <= 0) { R.hudT = .25; hud(); if ((P.turboU ?? 0) >= 5) award('turbo5'); }
+    if (R.roxyPos) { const dr = Math.hypot(P.x - R.roxyPos.x, P.z - R.roxyPos.z);
+      if (dr > 16) R.rxIn = false; else if (!R.rxIn && dr < 9 && P.v < 4) { R.rxIn = true; R.pen += 3; ctx.setPaused(true); state = 'jj'; save(); renderRoxy(); show('roxy'); return; } }
     if (R.jjPos) { const dj = Math.hypot(P.x - R.jjPos.x, P.z - R.jjPos.z);
       if (dj > 16) R.jjIn = false;
       else if (!R.jjIn && dj < 9 && P.v < 4) { R.jjIn = true; R.time = Math.max(.5, R.time - 3); ctx.setPaused(true); state = 'jj'; save(); renderJJ(); show('jj'); return; } }
