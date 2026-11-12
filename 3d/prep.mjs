@@ -16,10 +16,11 @@ if (process.env.UNSKIN) { // modelos con esqueleto: se quita el skin y se anula 
   for (const sk of doc.getRoot().listSkins()) sk.dispose();
   for (const m of doc.getRoot().listMeshes()) for (const p of m.listPrimitives()) for (const a of ['JOINTS_0', 'WEIGHTS_0']) { const acc = p.getAttribute(a); if (acc) { p.setAttribute(a, null); } }
 }
+if (process.env.DROP) { const re = new RegExp(process.env.DROP); for (const n of doc.getRoot().listNodes()) if (re.test(n.getName())) n.dispose(); }
 await doc.transform(
   flatten(), dedup(), prune(),
   weld(),
-  simplify({ simplifier: MeshoptSimplifier, ratio: +ratio, error: 0.002 }),
+  simplify({ simplifier: MeshoptSimplifier, ratio: +ratio, error: +(process.env.ERR || 0.002) }),
   textureCompress({ encoder: sharp, targetFormat: 'webp', quality: 82, resize: [+texMax, +texMax] }),
   prune(),
 );

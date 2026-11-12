@@ -184,7 +184,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=16';
+import { createGame } from './src/game.js?v=19';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -291,6 +291,7 @@ function step(dt) {
   if (!camInit || camMode !== camPrev) { if (camMode !== camPrev) camTh = P.th; camPos.copy(tmp); camLook.copy(look); camInit = true; camPrev = camMode; }
   camPos.lerp(tmp, 1 - Math.exp(-dt * (camMode === 'dron' ? 6 : 14))); camLook.lerp(look, 1 - Math.exp(-dt * (camMode === 'dron' ? 6 : 9)));
   cam.position.copy(camPos); cam.lookAt(camLook);
+  if (window.__camDbg) { cam.position.fromArray(window.__camDbg[0]); cam.lookAt(...window.__camDbg[1]); }   // solo para revisar escenarios
   const fovT = (drifting ? 3 : 0) + (P.kick || 0) * 6 + (camMode === 'dron' ? 42 + (P.v / 31) * 6 : 68 + (P.v / 31) * 12 + (turboOn ? 6 : 0));
   cam.fov += (fovT - cam.fov) * Math.min(1, dt * 3); cam.updateProjectionMatrix();
   // sol con sombra siguiendo la moto (ajustado al texel)

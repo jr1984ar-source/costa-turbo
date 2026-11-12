@@ -2,6 +2,9 @@
 // rivales, resultados, TOP 10, dinero y pausa. Se apoya en la escena y la física de play.html (ctx).
 import * as THREE from 'three';
 import { PAINTS } from './paint.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const GL = new GLTFLoader(), GLC = {};
+const glb = n => GLC[n] || (GLC[n] = GL.loadAsync('models/' + n + '.glb').then(r => { r.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); return r.scene; }));
 
 // ---------- datos (nombres y precios del juego 2D) ----------
 export const AVATARS = [
@@ -185,8 +188,9 @@ export async function createGame(ctx) {
     Modelos 3D con licencia Creative Commons Attribution (CC BY 4.0), de Sketchfab:<br>
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
-    · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br><br>
-    Texturas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
+    · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br><br>
+    Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- pausa ----------
   mk('pause', `<h2>PAUSA</h2><div class="row"><button class="btn main" data-a="resume"><i class="ti ti-player-play-filled"></i>CONTINUAR</button></div><div class="row"><button class="btn" data-a="retry"><i class="ti ti-reload"></i>REPETIR</button><button class="btn" data-a="map"><i class="ti ti-map"></i>MAPA</button><button class="btn" data-a="menu"><i class="ti ti-home"></i>MENÚ</button></div>
@@ -355,6 +359,42 @@ export async function createGame(ctx) {
     for (let k = 0; k < 9; k += 2) for (const s of [-1, 1]) box(.25, 2.4, .25, 0x6b4a2c, s * 1.5, -.7, -14.6 - k * 2.2);
     for (let k = 0; k < 9; k++) solid(x, z - 14.6 - k * 2.2, 1.7);
     g.position.set(x, y, z); R.jjPos = { x: x + 4.5, z: z - 27 }; return add(g); }
+  // ---------- escenario de EL PUERTO: muelle de salida, barcos amarrados, espigón con faro y yate fondeado ----------
+  async function puertoScene() {
+    const [riva, pesca, pesca2, barca, yate, faro, roca] = await Promise.all(['barco_riva', 'barco_pesca', 'barco_pesca2', 'barca', 'yate', 'faro_puerto', 'namaqualand_boulder_02'].map(glb));
+    const M = (c, r = .85) => new THREE.MeshStandardMaterial({ color: c, roughness: r });
+    const boat = (src, x, z, ry, y, r, bob = 1) => { const b = src.clone(); b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .37 + z * .11, k: bob }; add(b); boats.push(b);
+      // choque: círculos a lo largo de la eslora
+      const L = r * 2.2; for (let k = -1; k <= 1; k++) solid(x + Math.sin(ry) * k * L, z + Math.cos(ry) * k * L, r); return b; };
+    const boats = []; R.boats = boats;
+    // muelle de salida de hormigón, detrás de la salida
+    { const x = 318, z0 = coastZ(x) + 4, z1 = coastZ(x) - 46, L = z0 - z1, d = new THREE.Group();
+      const deck = new THREE.Mesh(new THREE.BoxGeometry(6, 4.2, L), M(0xb9b2a4, .95)); deck.position.set(x, -1.05, (z0 + z1) / 2); deck.castShadow = deck.receiveShadow = true; d.add(deck);
+      const edge = new THREE.Mesh(new THREE.BoxGeometry(6.3, .25, L), M(0xe9e4da, .9)); edge.position.set(x, 1.12, (z0 + z1) / 2); edge.receiveShadow = true; d.add(edge);
+      for (let k = 0; k < L; k += 7) for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.CylinderGeometry(.22, .28, .5, 10), M(0x2b2e33, .5)); b.position.set(x + s * 2.7, 1.45, z0 - 2 - k); b.castShadow = true; d.add(b);
+        const t = new THREE.Mesh(new THREE.TorusGeometry(.42, .17, 10, 20), M(0x1a1a1a, .9)); t.rotation.y = Math.PI / 2; t.position.set(x + s * 3.17, .45, z0 - 4 - k); t.castShadow = true; d.add(t); }   // norays y neumáticos
+      for (let z = z0 - 1; z > z1; z -= 2.2) solid(x, z, 3.3);
+      add(d);
+      boat(pesca, x + 7.6, coastZ(x) - 14, 0, -.55, 2.2); boat(pesca2, x + 7.4, coastZ(x) - 29, Math.PI, -.5, 2); boat(barca, x - 5.2, coastZ(x) - 22, .05, -.18, 1, 1.4); boat(riva, x - 5.6, coastZ(x) - 36, Math.PI, -.32, 1.6); }
+    // Riva amarrada al muelle del JJ'S
+    boat(riva, 257.4, coastZ(262) - 10, Math.PI + .03, -.32, 1.6);
+    // espigón de rocas con camino de hormigón y faro en la punta, pasada la meta
+    { const x = -326, z0 = coastZ(x) + 2, z1 = coastZ(x) - 78, L = z0 - z1;
+      const cam = new THREE.Mesh(new THREE.BoxGeometry(4.4, 4.6, L), M(0xa49d90, .95)); cam.position.set(x, -.9, (z0 + z1) / 2); cam.castShadow = cam.receiveShadow = true; add(cam);
+      const top = new THREE.Mesh(new THREE.BoxGeometry(4.6, .2, L), M(0xd2ccc0, .9)); top.position.set(x, 1.45, (z0 + z1) / 2); top.receiveShadow = true; add(top);
+      for (let k = 0; k * 2.6 < L + 6; k++) for (const s of [-1, 1]) for (const row of [0, 1]) { const r0 = roca.clone(), h = (k * 13 + row * 7 + (s > 0 ? 5 : 0)) % 9 / 9, sc = 1.05 + h * .55;
+        r0.scale.set(sc, sc * (1.3 - row * .3), sc); r0.rotation.set((h - .5) * .5, k * 2.3 + s + row, (h - .5) * .4); r0.position.set(x + s * (2.9 + row * 2.4 + h * .6), row ? -.7 : .1 + h * .4, z0 - 1 - k * 2.6 + row * 1.3); add(r0); }
+      for (let z = z0; z > z1 - 4; z -= 3) solid(x, z, 6.4);
+      const pl = new THREE.Mesh(new THREE.CylinderGeometry(6.5, 7.2, 4.6, 32), M(0xa49d90, .95)); pl.position.set(x, -.7, z1 - 4); pl.castShadow = pl.receiveShadow = true; add(pl);
+      const f = faro.clone(); f.position.set(x, 1.6, z1 - 4); f.rotation.y = 2.2; add(f); solid(x, z1 - 4, 7.6);
+      // luz del faro que gira
+      const bm = new THREE.Mesh(new THREE.ConeGeometry(2.5, 40, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff2c0, transparent: true, opacity: .1, depthWrite: false, side: THREE.DoubleSide }));
+      bm.geometry.translate(0, -20, 0); bm.rotation.z = Math.PI / 2; const piv = new THREE.Group(); piv.position.set(x, 14.2, z1 - 4); piv.add(bm); add(piv); R.beam = piv;
+      boat(pesca2, x + 9, coastZ(x) - 30, .1, -.5, 2); boat(barca, x + 8.4, coastZ(x) - 50, -.1, -.18, 1, 1.4); boat(pesca, x + 9.6, coastZ(x) - 66, Math.PI + .1, -.55, 2.2); }
+    // yate grande fondeado mar adentro
+    boat(yate, 150, coastZ(150) - 92, .35, -1.3, 4.2, .4);
+  }
+
   // ---------- rivales ----------
   const RIVC = ['#e3202b', '#1e5eff', '#7be35a', '#ffd21a', '#ff3f8e'], RIVN = ['Toni Marín', 'Carla Ruiz', 'El Tito', 'Sandra Vidal', 'Javi Rubio'];
   let rivPool = null;
@@ -372,6 +412,7 @@ export async function createGame(ctx) {
     R = { Z, path, t: 0, pen: 0, time: 0, cps: [], gates: [], rivals: [], hint: 0, s: 0, lat: 0, done: false, count: 3.6, lastCount: 4, maxS: 0, finished: [] };
     // salida y meta
     arch('META', path, path.L - 4, 16, true);
+    if (Z.id === 'puerto') await puertoScene();
     if (Z.obj === 'time') { jjBar(); R.time = 14 + [4, 0, -2][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 11 }));
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
@@ -452,6 +493,8 @@ export async function createGame(ctx) {
     pollPad();
     if (msgT > 0) { msgT -= dt; if (msgT <= 0) msg.style.display = 'none'; }
     if (!R || state === 'pause' || R.done) return;
+    if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k; b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
+    if (R.beam) R.beam.rotation.y += dt * 1.1;
     const Z = R.Z, path = R.path;
     if (state === 'count') { R.count -= dt; const c = Math.ceil(R.count - .6);
       if (c !== R.lastCount && c >= 0) { R.lastCount = c; if (c > 0) { flash(String(c), .9); if (Snd.ok()) Snd.beep(false); } else { flash('¡YA!', .8); if (Snd.ok()) Snd.beep(true); state = 'race'; R.started = true; } }
