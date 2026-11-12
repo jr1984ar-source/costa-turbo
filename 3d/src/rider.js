@@ -3,6 +3,7 @@
 // hombros -> manos en el manillar), así no depende de los ejes de cada hueso.
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const tmpQ = new THREE.Quaternion(), tmpQ2 = new THREE.Quaternion(), tmpV = new THREE.Vector3();
@@ -60,7 +61,7 @@ function recolorVest(mat, hex) {
 }
 
 export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = null, body: bodyModel = 'piloto_eric', skin = 1, gog = '#1d2027', glove = '#1d2027', boot = '#16181d', base = 'models/' } = {}) {
-  const gl = new GLTFLoader();
+  const gl = new GLTFLoader(); gl.setMeshoptDecoder(MeshoptDecoder);
   const [pg, hg, vg] = await Promise.all([gl.loadAsync(base + bodyModel + '.glb'), gl.loadAsync(base + 'casco_motocross.glb'), gl.loadAsync(base + 'chaleco.glb')]);
   const root = new THREE.Group(), body = pg.scene; root.add(body);
   const B = {}; body.traverse(o => { if (o.isBone) B[o.name] = o; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material.map) recolor(o.material, vest, suit, skin); } });

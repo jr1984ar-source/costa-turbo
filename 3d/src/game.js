@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 import { PAINTS } from './paint.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-const GL = new GLTFLoader(), GLC = {};
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+const GL = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), GLC = {};
 const glb = n => GLC[n] || (GLC[n] = GL.loadAsync('models/' + n + '.glb').then(r => { r.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; const m = o.material; if (m && m.metalness > .9 && !m.metalnessMap) m.metalness = 0;
   if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
   if (/^acantilado/.test(n) && m) o.material = new THREE.MeshStandardMaterial({ map: m.map, normalMap: m.normalMap || null, roughness: 1, metalness: 0, emissive: 0xffffff, emissiveMap: m.map, emissiveIntensity: .2 }); } }); return r.scene; }));
