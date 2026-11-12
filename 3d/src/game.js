@@ -745,7 +745,10 @@ export async function createGame(ctx) {
       for (const r of R.rivals) {
         // IA como el 2D: usa turbo (más cuanto más difícil y si va por detrás) y se ajusta a tu ritmo
         r.tb = (r.tb || 0) - dt; r.tcd = (r.tcd ?? 3 + Math.random() * 4) - dt; if (r.tcd <= 0 && !r.fin) { r.tcd = [9, 8, 6, 5, 4][S.set.dif] + Math.random() * 4 - (r.s < R.s ? 2 : 0); r.tb = 2; }
-        const ahead = r.s - R.s, rub = ahead > 25 ? -.08 : ahead < -25 ? .07 : 0, vt = r.fin ? 8 : r.vmax * (1 + rub) * (r.tb > 0 ? 1.22 : 1);
+        // boxes: en EL PUERTO y EL MAGO un rival para a repostar en el JJ'S (3 s), como en el 2D
+        if (R.jjPos && r === R.rivals[R.rivals.length - 1]) { if (R.jjS == null) R.jjS = locate(R.path, R.jjPos.x, R.jjPos.z, 0).s;
+          r.inPit = false; if (!r.pitDone && R.jjS > 120 && r.s > R.jjS - 45) { r.laneT = 18 * (Math.sign(at(R.path, r.s).tx) || 1); if (r.s > R.jjS - 40) r.v *= 1 - Math.min(1, dt * 2.5); if (r.s > R.jjS - 6) { r.inPit = true; r.pit = (r.pit || 0) + dt; if (r.pit > 3 || r.s > R.jjS + 10) r.pitDone = true; } } }
+        const ahead = r.s - R.s, rub = ahead > 25 ? -.08 : ahead < -25 ? .07 : 0, vt = r.fin ? 8 : r.inPit ? 0 : r.vmax * (1 + rub) * (r.tb > 0 ? 1.22 : 1);
         r.v += (vt - r.v) * .55 * dt; r.s += r.v * dt;
         r.tl -= dt; if (r.tl <= 0) { r.tl = 2 + Math.random() * 3; r.laneT = (Math.random() * 2 - 1) * 9; }
         // choque con el jugador: los dos se empujan y pierden algo de velocidad
