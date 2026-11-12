@@ -469,7 +469,7 @@ export async function createGame(ctx) {
   async function makeRivals(n) {
     if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i], body: ['piloto_eric', 'piloto_carla', 'piloto_eric', 'piloto_claudia', 'piloto_eric'][i], skin: [1, 1, .7, .92, 1][i] });
         rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); const pp = PAINTS[[1, 3, 2, 9, 6][i]]; ctx.paintSki && ctx.paintSki(sk.root, pp.main, pp.acc); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
-        const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex([RIVN[i].toUpperCase()], 512, 128, RIVC[i], '#ffffff'), transparent: true, depthWrite: false })); tag.scale.set(5.2, 1.3, 1); tag.position.set(0, 3.3, 0); tag.renderOrder = 5; sk.root.add(tag);   // nombre encima
+        const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex([RIVN[i].toUpperCase()], 512, 128, RIVC[i], '#ffffff'), transparent: true, depthWrite: false, sizeAttenuation: false })); tag.scale.set(.11, .0275, 1); tag.position.set(0, 3.3, 0); tag.renderOrder = 5; sk.root.add(tag);   // nombre encima
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
     return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [0.9, 1, 1.07][S.set.dif], fin: null, tl: 0, steer: 0 }));
   }
@@ -656,6 +656,10 @@ export async function createGame(ctx) {
         r.sk.body.rotation.z = -r.steer * .25; r.sk.body.position.y = -.05 + Math.sin(P.t * 3 + r.vmax) * .02;
         r.rd.userData.pose({ barY: .13, steer: Math.max(-1, Math.min(1, r.steer)), k: Math.min(1, r.v / 33), t: P.t });
         const f = { x: q.tx, z: q.tz }; r.wk.update(dt, r.sk.root.position.x - f.x * 1.5, r.sk.root.position.z - f.z * 1.5, Math.min(1, r.v / 10), r.v);
+        { const sp = window.__spray, rx = r.sk.root.position.x - f.x * 1.5, rz = r.sk.root.position.z - f.z * 1.5, Rn = Math.random;   // cola de gallo y cortina de proa de los rivales
+          if (sp && r.v > 4 && Math.hypot(rx - P.x, rz - P.z) < 120) { const n = Math.floor(r.v * dt * 45 + Rn());
+            for (let i = 0; i < n; i++) { const o = Rn() - .5; sp.emit(rx - f.z * o * .45, .22, rz + f.x * o * .45, -f.x * r.v * (.18 + Rn() * .22) - f.z * o * 2, 3 + Rn() * 4, -f.z * r.v * (.18 + Rn() * .22) + f.x * o * 2, .07 + Rn() * .1, .8 + Rn() * .7, .3 + Rn() * .3); }
+            for (let i = 0; i < Math.floor(r.v * dt * 16); i++) { const sg = Rn() < .5 ? -1 : 1, bx = r.sk.root.position.x + f.x * 1.2, bz = r.sk.root.position.z + f.z * 1.2; sp.emit(bx - f.z * sg * .35, .12, bz + f.x * sg * .35, -f.z * sg * (2 + Rn() * 3) + f.x * r.v * .35, 1.5 + Rn() * 2, f.x * sg * (2 + Rn() * 3) + f.z * r.v * .35, .05 + Rn() * .07, .55 + Rn() * .5, .3); } } }
         if (!r.fin && r.s >= path.L - 4) { r.fin = R.t; R.finished.push(r.name); }
       }
       // rivales entre sí: no se atraviesan
