@@ -114,7 +114,7 @@ for (let i = 0; i < 6; i++) { const b = makeBuoy(i % 2 ? '#ffe14d' : '#ff7a1a');
 const gulls = [[6, 9, -6, 0.5], [-3, 12, 4, -0.2], [12, 14, 2, 0.1], [-8, 10, -12, 0.35]];
 for (const [dx, y, dz, fl] of gulls) { const gl = makeGull(fl); gl.position.set(x0 + dx, y, z0 + dz); gl.rotation.y = th0 + 0.4 + dx * 0.05; scene.add(gl); }
 
-import { createSound } from './src/sound.js';
+import { Snd, updateSound } from './src/sound.js'; window.__Snd = Snd;
 // --- JUEGO: cámara detrás, controles (teclado, táctil, mando) y bucle
 const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
@@ -162,7 +162,7 @@ hud.appendChild(camBtn);
 const toggleCam = () => { camMode = camMode === 'dron' ? 'onboard' : 'dron'; camBtn.textContent = 'CÁMARA: ' + (camMode === 'dron' ? 'DRON' : 'ONBOARD'); };
 camBtn.addEventListener('pointerdown', e => { e.preventDefault(); toggleCam(); });
 const spd = hud.querySelector('.sp');
-const clock = new THREE.Clock(); const snd = createSound();
+const clock = new THREE.Clock();
 function step(dt) {
   const I = input(), f = fwdOf(P.th), side = new THREE.Vector3(-f.z, 0, f.x);
   const turboOn = I.turbo && P.energy > 0.02 && I.acc;
@@ -201,8 +201,8 @@ function step(dt) {
       spray.emit(P.x + f.x * 0.6 + side.x * sg * 0.6, 0.15, P.z + f.z * 0.6 + side.z * sg * 0.6, side.x * sg * (1.5 + Math.random() * 1.5) + f.x * P.v * 0.3, 1.2 + Math.random() * 1.2, side.z * sg * (1.5 + Math.random() * 1.5) + f.z * P.v * 0.3, 0.04 + Math.random() * 0.04, 0.5 + Math.random() * 0.3, 0.25); }
   }
   spray.update(dt);
-  if (wall && P.v > 6) snd.hit();
-  snd.update(P.v, I.acc, turboOn, false);
+  if (wall && P.v > 6 && Snd.ok() && !(P._bumpT > P.t)) { Snd.bump(); P._bumpT = P.t + 0.6; }
+  updateSound(P.v, 24, I.acc, turboOn, I.drift && P.v > 8, 3, false);
   // cámara: modo 'dron' (cenital, como un reel) u 'onboard' (pegada a la moto)
   const look = new THREE.Vector3();
   if (camMode === 'dron') {
@@ -227,7 +227,7 @@ function step(dt) {
   sun.position.set(cx, 0, cz).addScaledVector(env.sunDir, 150); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
   spd.firstChild.nodeValue = Math.round(P.v * 3.6);
 }
-function frame() { const dt = Math.min(0.05, clock.getDelta()); if (!paused) step(dt); else snd.update(0, 0, false, true); comp.render(); requestAnimationFrame(frame); }
+function frame() { const dt = Math.min(0.05, clock.getDelta()); if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame();
 
 </script></body></html>
