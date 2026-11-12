@@ -54,13 +54,17 @@ export function sprayMaterial(env) {
   return new THREE.ShaderMaterial({
     ...premult,
     uniforms: { uSunCol: { value: env.sunCol }, uScale: { value: 900 } },
-    vertexShader: `attribute float aSize; attribute float aAlpha; uniform float uScale; varying float vA;
-      void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vA = aAlpha * smoothstep(1.5, 8.0, -mv.z); gl_PointSize = min(aSize * uScale / -mv.z, 34.0); gl_Position = projectionMatrix * mv; }`,
-    fragmentShader: `uniform vec3 uSunCol; varying float vA;
+    vertexShader: `attribute float aSize; attribute float aAlpha; uniform float uScale; varying float vA; varying float vS;
+      void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vA = aAlpha * smoothstep(1.5, 8.0, -mv.z); vS = aSize; gl_PointSize = min(aSize * uScale / -mv.z, aSize > 0.17 ? 64.0 : 30.0); gl_Position = projectionMatrix * mv; }`,
+    fragmentShader: `uniform vec3 uSunCol; varying float vA; varying float vS;
       void main(){ vec2 d = gl_PointCoord - 0.5; float r = length(d) * 2.0; if (r > 1.0) discard;
-        float a = (1.0 - r * r) * vA; float lit = 0.75 + 0.25 * (0.5 - d.y);
-        vec3 c = vec3(0.93, 0.97, 1.0) * (uSunCol.g * 0.38 + 0.4) * lit;
-        gl_FragColor = vec4(c * a, a); }`,
+        float sun = uSunCol.g * 0.38 + 0.42;
+        if (vS > 0.17) { // bruma: nube suave y translúcida
+          float a = pow(1.0 - r, 2.0) * vA * 0.55; vec3 c = vec3(0.95, 0.98, 1.0) * sun * (0.85 + 0.15 * (0.5 - d.y)); gl_FragColor = vec4(c * a, a); return; }
+        // gota: borde definido, un poco de azul del agua dentro y un brillo del sol arriba a la izquierda
+        float core = smoothstep(1.0, 0.3, r), hl = pow(max(0.0, 1.0 - length(d - vec2(-0.12, -0.14)) * 3.0), 4.0);
+        vec3 c = vec3(0.93, 0.97, 1.0) * sun * (0.82 + 0.18 * (0.5 - d.y)) + vec3(1.0) * hl * 0.6 * sun;   // gota maciza y clara, con un pequeño brillo
+        float a = core * vA; gl_FragColor = vec4(c * a, a); }`,
   });
 }
 function wakeGeometry(path) {
@@ -120,7 +124,7 @@ export function makeSpray(env, parts) {
 // Salpicaduras en vivo (gotas con gravedad)
 export class Spray {
   constructor(env, max = 2400) {
-    this.max = max; this.n = 0;
+    this.max = max; this.n = 0; this._land = [];
     this.p = new Float32Array(max * 3); this.v = new Float32Array(max * 3); this.life = new Float32Array(max); this.age = new Float32Array(max); this.s0 = new Float32Array(max); this.a0 = new Float32Array(max);
     const g = new THREE.BufferGeometry();
     this.pos = new THREE.BufferAttribute(new Float32Array(max * 3), 3); this.size = new THREE.BufferAttribute(new Float32Array(max), 1); this.alpha = new THREE.BufferAttribute(new Float32Array(max), 1);
@@ -136,15 +140,16 @@ export class Spray {
     let j = 0;
     for (let i = 0; i < this.n; i++) {
       const a = this.age[i] + dt; let y = this.p[i * 3 + 1] + this.v[i * 3 + 1] * dt;
+      if (y < -0.05 && this.s0[i] > .08 && this.s0[i] < .17 && this.n + j < this.max - 8 && Math.random() < .35) this._land.push(this.p[i * 3], this.p[i * 3 + 2]);   // salpica al caer
       if (a > this.life[i] || y < -0.05) continue;
       this.v[i * 3 + 1] -= 9.8 * dt; this.v[i * 3] *= 1 - dt * 0.6; this.v[i * 3 + 2] *= 1 - dt * 0.6;
       this.p[j * 3] = this.p[i * 3] + this.v[i * 3] * dt; this.p[j * 3 + 1] = y; this.p[j * 3 + 2] = this.p[i * 3 + 2] + this.v[i * 3 + 2] * dt;
       this.v[j * 3] = this.v[i * 3]; this.v[j * 3 + 1] = this.v[i * 3 + 1]; this.v[j * 3 + 2] = this.v[i * 3 + 2];
       this.age[j] = a; this.life[j] = this.life[i]; this.s0[j] = this.s0[i]; this.a0[j] = this.a0[i]; j++;
     }
-    this.n = j;
+    this.n = j; for (let k = 0; k < this._land.length; k += 2) this.emit(this._land[k], .05, this._land[k + 1], (Math.random() - .5) * 1.5, 1 + Math.random() * 1.5, (Math.random() - .5) * 1.5, .18 + Math.random() * .1, .5 + Math.random() * .4, .22); this._land.length = 0;
     const P = this.pos.array, S = this.size.array, A = this.alpha.array;
-    for (let i = 0; i < j; i++) { const t = this.age[i] / this.life[i]; P[i * 3] = this.p[i * 3]; P[i * 3 + 1] = this.p[i * 3 + 1]; P[i * 3 + 2] = this.p[i * 3 + 2]; S[i] = this.s0[i] * (1 + t * 2.2); A[i] = this.a0[i] * (1 - t); }
+    for (let i = 0; i < j; i++) { const t = this.age[i] / this.life[i]; P[i * 3] = this.p[i * 3]; P[i * 3 + 1] = this.p[i * 3 + 1]; P[i * 3 + 2] = this.p[i * 3 + 2]; S[i] = this.s0[i] * (this.s0[i] > .17 ? 1 + t * 2.2 : 1 + t * .25); A[i] = this.a0[i] * (1 - t); }
     this.pos.needsUpdate = this.size.needsUpdate = this.alpha.needsUpdate = true;
     this.points.geometry.setDrawRange(0, j);
   }
