@@ -568,6 +568,12 @@ export async function createGame(ctx) {
         place(net, path, path.L * .38, -10 * sh, 0); add(net); R.haz.push({ k: 'red', o: net, r: 4.5 }); }
       { const pos = new THREE.Mesh(new THREE.CircleGeometry(6, 24), new THREE.MeshBasicMaterial({ color: 0x1f4a2a, transparent: true, opacity: .5, depthWrite: false })); pos.rotation.x = -Math.PI / 2; place(pos, path, path.L * .7, 9 * sh, -.25); add(pos); R.haz.push({ k: 'posidonia', o: pos, r: 6 });
         const cor = new THREE.Mesh(new THREE.CircleGeometry(4, 20), new THREE.MeshBasicMaterial({ color: 0xff6f61, transparent: true, opacity: .45, depthWrite: false })); cor.rotation.x = -Math.PI / 2; place(cor, path, path.L * .12, -9 * sh, -.25); add(cor); R.haz.push({ k: 'coral', o: cor, r: 4 }); } }
+    // tráfico que se mueve en las tres pantallas: yate de paseo con chicas que saludan y regalan un refresco, y una motora en sentido contrario
+    { const [yt, rv, g1, g2] = await Promise.all(['yate', 'barco_riva', 'gente_tropical_confidence', 'gente_tropical_leaf_bikini'].map(glb)); const sh = R.shore || 1;
+      const y = yt.clone(); add(y); for (const [gm, dx] of [[g1, -.8], [g2, .9]]) { const p = gm.clone(); p.scale.setScalar(.95); p.position.set(dx, 3.3, -3); p.rotation.y = dx > 0 ? 1.2 : -1.2; y.add(p); }
+      const wy = new Wake(env); add(wy.mesh); wy.pts.length = 0; const m = rv.clone(); add(m); const wm = new Wake(env); add(wm.mesh); wm.pts.length = 0;
+      R.traffic = [{ o: y, wk: wy, s: R.path.L * .15, lat: -34 * sh, v: 7, dir: 1, y: -1.3, girls: true, gave: false, cols: [] }, { o: m, wk: wm, s: R.path.L * .95, lat: -30 * sh, v: 12, dir: -1, y: -.32, cols: [] }];
+      for (const t of R.traffic) for (let k = 0; k < 3; k++) { const c = { x: 0, z: 0, r: t.girls ? 4 : 1.7 }; window.__COLZ.push(c); t.cols.push(c); } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -696,6 +702,11 @@ export async function createGame(ctx) {
         if (d < 5) { S.cash = Math.max(0, S.cash - 500); save(); flash('¡MULTA! −500 PTA', 1.5, true, '#ff3b4e'); if (Snd.ok()) Snd.fine(); pl.on = false; }
         else if (!inB && pl.t > 4) { pl.on = false; flash('¡TE HAS ESCAPADO!', 1, true, '#5be37a'); }
         if (!pl.on) { pl.cd = R.t + 8; pl.o.visible = false; pl.lamp.intensity = 0; if (Snd.sirenStop) Snd.sirenStop(); } } }
+    if (R.traffic) for (const t of R.traffic) { t.s += t.v * t.dir * dt; if (t.s > R.path.L + 40 || t.s < -40) t.dir *= -1;
+      const q = at(R.path, Math.max(0, Math.min(R.path.L, t.s))), x = q.x - q.tz * t.lat, z = q.z + q.tx * t.lat, ry = Math.atan2(q.tx * t.dir, q.tz * t.dir);
+      t.o.position.set(x, t.y + (window.__swell ? window.__swell(x, z) * .5 : 0), z); t.o.rotation.y = ry; const fx = Math.sin(ry), fz = Math.cos(ry), L = t.girls ? 8.5 : 3.5;
+      t.cols.forEach((c, k) => { c.x = x + fx * (k - 1) * L; c.z = z + fz * (k - 1) * L; }); t.wk.update(dt, x - fx * L * 1.2, z - fz * L * 1.2, Math.min(1, t.v / 12), t.v);
+      if (t.girls && !t.gave && state === 'race' && Math.hypot(x - P.x, z - P.z) < 26) { t.gave = true; P.turboU = Math.min(5, (P.turboU ?? 2) + 1); flash('¡LAS CHICAS DEL YATE TE REGALAN UN REFRESCO! +1 TURBO', 1.8, true, '#ff7ad9'); if (Snd.ok()) Snd.girls(); } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
       if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }
