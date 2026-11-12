@@ -145,6 +145,9 @@ const CSS = `
 #toast .ti{margin-right:8px;vertical-align:-2px}
 #sem{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:16;display:none;gap:12px;padding:10px 14px;background:#111418;border:3px solid #2a2f37;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 #sem i{width:38px;height:38px;border-radius:50%;background:#2b1214;display:block;box-shadow:inset 0 3px 6px rgba(0,0,0,.6)}#sem i.r{background:#ff2b3a;box-shadow:0 0 18px #ff2b3a}#sem i.g{background:#2bd94f;box-shadow:0 0 22px #2bd94f}
+#rot{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#061428;color:#fff;font:900 26px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.06em;text-align:center}
+#rot .ti{font-size:84px;color:#ffe14d;animation:rotph 1.6s ease-in-out infinite}@keyframes rotph{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
+@media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}
 #msg3.small{font-size:clamp(28px,5vw,52px);top:22%}
 `;
 
@@ -154,6 +157,7 @@ export async function createGame(ctx) {
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
   const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><canvas class="mini" width="380" height="240"></canvas><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
+  const rot = document.createElement('div'); rot.id = 'rot'; rot.innerHTML = '<i class="ti ti-device-mobile-rotated"></i>GIRA EL MÓVIL<br>PARA JUGAR EN HORIZONTAL'; document.body.appendChild(rot);   // aviso en vertical
   const sem = document.createElement('div'); sem.id = 'sem'; sem.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(sem);   // semáforo de salida
   const semSet = n => { sem.style.display = 'flex'; [...sem.children].forEach((l, k) => l.className = n < 0 ? 'g' : k < n ? 'r' : ''); };
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
