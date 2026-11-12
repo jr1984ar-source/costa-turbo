@@ -31,7 +31,16 @@ export const GEAR = {
     { id: 's1', n: 'Neopreno negro', b: 'Neopreno', p: 500, c: '#1d2027' }, { id: 's2', n: 'Neopreno azul océano', b: 'Neopreno', p: 900, c: '#1e5eff' },
     { id: 's3', n: 'Neopreno rojo racing', b: 'Neopreno', p: 1300, c: '#e3202b' }, { id: 's4', n: 'Neopreno flúor', b: 'Neopreno', p: 1800, c: '#b6f01e' },
     { id: 's5', n: 'Neopreno camuflaje marino', b: 'Neopreno', p: 2400, c: '#2f6f8f' }, { id: 's6', n: 'Neopreno carbono y oro', b: 'Neopreno', p: 3200, c: '#2a2d33' }]};
-const CAT = [['helm', 'CASCO'], ['gog', 'GAFAS'], ['glove', 'GUANTES'], ['vest', 'CHALECO'], ['suit', 'NEOPRENO']];
+const CAT = [['helm', 'CASCO'], ['gog', 'GAFAS'], ['glove', 'GUANTES'], ['vest', 'CHALECO'], ['suit', 'NEOPRENO'], ['parts', 'PIEZAS STAGE']];
+// piezas de la moto (nombres y precios del 2D); se desbloquean al ganar pantallas
+export const PARTS = [
+  { id: 'turbo', n: 'Turbo', ef: 'Más aceleración', price: [3000, 5000, 8000], ic: 'propeller' },
+  { id: 'bov', n: 'Válvula de descarga', ef: '«Pssshh» y recarga el turbo', price: [1500, 2500, 4000], ic: 'wind' },
+  { id: 'escape', n: 'Escape deportivo', ef: 'Más punta y más ruido', price: [2000, 3500, 5500], ic: 'flame' },
+  { id: 'turbina', n: 'Turbina', ef: 'Más velocidad máxima', price: [2500, 4500, 7000], ic: 'engine' },
+  { id: 'intercooler', n: 'Intercooler', ef: 'El turbo dura más', price: [1800, 3000, 4800], ic: 'snowflake' },
+  { id: 'aletas', n: 'Aletas', ef: 'Gira mejor', price: [1200, 2200, 3500], ic: 'steering-wheel' }];
+const PART_NEED = [0, 1, 3];   // pantallas ganadas para STAGE 1, 2 y 3
 const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 // pantallas: recorridos comprobados en agua profunda
 export const ZONES = [
@@ -43,6 +52,7 @@ export const ZONES = [
 const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
+S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 1, hide: 0, q: 'alta' }, S.set || {});
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -200,6 +210,14 @@ export async function createGame(ctx) {
     const tb = scr.taller.querySelector('.cat'); tb.innerHTML = '';
     CAT.forEach(([k, n]) => { const b = document.createElement('button'); b.className = 'btn' + (tCat === k ? ' sel' : ''); b.textContent = n; b.onclick = () => { click(); tCat = k; renderTaller(); }; tb.appendChild(b); });
     const g = scr.taller.querySelector('.it'); g.innerHTML = '';
+    if (tCat === 'parts') { const won = Object.keys(S.done).length;
+      PARTS.forEach(pt => { const lv = S.parts[pt.id] | 0, nxt = lv < 3 ? pt.price[lv] : 0, need = lv < 3 ? PART_NEED[lv] : 0, lock = lv < 3 && won < need, b = document.createElement('button');
+        b.className = 'card' + (lv ? ' sel' : '');
+        b.innerHTML = `<div class="img" style="display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#1d2b44,#05070b 70%)"><i class="ti ti-${pt.ic}" style="font-size:64px;color:#ffe14d"></i></div><b>${pt.n}</b><i>${pt.ef}</i><i>STAGE ${lv}/3 ${'●'.repeat(lv)}${'○'.repeat(3 - lv)}</i><em>${lv >= 3 ? 'STAGE 3 · MÁX' : lock ? 'Gana ' + need + ' pantalla' + (need > 1 ? 's' : '') : 'STAGE ' + (lv + 1) + ' · ' + nxt.toLocaleString('es-ES') + ' PTA'}</em>`;
+        b.onclick = () => { if (lv >= 3 || lock) { if (Snd.ok()) Snd.miss(); return; } if (S.cash < nxt) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; }
+          S.cash -= nxt; S.parts[pt.id] = lv + 1; window.__parts = S.parts; save(); if (Snd.ok()) Snd.cash(); renderTaller(); };
+        g.appendChild(b); });
+      refreshCash(); return; }
     GEAR[tCat].forEach(it => { const own = S.own.includes(it.id), eq = S.eq[tCat] === it.id; const b = document.createElement('button'); b.className = 'card' + (eq ? ' sel' : '');
       const col = it.c || AVATARS[S.pilot].vest;
       b.innerHTML = `<div class="img" style="background-image:url('assets/taller/${it.id}.jpg'),radial-gradient(circle at 50% 45%,${col} 0 30%,#0b0d12 31%,#05070b 70%)"></div><b>${it.n}</b><i>${it.b}</i><em>${eq ? 'EQUIPADO' : own ? 'EQUIPAR' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
