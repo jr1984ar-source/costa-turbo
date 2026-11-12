@@ -127,6 +127,7 @@ const CSS = `
 #rh .fu{display:flex;align-items:center;gap:8px;font-size:22px;margin-top:4px;text-shadow:0 2px 0 #0b1630}
 #rh .fu span{display:block;width:120px;height:10px;border-radius:10px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.7);overflow:hidden}#rh .fu b{display:block;height:100%;background:linear-gradient(90deg,#ff6a1a,#ffd21a)}
 #rh .fu.low b{background:#ff3b4e}
+#rh .co{font-size:22px;color:#ffd21a;text-shadow:0 2px 0 #0b1630;margin-top:2px}#rh .co span{color:#fff;margin-left:6px}
 #msg3{position:fixed;left:0;right:0;top:34%;z-index:16;text-align:center;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;font-weight:900;font-style:italic;
   font-size:clamp(60px,12vw,150px);color:#ffe14d;text-shadow:0 6px 0 #0b1630,0 0 30px rgba(0,0,0,.5);display:none}
 #toast{position:fixed;left:50%;top:16px;z-index:40;transform:translate(-50%,-20px);opacity:0;pointer-events:none;font:900 24px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.05em;
@@ -140,7 +141,7 @@ export async function createGame(ctx) {
   const { scene, P, env, heightAt, coastZ, makeBuoy, Wake, Snd } = ctx;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
-  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div></div>'; document.body.appendChild(rh);
+  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
@@ -423,8 +424,13 @@ export async function createGame(ctx) {
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
     if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5; R.gates.push({ s, c, done: false });
         for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); solid(b.position.x, b.position.z, .75); } } }
+    { const cg = new THREE.CylinderGeometry(.6, .6, .12, 28), cm = new THREE.MeshStandardMaterial({ color: 0xffc21a, metalness: .85, roughness: .22, emissive: 0x5a3a00, emissiveIntensity: .6 }); cg.rotateX(Math.PI / 2);
+      R.coins = []; R.coinN = 0; let k = 0;
+      for (let s = 50; s < R.path.L - 30; s += 64, k++) { const lat0 = [-9, 0, 9, -5, 5][k % 5], ln = Z.obj === 'slalom' ? (R.gates.find(q => Math.abs(q.s - s - 10) < 23)?.c ?? lat0) : lat0;
+        for (let j = 0; j < 5; j++) { const c = new THREE.Mesh(cg, cm); c.castShadow = true; const q = place(c, R.path, s + j * 4, ln); c.position.y = 1; add(c); R.coins.push({ m: c, got: false }); } } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
     // jugador a la salida
+    rh.querySelector('.co span').textContent = '0';
     if (Z.obj !== 'time' && S.fuel < 25) S.fuel = 25; window.__noFuel = S.fuel <= 0; hud();
     window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
@@ -433,12 +439,13 @@ export async function createGame(ctx) {
   function finishRace(ok, title) {
     if (R.done) return; R.done = true; state = 'result'; rh.style.display = 'none'; const Z = R.Z;
     let prize = 0, line = '', t = R.t + R.pen;
+    const coinTxt = R.coinN ? ' · ' + R.coinN + ' monedas: +' + (R.coinN * 25).toLocaleString('es-ES') + ' PTA' : '';
     if (Z.obj === 'time') { line = ok ? 'Tiempo: ' + fmtT(R.t) : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'; if (ok) prize = Z.prize; }
     if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; line = 'Tiempo ' + fmtT(R.t) + ' + ' + miss + ' s de boyas = ' + fmtT(t); if (ok) prize = Math.max(300, Z.prize - miss * 100); }
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
     save();
-    scr.result.querySelector('.rt').textContent = title; scr.result.querySelector('.rs').textContent = line;
+    scr.result.querySelector('.rt').textContent = title; scr.result.querySelector('.rs').textContent = line + coinTxt;
     scr.result.querySelector('.rp').textContent = ok ? '+' + prize.toLocaleString('es-ES') + ' PTA' : '';
     const nx = scr.result.querySelector('.nx'); nx.disabled = !(zone + 1 < ZONES.length && zone + 1 < S.unlocked);
     const list = S.top[Z.id] || []; const qual = ok && (list.length < 10 || t < list[list.length - 1].t);
@@ -500,6 +507,9 @@ export async function createGame(ctx) {
     if (!R || state === 'pause' || R.done) return;
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k; b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
+    if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
+      c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
+      if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); rh.querySelector('.co span').textContent = R.coinN; } }
     if (R.movers) for (const m of R.movers) { const L = Math.abs(m.zb - m.za);
       if (m.wait > 0) { m.wait -= dt; m.ry += (m.dir > 0 ? Math.PI : 0) - m.ry > 0 ? Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)) : -Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)); }
       else { m.u += m.dir * m.sp * dt / L; if (m.u >= 1 || m.u <= 0) { m.u = Math.max(0, Math.min(1, m.u)); m.dir *= -1; m.wait = 3; } else m.ry = m.dir > 0 ? Math.PI : 0; }
