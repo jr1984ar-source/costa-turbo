@@ -200,7 +200,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=104';
+import { createGame } from './src/game.js?v=105';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -209,8 +209,17 @@ const setQuality = q => { const hi = q !== 'baja'; gtao.enabled = hi; bloomPass.
 const SUN0 = sun.color.clone(), SUNI0 = sun.intensity, EXP0 = renderer.toneMappingExposure;
 const setTime = k => { const m = k === 'manana'; sun.color.copy(SUN0).lerp(new THREE.Color(1, .84, .66), m ? 1 : 0); sun.intensity = SUNI0 * (m ? .82 : 1); renderer.toneMappingExposure = EXP0 * (m ? .93 : 1); };   // hora del día: EL PUERTO por la mañana, el resto a mediodía
 const setHideControls = v => { hud.querySelectorAll('.pad').forEach(e => e.style.display = v ? 'none' : ''); };
+// dorsal y logo pegados a los dos lados de la moto
+const decals = [];
+const decalTex = (txt, bg, fg, w = 256, h = 160) => { const c = document.createElement('canvas'); c.width = w; c.height = h; const x = c.getContext('2d'); if (bg) { x.fillStyle = bg; x.beginPath(); x.roundRect(4, 4, w - 8, h - 8, 24); x.fill(); }
+  x.fillStyle = fg; x.font = `italic 900 ${Math.round(h * .62)}px "Saira Condensed", "Arial Narrow", Arial`; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(txt, w / 2, h / 2 + 4); const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+const setDecals = (num, logo) => { for (const d of decals) { d.parent && d.parent.remove(d); d.material.map && d.material.map.dispose(); } decals.length = 0;
+  const L = { jj: ["JJ'S", '#8e1f2c', '#fff'], roxy: ['ROXY', '#ff3f8e', '#fff'], ct: ['COSTA TURBO', null, '#ffe14d'] }[logo];
+  for (const s of [-1, 1]) {
+    if (num) { const m = new THREE.Mesh(new THREE.PlaneGeometry(.42, .26), new THREE.MeshStandardMaterial({ map: decalTex(String(num), '#ffffff', '#0b1630'), transparent: true, roughness: .4, polygonOffset: true, polygonOffsetFactor: -4 })); m.position.set(s * .69, .46, -.95); m.rotation.y = s * Math.PI / 2; ski.body.add(m); decals.push(m); }
+    if (L) { const m = new THREE.Mesh(new THREE.PlaneGeometry(.7, .2), new THREE.MeshStandardMaterial({ map: decalTex(L[0], L[1], L[2], 512, 140), transparent: true, roughness: .4, polygonOffset: true, polygonOffsetFactor: -4 })); m.position.set(s * .67, .5, .05); m.rotation.y = s * Math.PI / 2; m.rotation.z = s * .04; ski.body.add(m); decals.push(m); } } };
 const paintPlayer = (m, c) => { if (!m) { ski.root.traverse(o => { if (o.isMesh && o.userData.mat0) o.material = o.userData.mat0; }); return; } paintSki(ski.root, m, c); };
-const GAME = await createGame({ paintSki, paintPlayer, scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls, setTime,
+const GAME = await createGame({ paintSki, paintPlayer, scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls, setTime, setDecals,
   setPaused: v => { paused = v; }, resetFx: () => { wake.pts.length = 0; } });
 window.__GAME = GAME;
 if (new URLSearchParams(location.search).has('test')) import('./src/autotest.js').then(m => setTimeout(() => m.runAutotest(GAME), 1500));   // prueba automática de las 3 pantallas

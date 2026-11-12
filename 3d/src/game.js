@@ -73,7 +73,7 @@ const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
 S.medal = S.medal || {}; S.best = S.best || {}; S.cups = S.cups || {}; S.ach = S.ach || {}; S.coinsTot = S.coinsTot || 0;
 S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
-S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
+S.paint = S.paint || 'serie'; S.dorsal = S.dorsal ?? 7; S.logo = S.logo || 'ct'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, mt: 'suno', vol: 0.8, vib: 1, dif: 2, hide: 0, q: 'alta' }, S.set || {});
 if (!S.set.dif5) { S.set.dif = [1, 2, 3][S.set.dif] ?? 2; S.set.dif5 = 1; }   // 5 niveles de dificultad como en el 2D
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -202,6 +202,8 @@ export async function createGame(ctx) {
     <div class="row" style="align-items:center;gap:10px;font-weight:900;letter-spacing:.1em">TU NOMBRE <input class="pname" maxlength="12" style="width:200px"></div>
     <div class="moto"><div class="tabs mo"></div><div class="stats"></div></div>
     <div class="sub" style="font-weight:900;letter-spacing:.12em">PINTURA</div><div class="grid pt"></div>
+    <div class="sub" style="font-weight:900;letter-spacing:.12em">A TU GUSTO: COLOR PRINCIPAL Y DETALLES</div><div class="row sw1"></div><div class="row sw2"></div>
+    <div class="row" style="align-items:center;gap:10px;font-weight:900;letter-spacing:.1em">DORSAL <input class="dors" maxlength="2" style="width:80px"> LOGO <span class="tabs lg"></span></div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-check"></i>LISTO</button></div>`);
   // ---------- taller ----------
   mk('taller', `<h2>TALLER</h2><div class="cash"></div><div class="tabs cat"></div><div class="grid it"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
@@ -313,6 +315,14 @@ export async function createGame(ctx) {
       b.onclick = () => { if (!own) { if (S.cash < P0.p) return noCash(P0.p); S.cash -= P0.p; S.ownPaint.push(P0.id); if (Snd.ok()) Snd.cash(); toast('COMPRADA Y PUESTA: ' + P0.n.toUpperCase(), true); } else { click(); toast('PINTURA PUESTA: ' + P0.n.toUpperCase(), true); }
         S.paint = P0.id; save(); ctx.paintPlayer && ctx.paintPlayer(P0.main, P0.acc); renderPilot(); };
       pt.appendChild(b); });
+    { const SW = ['#e3202b', '#ff7a1a', '#ffd21a', '#b6f01e', '#5fd31a', '#16b3c7', '#4d9bff', '#1e5eff', '#7b3fe4', '#ff3f8e', '#f5f6f8', '#8d9199', '#3a3f48', '#14161b'];
+      S.pc = S.pc || { m: '#16b3c7', a: '#d6e816' };
+      for (const [cls, key] of [['.sw1', 'm'], ['.sw2', 'a']]) { const row = scr.pilot.querySelector(cls); row.innerHTML = '';
+        SW.forEach(c => { const b = document.createElement('button'); b.className = 'card' + (S.paint === 'custom' && S.pc[key] === c ? ' sel' : ''); b.style.cssText = `width:44px;height:44px;padding:0;border-radius:50%;background:${c}`; b.title = c;
+          b.onclick = () => { click(); S.pc[key] = c; S.paint = 'custom'; save(); ctx.paintPlayer && ctx.paintPlayer(S.pc.m, S.pc.a); renderPilot(); }; row.appendChild(b); }); }
+      const dn = scr.pilot.querySelector('.dors'); dn.value = S.dorsal || ''; dn.onkeydown = e => e.stopPropagation(); dn.onchange = () => { S.dorsal = Math.max(0, Math.min(99, parseInt(dn.value) || 0)); save(); ctx.setDecals && ctx.setDecals(S.dorsal, S.logo); toast('DORSAL ' + (S.dorsal || 'SIN NÚMERO'), true); };
+      const lg = scr.pilot.querySelector('.lg'); lg.innerHTML = ''; for (const [id, n] of [['none', 'NINGUNO'], ['ct', 'COSTA TURBO'], ['jj', "JJ'S"], ['roxy', 'ROXY']]) { const b = document.createElement('button'); b.className = 'btn' + (S.logo === id ? ' sel' : ''); b.textContent = n;
+        b.onclick = () => { click(); S.logo = id; save(); ctx.setDecals && ctx.setDecals(S.dorsal, S.logo); renderPilot(); }; lg.appendChild(b); } }
     const mo = scr.pilot.querySelector('.mo'); mo.innerHTML = '';
     MOTOS.forEach(([k, n]) => { const b = document.createElement('button'); b.className = 'btn' + (ctx.PAINT === k ? ' sel' : ''); b.textContent = n;
       b.onclick = () => { click(); if (ctx.PAINT !== k) { try { localStorage.setItem('ct3d_moto', k); } catch (e) {} location.search = '?paint=' + k; } }; mo.appendChild(b); });
@@ -894,7 +904,7 @@ export async function createGame(ctx) {
 
   // estado inicial: portada
   refreshCash(); applySettings(); show('menu');
-  { const P0 = PAINTS.find(x => x.id === S.paint); if (P0 && P0.main && ctx.paintPlayer) ctx.paintPlayer(P0.main, P0.acc); }
+  { const P0 = PAINTS.find(x => x.id === S.paint); if (P0 && P0.main && ctx.paintPlayer) ctx.paintPlayer(P0.main, P0.acc); if (S.paint === 'custom' && S.pc && ctx.paintPlayer) ctx.paintPlayer(S.pc.m, S.pc.a); ctx.setDecals && ctx.setDecals(S.dorsal, S.logo); }
   await ctx.applyGear(gearLook());
   return { update, drive: () => state === 'race', togglePause, state: () => state, uiOpen: () => ui.classList.contains('on'), dbg: { R: () => R, at, S } };
 }

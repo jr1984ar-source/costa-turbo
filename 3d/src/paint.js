@@ -25,5 +25,5 @@ export const PAINTS = [
   { id: 'brava', n: 'Brava', main: '#e3202b', acc: '#f5f6f8', p: 200 }, { id: 'avispa', n: 'Avispa', main: '#ffd21a', acc: '#25272e', p: 200 },
   { id: 'oceano', n: 'Océano', main: '#1e5eff', acc: '#16181d', p: 200 }, { id: 'marea', n: 'Marea', main: '#4d9bff', acc: '#ffffff', p: 200 },
   { id: 'solar', n: 'Solar', main: '#ffb21a', acc: '#2a2c33', p: 200 }, { id: 'veneno', n: 'Veneno', main: '#5fd31a', acc: '#111317', p: 200 },
-  { id: 'sombra', n: 'Sombra', main: '#3a3f48', acc: '#8d9199', p: 200 }, { id: 'dorada', n: 'Dorada', main: '#d9b55a', acc: '#e3202b', p: 400 },
-  { id: 'rosa', n: 'Flamenco', main: '#ff3f8e', acc: '#ffffff', p: 400 }];
+  { id: 'sombra', n: 'Sombra', main: '#3a3f48', acc: '#8d9199', p: 200 }, { id: 'dorada', n: 'Dorada', main: '#d9b55a', acc: '#e3202b', p: 200 },
+  { id: 'rosa', n: 'Flamenco', main: '#ff3f8e', acc: '#ffffff', p: 200 }];
