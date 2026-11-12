@@ -665,9 +665,9 @@ export async function createGame(ctx) {
     const inp = scr.result.querySelector('input'); inp.value = S.name || 'JUGADOR';
     renderTop(); show('result'); if (qual) setTimeout(() => inp.focus(), 60);
   }
-  function renderTop(me) { const list = S.top[R.Z.id] || []; scr.result.querySelector('.tt').innerHTML = list.length ? list.map((e, k) => `<tr class="${k === me ? 'me' : ''}"><td>${k + 1}.</td><td>${e.n}</td><td>${fmtT(e.t)}</td><td style="color:#ffe14d">${e.p != null ? e.p.toLocaleString('es-ES') + ' pts' : ''}</td><td style="opacity:.7">${e.m || ''}</td></tr>`).join('') : '<tr><td>Aún no hay tiempos</td></tr>'; }
+  function renderTop(me) { const list = S.top[R.Z.id] || []; scr.result.querySelector('.tt').innerHTML = list.length ? list.map((e, k) => `<tr class="${k === me ? 'me' : ''}"><td>${k + 1}.</td><td>${e.n}</td><td>${fmtT(e.t)}</td><td style="color:#ffe14d">${e.p != null ? e.p.toLocaleString('es-ES') + ' pts' : ''}</td><td style="opacity:.7">${e.m || ''}</td><td style="opacity:.7">${e.c || ''}</td></tr>`).join('') : '<tr><td>Aún no hay tiempos</td></tr>'; }
   function saveName() { if (!R || !R.qual) return; const n = (scr.result.querySelector('input').value || 'JUGADOR').toUpperCase().slice(0, 12); S.name = n;
-    const list = S.top[R.Z.id] || (S.top[R.Z.id] = []); list.push({ n, t: R.final, p: R.points || 0, m: 'Kawasaki Ultra 310' }); list.sort((a, b) => a.t - b.t); list.length = Math.min(10, list.length);
+    const list = S.top[R.Z.id] || (S.top[R.Z.id] = []); list.push({ n, t: R.final, p: R.points || 0, m: 'Kawasaki Ultra 310', c: CUPS[S.set.dif].replace('COPA ', '') }); list.sort((a, b) => a.t - b.t); list.length = Math.min(10, list.length);
     const me = list.findIndex(e => e.n === n && e.t === R.final); save(); R.qual = false; scr.result.querySelector('.nm').style.display = 'none'; renderTop(me); scr.result.querySelector('.btn.main').focus(); }
 
   // ---------- acciones de botones ----------
