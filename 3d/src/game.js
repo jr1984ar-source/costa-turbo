@@ -813,6 +813,8 @@ export async function createGame(ctx) {
       else { f.o.position.set(x, -.25 + (window.__swell ? window.__swell(x, z) : 0), z); f.o.rotation.y = ry;
         if (state === 'race' && Math.hypot(x - P.x, z - P.z) < 2 && !(f.t > R.t)) { f.t = R.t + 3; P.v *= .45; flash('¡CUIDADO CON LA TORTUGA!', 1.1, true, '#5be37a'); if (Snd.ok()) Snd.bump(); } } }
     if (R.traffic) for (const t of R.traffic) { t.s += t.v * t.dir * dt; if (t.s > R.path.L + 40 || t.s < -40) t.dir *= -1;
+      if (t.lat0 == null) t.lat0 = t.lat; { const q1 = at(R.path, Math.max(0, Math.min(R.path.L, t.s + t.dir * 25))), x1 = q1.x - q1.tz * t.lat, z1 = q1.z + q1.tx * t.lat;   // si delante hay poco fondo (bancos de arena), se acerca al recorrido
+        if (heightAt(x1, z1) > -1.6) t.lat -= Math.sign(t.lat) * Math.min(Math.abs(t.lat) - 14, dt * 6); else if (Math.abs(t.lat) < Math.abs(t.lat0)) t.lat += Math.sign(t.lat) * dt * 2; }
       const q = at(R.path, Math.max(0, Math.min(R.path.L, t.s))), x = q.x - q.tz * t.lat, z = q.z + q.tx * t.lat, ry = Math.atan2(q.tx * t.dir, q.tz * t.dir);
       t.o.position.set(x, t.y + (window.__swell ? window.__swell(x, z) * .5 : 0), z); t.o.rotation.y = ry; const fx = Math.sin(ry), fz = Math.cos(ry), L = t.girls ? 8.5 : 3.5;
       t.cols.forEach((c, k) => { c.x = x + fx * (k - 1) * L; c.z = z + fz * (k - 1) * L; }); t.wk.update(dt, x - fx * L * 1.2, z - fz * L * 1.2, Math.min(1, t.v / 12), t.v);

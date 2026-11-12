@@ -147,7 +147,7 @@ const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
 const wake = new Wake(env); scene.add(wake.mesh); window.__wake = wake;
 const spray = new Spray(env, 12000); scene.add(spray.points); window.__spray = spray;
-import { makeRider } from './src/rider.js?v=15';
+import { makeRider } from './src/rider.js?v=16';
 let rider = await makeRider({ vest: '#ff7a1a' }); const RP = [0, 0.74, -0.75, 0.13]; rider.position.set(RP[0], RP[1], RP[2]); rider.userData.barY = RP[3]; ski.body.add(rider); window.__rider = rider;
 scene.add(ski.root);
 const PR = renderer.getPixelRatio();
@@ -200,7 +200,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=109';
+import { createGame } from './src/game.js?v=110';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -222,6 +222,9 @@ const paintPlayer = (m, c) => { if (!m) { ski.root.traverse(o => { if (o.isMesh 
 const GAME = await createGame({ paintSki, paintPlayer, scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls, setTime, setDecals,
   setPaused: v => { paused = v; }, resetFx: () => { wake.pts.length = 0; } });
 window.__GAME = GAME;
+// ondas que se abren en el agua al caer de un salto o al chocar
+const ripples = [], ripM = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .5, depthWrite: false, side: THREE.DoubleSide });
+window.__ripple = (x, z, s = 1) => { const m = new THREE.Mesh(new THREE.RingGeometry(.8, 1.15, 48), ripM.clone()); m.rotation.x = -Math.PI / 2; m.position.set(x, .06, z); m.userData = { t: 0, s }; scene.add(m); ripples.push(m); };
 const studio = new THREE.Group(); studio.visible = false; scene.add(studio);
 { const fl = new THREE.Mesh(new THREE.CircleGeometry(9, 64), new THREE.MeshStandardMaterial({ color: 0x07080b, roughness: .18, metalness: .6 })); fl.rotation.x = -Math.PI / 2; fl.position.y = -.32; fl.receiveShadow = true; studio.add(fl);
   const key = new THREE.SpotLight(0xffffff, 260, 30, .55, .6, 1.4); key.position.set(-3, 6, 5); key.castShadow = true; key.shadow.mapSize.set(1024, 1024); studio.add(key, key.target);
@@ -285,7 +288,7 @@ function step(dt) {
   // choques con barcos, rocas, boyas y arcos: se empuja fuera y se pierde velocidad
   for (const c of window.__COL.concat(window.__COLZ)) { const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz), mn = c.r + 1.25;
     if (d < mn && d > 1e-4) { const nx = dx / d, nz = dz / d; P.x = c.x + nx * mn; P.z = c.z + nz * mn;
-      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t) && !(P._invT > P.t)) { if (P.v > 18 && window.__onCrash) window.__onCrash(); P._invT = P.t + 1.6; P._spinT = P.t + .75; P.boostT = 0; P.shake = .5; P.v *= 0.22; P._hitT = P.t + 0.4; if (Snd.ok()) (P._invT - 1.6 > P.t - .01 && into > .5 ? Snd.crash() : Snd.bump()); window.__vibrate && window.__vibrate(120); } }
+      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t) && !(P._invT > P.t)) { if (P.v > 18 && window.__onCrash) window.__onCrash(); P._invT = P.t + 1.6; P._spinT = P.t + .75; window.__ripple && window.__ripple(P.x, P.z, .9); P.boostT = 0; P.shake = .5; P.v *= 0.22; P._hitT = P.t + 0.4; if (Snd.ok()) (P._invT - 1.6 > P.t - .01 && into > .5 ? Snd.crash() : Snd.bump()); window.__vibrate && window.__vibrate(120); } }
       const tg = Math.atan2(f.x + nx * 0.8, f.z + nz * 0.8); P.th += Math.atan2(Math.sin(tg - P.th), Math.cos(tg - P.th)) * Math.min(1, dt * 3); } }
   // rampas: la moto sube por la cuña y sale volando
   P.y = P.y || 0; P.vy = P.vy || 0;
@@ -295,10 +298,11 @@ function step(dt) {
     else if (P.spin) { const t = Math.ceil(Math.abs(P.spin) / 6.283 - .02) * 6.283, nx = Math.abs(P.spin) + dt * 9; P.spin = Math.sign(P.spin) * Math.min(t, nx); }   // al soltar, termina la vuelta empezada
     if (big && I.turbo) P._sup = (P._sup || 0) + dt;   // SUPERMAN: turbo en el aire, el piloto se estira
     if (!big && !P.flip) {} else if (I.drift) P.flip = (P.flip || 0) + dt * 8; else if (P.flip) P.flip = Math.min(Math.ceil(P.flip / 6.283 - .02) * 6.283, P.flip + dt * 8);
-    if (P.y <= 0) { P.y = 0; P.air = false; P.vy = 0; P.land = 1; if (Snd.ok() && P._airT > .4) Snd.land(); window.__vibrate && window.__vibrate(90);
+    if (P.y <= 0) { P.y = 0; P.air = false; P.vy = 0; P.land = Math.max(.01, P._airT || 0); if (Snd.ok() && P._airT > .4) Snd.land(); window.__vibrate && window.__vibrate(90);
       const sp = Math.abs(P.spin || 0), fl = P.flip || 0, ns = Math.round(sp / 6.283), nf = Math.round(fl / 6.283), bad = Math.abs(sp - ns * 6.283) > .7 || Math.abs(fl - nf * 6.283) > .7;
       const sup = (P._sup || 0) > .3; P._sup = 0;
-      if (bad) { P.v *= .25; P._hitT = P.t + .6; window.__onTrick && window.__onTrick(-1, 0); } else if (ns || nf || sup) window.__onTrick && window.__onTrick(ns, nf, sup);
+      P._abs = Math.min(1, (P._airT || 0) * 1.2);
+      if (bad) { P.v *= .25; P._hitT = P.t + .6; P._fallT = P.t + 2.2; window.__onTrick && window.__onTrick(-1, 0); } else if (ns || nf || sup) window.__onTrick && window.__onTrick(ns, nf, sup);
       P.spin = 0; P.flip = 0; P._airT = 0; } }
   else { let onR = null; for (const r of (window.__RAMPS || [])) { const dx = P.x - r.x, dz = P.z - r.z, u = (dx * Math.sin(r.th) + dz * Math.cos(r.th)) / r.len, lt = dx * Math.cos(r.th) - dz * Math.sin(r.th);
       if (u >= 0 && u <= 1.02 && Math.abs(lt) < r.w / 2 && Math.cos(P.th - r.th) > .5) onR = [r, u]; }
@@ -319,15 +323,22 @@ function step(dt) {
     const w = fl ? Math.sin(P.t * 11 + b.ph) * .65 : .12; b.gl.userData.w[0].rotation.z = w; b.gl.userData.w[1].rotation.z = -w; }
   // piloto vivo: se echa hacia delante, se inclina en las curvas, mira hacia donde gira y vibra con el manillar
   rider.userData.pose({ barY: rider.userData.barY, steer: P.steer, k: Math.min(1, P.v / 33), drift: drifting ? 1 : 0, t: P.t,
+    up: P.air && P.y > .6 ? Math.min(1, (P._airT || 0) * 3) : 0, abs: P._abs || 0, dy: (P.air && P.y > .6 ? Math.min(1, (P._airT || 0) * 3) : 0) * .16 - (P._abs || 0) * .12,
     cel: (window.__celebT != null && P.t - window.__celebT < 5) || (P._sup || 0) > .3 ? 1 : 0, hit: P._hitT > P.t ? 1 : 0 });   // celebrar al ganar, golpe al chocar
-  rider.position.y = RP[1] + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14);
+  // en saltos se pone de pie; al caer amortigua con las piernas; si vuelca cae al agua y vuelve a subir
+  P._abs = Math.max(0, (P._abs || 0) - dt * 2.2); const upA = P.air && P.y > .6 ? Math.min(1, (P._airT || 0) * 3) : 0;
+  const dyR = upA * .16 - P._abs * .12;
+  rider.position.set(RP[0], RP[1] + dyR + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14), RP[2]); rider.rotation.set(0, 0, 0);
+  if (P._fallT > P.t) { const u = 1 - (P._fallT - P.t) / 2.2, out = u < .25 ? u / .25 : u > .75 ? (1 - u) / .25 : 1;   // caída al agua y reincorporación
+    rider.position.x = RP[0] + 1.1 * out; rider.position.y = RP[1] - 1.25 * out; rider.rotation.z = -1.35 * out; P.v = 0; }
   // moto
   const SWL = swell(P.x, P.z, env.time.value); window.__swell = (x, z) => swell(x, z, env.time.value)[0];   // mar de fondo bajo la moto
   { const vs = (SWL[1] * f.x + SWL[2] * f.z) * P.v;   // la ola sube bajo la moto: al pasar la cresta rápido, sale volando
     if (!P.air && !(P.y > .05) && P.v > 22 && (P._vs || 0) > 1.4 && vs < (P._vs || 0) - .6) { P.air = true; P.y = .05; P.vy = P._vs * .95; }
     P._vs = vs; }
   ski.root.position.set(P.x, (P.y || 0) + SWL[0], P.z); ski.root.rotation.y = P.th + (P.spin || 0) + (P._spinT > P.t ? (1 - (P._spinT - P.t) / .75) * 6.283 : 0);   // choque: trompo de 0,75 s
-  if (P.land) { P.land = 0; for (let i = 0; i < 90; i++) { const a = Math.random() * 6.28, sp0 = 2 + Math.random() * 5; spray.emit(P.x + Math.cos(a) * .8, .1, P.z + Math.sin(a) * .8, Math.cos(a) * sp0, 2 + Math.random() * 4, Math.sin(a) * sp0, .08 + Math.random() * .1, .8 + Math.random() * .6, .45); } }   // chapuzón al caer
+  for (let i = ripples.length - 1; i >= 0; i--) { const m = ripples[i], u = m.userData; u.t += dt; const k = u.t / 2.4; m.scale.setScalar(1 + k * 9 * u.s); m.material.opacity = .45 * (1 - k); m.position.y = .06 + (window.__swell ? window.__swell(m.position.x, m.position.z) : 0); if (k >= 1) { scene.remove(m); m.geometry.dispose(); ripples.splice(i, 1); } }
+  if (P.land) { if (P.land > .35) { window.__ripple(P.x, P.z, 1.2); setTimeout(() => window.__ripple(P.x, P.z, .8), 180); } P.land = 0; for (let i = 0; i < 90; i++) { const a = Math.random() * 6.28, sp0 = 2 + Math.random() * 5; spray.emit(P.x + Math.cos(a) * .8, .1, P.z + Math.sin(a) * .8, Math.cos(a) * sp0, 2 + Math.random() * 4, Math.sin(a) * sp0, .08 + Math.random() * .1, .8 + Math.random() * .6, .45); } }   // chapuzón al caer
   ski.body.position.y = -0.02 + (window.__quiet ? 0 : Math.sin(P.t * 3.1) * 0.02 * (0.3 + k)) - k * 0.03;   // quieta mientras eliges
   ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01 + (P.y > .05 ? 0 : (SWL[1] * side.x + SWL[2] * side.z) * .8)) - ski.body.rotation.z) * Math.min(1, dt * 5);
   ski.body.rotation.y += ((drifting ? P.steer * 0.32 : 0) - ski.body.rotation.y) * Math.min(1, dt * 6);   // la moto cruzada respecto a la trayectoria
