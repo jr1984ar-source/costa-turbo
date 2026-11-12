@@ -184,7 +184,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=53';
+import { createGame } from './src/game.js?v=55';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -211,6 +211,12 @@ function step(dt) {
   if (drifting) { P.dc = Math.min(1.6, (P.dc || 0) + dt); P.v -= P.v * 0.05 * dt; } else if ((P.dc || 0) > 0) {       // al soltar el derrape: mini-turbo si se cargó
     if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(44, P.v + 4 + P.dc * 4); P.kick = 1; if (Snd.ok()) Snd.boost(); } P.dc = 0; }
   P.kick = Math.max(0, (P.kick || 0) - dt * 1.6);
+  { // aviso visual: bordes azules con turbo, naranja mientras carga el derrape (más fuerte al estar listo) y destello al soltar el mini-turbo
+    const fx = window.__fxEdge || (window.__fxEdge = Object.assign(document.body.appendChild(document.createElement('div')), { id: 'fxEdge' }));
+    if (!fx.style.position) Object.assign(fx.style, { position: 'fixed', inset: '0', pointerEvents: 'none', zIndex: 14 });
+    const dcN = drifting ? Math.min(1, (P.dc || 0) / .7) : 0, col = P.kick > .05 ? '255,225,77' : turboOn ? '110,70,255' : '255,140,30';
+    fx.style.background = `radial-gradient(ellipse at center, rgba(0,0,0,0) 52%, rgba(${col},.55) 100%)`;
+    fx.style.opacity = window.__quiet ? 0 : Math.max(turboOn ? .85 : 0, P.kick || 0, dcN * (dcN >= 1 ? .8 + Math.sin(P.t * 20) * .2 : .45)); }
   const targetSlip = drifting ? -P.steer * P.v * 0.42 : 0; P.slip += (targetSlip - P.slip) * Math.min(1, dt * (drifting ? 5 : 3));
   const nx = P.x + (f.x * P.v + side.x * P.slip) * dt, nz = P.z + (f.z * P.v + side.z * P.slip) * dt;
   // orilla: solo es pared la tierra de verdad (antes se frenaba en el fondo poco profundo que parece agua);

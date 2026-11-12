@@ -430,7 +430,7 @@ export async function createGame(ctx) {
     // rocas sueltas por la orilla
     for (let k = 0; k < 10; k++) { const x = -200 + k * 43 + (k % 2) * 9, z = coastZ(x) + 1.5 + (k % 3); rock(x, z, 1.2 + (k % 4) * .35, k * .53); }
     // barcas y llaüts fondeados, fuera del recorrido
-    const anch = (src, x, dz, ry, y, k = 1) => { const b = src.clone(); const z = coastZ(x) - dz; b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .3, k }; add(b); boats.push(b); solid(x, z, 2.4); };
+    const anch = (src, x, dz, ry, y, k = 1) => { const b = src.clone(); const z = coastZ(x) - dz; b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .3, k }; add(b); boats.push(b); const r = src === barca ? 1.1 : src === riva ? 1.6 : 2.1; for (let j = -1; j <= 1; j++) solid(x + Math.sin(ry) * j * r * 2.2, z + Math.cos(ry) * j * r * 2.2, r); };
     anch(barca, -150, 16, .6, -.18, 1.4); anch(barca, -40, 14, -.8, -.18, 1.4); anch(pesca2, 60, 78, 2.2, -.5); anch(barca, 130, 15, 1.9, -.18, 1.4); anch(riva, 200, 74, -1.1, -.32); anch(pesca2, -210, 80, .9, -.5);
   }
 
