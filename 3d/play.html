@@ -107,11 +107,13 @@ for (let i = 0; i < 5; i++) { const x = -60 + i * 33 + Math.sin(i * 2.1) * 5, z 
 const rock = (await gl.loadAsync('models/coast_rocks_02_lite.glb')).scene; rock.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 rock.position.set(-100, -0.7, coastZ(-100) - 2); rock.rotation.y = 2.4; scene.add(rock);
 for (let i = 0; i < 7; i++) { const x = -40 + i * 7, u = makeUmbrella(i % 2 ? '#ff5a0a' : '#1e63d6'); u.position.set(x, heightAt(x, coastZ(x) + 12), coastZ(x) + 12); u.rotation.y = i; scene.add(u); }
-const yacht = makeYacht(); yacht.position.set(-60, -0.45, coastZ(-60) - 70); yacht.rotation.y = 0.9; scene.add(yacht);
-const yacht2 = makeYacht(); yacht2.position.set(45, -0.45, coastZ(45) - 105); yacht2.rotation.y = -0.5; scene.add(yacht2);
+// barcos fondeados reales (modelos 3D), no hechos por código
+const shadowed = o => { o.traverse(m => { if (m.isMesh) { m.castShadow = m.receiveShadow = true; } }); return o; };
+const yacht = shadowed((await gl.loadAsync('models/barco_pesca.glb')).scene); yacht.position.set(-60, -0.55, coastZ(-60) - 70); yacht.rotation.y = 0.9; scene.add(yacht);
+const yacht2 = shadowed((await gl.loadAsync('models/yate.glb')).scene); yacht2.position.set(45, -1.3, coastZ(45) - 105); yacht2.rotation.y = -0.5; scene.add(yacht2);
 // cosas sólidas del escenario (círculos x,z,r): la moto choca con ellas
 window.__COL = [];
-for (const y of [yacht, yacht2]) for (const o of [-4.6, 0, 4.6]) window.__COL.push({ x: y.position.x + Math.sin(y.rotation.y) * o, z: y.position.z + Math.cos(y.rotation.y) * o, r: 2.5 });
+for (const [y, L, r] of [[yacht, 4.6, 2.3], [yacht2, 8.5, 4.2]]) for (const o of [-L, 0, L]) window.__COL.push({ x: y.position.x + Math.sin(y.rotation.y) * o, z: y.position.z + Math.cos(y.rotation.y) * o, r });
 { const bb = new THREE.Box3().setFromObject(rock), sz = bb.getSize(new THREE.Vector3()), c = bb.getCenter(new THREE.Vector3()); window.__COL.push({ x: c.x, z: c.z, r: Math.max(sz.x, sz.z) * 0.42 }); }
 window.__COLZ = [];
 for (let i = 0; i < 6; i++) { const b = makeBuoy(i % 2 ? '#ffe14d' : '#ff7a1a'); b.position.set(-35 - i * 14, 0.05, coastZ(-35 - i * 14) - 32 - (i % 2) * 10); scene.add(b); }
@@ -255,6 +257,7 @@ function step(dt) {
   for (let i = BUOYS.length - 1; i >= 0; i--) { const b = BUOYS[i]; if (!b.parent) { if (b.userData.y0 != null) BUOYS.splice(i, 1); continue; }   // boyas meciéndose
     if (b.userData.y0 == null) { b.userData.y0 = b.position.y; b.userData.ph = b.position.x * .37 + b.position.z * .23; }
     const ph = P.t * 1.6 + b.userData.ph; b.position.y = b.userData.y0 + Math.sin(ph) * .12; b.rotation.x = Math.sin(ph + 1) * .12; b.rotation.z = Math.cos(ph * .8) * .1; }
+  yacht.position.y = -.55 + Math.sin(P.t * 1.1) * .06; yacht.rotation.z = Math.sin(P.t * .9) * .025; yacht2.position.y = -1.3 + Math.sin(P.t * .8 + 1) * .04; yacht2.rotation.z = Math.sin(P.t * .7) * .012;   // barcos fondeados meciéndose
   for (const b of flock) { const a = b.ph + P.t * b.sp, fl = (P.t * .35 + b.ph) % 3 < 1.3;
     b.gl.position.set(b.cx + Math.cos(a) * b.r, b.h + Math.sin(P.t * .7 + b.ph) * 1.2, b.cz + Math.sin(a) * b.r);
     b.gl.rotation.set(0, Math.atan2(-Math.sin(a) * Math.sign(b.sp), Math.cos(a) * Math.sign(b.sp)), -.35 * Math.sign(b.sp));
