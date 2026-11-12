@@ -114,9 +114,10 @@ for (let i = 0; i < 6; i++) { const b = makeBuoy(i % 2 ? '#ffe14d' : '#ff7a1a');
 const gulls = [[6, 9, -6, 0.5], [-3, 12, 4, -0.2], [12, 14, 2, 0.1], [-8, 10, -12, 0.35]];
 for (const [dx, y, dz, fl] of gulls) { const gl = makeGull(fl); gl.position.set(x0 + dx, y, z0 + dz); gl.rotation.y = th0 + 0.4 + dx * 0.05; scene.add(gl); }
 
+import { createSound } from './src/sound.js';
 // --- JUEGO: cámara detrás, controles (teclado, táctil, mando) y bucle
 const hud = document.getElementById('hud'); hud.style.display = 'block';
-const cam = new THREE.PerspectiveCamera(58, W / H, 0.1, 4000);
+const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
 const wake = new Wake(env); scene.add(wake.mesh);
 const spray = new Spray(env); scene.add(spray.points);
 scene.add(ski.root);
@@ -133,13 +134,13 @@ addEventListener('resize', () => { const w = innerWidth, h = innerHeight; render
 
 // entradas: teclado, botones táctiles y mando
 const K = {}, TC = { left: 0, right: 0, acc: 0, turbo: 0, drift: 0 }; let paused = false;
-addEventListener('keydown', e => { K[e.code] = 1; if (e.code === 'KeyP' || e.code === 'Escape') paused = !paused; if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); });
+addEventListener('keydown', e => { K[e.code] = 1; if (e.code === 'KeyP' || e.code === 'Escape') paused = !paused; if (e.code === 'KeyC' && !e.repeat) toggleCam(); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); });
 addEventListener('keyup', e => { K[e.code] = 0; });
 const bind = (sel, key) => { const el = document.querySelector(sel); el.style.pointerEvents = 'auto'; el.style.touchAction = 'none'; el.style.userSelect = 'none';
   const on = e => { e.preventDefault(); TC[key] = 1; }, off = e => { e.preventDefault(); TC[key] = 0; };
   el.addEventListener('pointerdown', on); el.addEventListener('pointerup', off); el.addEventListener('pointerleave', off); el.addEventListener('pointercancel', off); };
 bind('.ar:nth-child(1)', 'left'); bind('.ar:nth-child(2)', 'right'); bind('.acc', 'acc'); bind('.tur', 'turbo'); bind('.pill:not(.tur)', 'drift');
-let padStart = 0;
+let padStart = 0, padY = 0;
 function input() {
   let steer = (K.ArrowLeft || K.KeyA || TC.left ? 1 : 0) - (K.ArrowRight || K.KeyD || TC.right ? 1 : 0);
   let acc = (K.ArrowUp || K.KeyW || TC.acc) ? 1 : 0, brake = (K.ArrowDown || K.KeyS) ? 1 : 0;
@@ -148,15 +149,20 @@ function input() {
   if (gp) { const ax = gp.axes[0] || 0; if (Math.abs(ax) > 0.12) steer = -ax;
     const b = i => gp.buttons[i] && gp.buttons[i].value > 0.2;
     if (b(7) || b(1)) acc = Math.max(acc, (gp.buttons[7] && gp.buttons[7].value) || 1); if (b(6)) brake = 1; if (b(2)) turbo = 1; if (b(0)) drift = 1;
-    const st = b(9) ? 1 : 0; if (st && !padStart) paused = !paused; padStart = st; }
+    const st = b(9) ? 1 : 0; if (st && !padStart) paused = !paused; padStart = st; const y = b(3) ? 1 : 0; if (y && !padY) toggleCam(); padY = y; }
   return { steer, acc, brake, turbo, drift };
 }
 
 // estado de la moto
-const P = { x: x0, z: z0 - 22, th: Math.PI, v: 0, slip: 0, steer: 0, energy: 1, t: 0 }; window.__P = P;
-const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), tmp = new THREE.Vector3(); let camInit = false;
+const P = { x: x0, z: coastZ(x0) - 20, th: -Math.PI / 2 + 0.25, v: 0, slip: 0, steer: 0, energy: 1, t: 0 }; window.__P = P;
+const camPos = new THREE.Vector3(), camLook = new THREE.Vector3(), tmp = new THREE.Vector3(); let camInit = false, camTh = 0, camMode = 'dron', camPrev = 'dron';
+const camBtn = document.createElement('div'); camBtn.className = 'pill'; camBtn.textContent = 'CÁMARA: DRON';
+camBtn.style.cssText = 'position:absolute;top:14px;left:50%;transform:translateX(-50%);pointer-events:auto;touch-action:none;user-select:none;cursor:pointer';
+hud.appendChild(camBtn);
+const toggleCam = () => { camMode = camMode === 'dron' ? 'onboard' : 'dron'; camBtn.textContent = 'CÁMARA: ' + (camMode === 'dron' ? 'DRON' : 'ONBOARD'); };
+camBtn.addEventListener('pointerdown', e => { e.preventDefault(); toggleCam(); });
 const spd = hud.querySelector('.sp');
-const clock = new THREE.Clock();
+const clock = new THREE.Clock(); const snd = createSound();
 function step(dt) {
   const I = input(), f = fwdOf(P.th), side = new THREE.Vector3(-f.z, 0, f.x);
   const turboOn = I.turbo && P.energy > 0.02 && I.acc;
@@ -195,20 +201,32 @@ function step(dt) {
       spray.emit(P.x + f.x * 0.6 + side.x * sg * 0.6, 0.15, P.z + f.z * 0.6 + side.z * sg * 0.6, side.x * sg * (1.5 + Math.random() * 1.5) + f.x * P.v * 0.3, 1.2 + Math.random() * 1.2, side.z * sg * (1.5 + Math.random() * 1.5) + f.z * P.v * 0.3, 0.04 + Math.random() * 0.04, 0.5 + Math.random() * 0.3, 0.25); }
   }
   spray.update(dt);
-  // cámara
-  const vis = 0.25 * P.steer;
-  tmp.set(P.x - f.x * 8.2 + side.x * (1.3 + vis * 2), 4.3 + P.v * 0.015, P.z - f.z * 8.2 + side.z * (1.3 + vis * 2));
-  const look = new THREE.Vector3(P.x + f.x * 14, 0.4, P.z + f.z * 14);
-  if (!camInit) { camPos.copy(tmp); camLook.copy(look); camInit = true; }
-  camPos.lerp(tmp, 1 - Math.exp(-dt * 5)); camLook.lerp(look, 1 - Math.exp(-dt * 6));
+  if (wall && P.v > 6) snd.hit();
+  snd.update(P.v, I.acc, turboOn, false);
+  // cámara: modo 'dron' (cenital, como un reel) u 'onboard' (pegada a la moto)
+  const look = new THREE.Vector3();
+  if (camMode === 'dron') {
+    camTh += Math.atan2(Math.sin(P.th - camTh), Math.cos(P.th - camTh)) * Math.min(1, dt * 1.6);
+    const cf = fwdOf(camTh), asp = innerWidth / innerHeight, hgt = (asp < 1 ? 50 : 34) + P.v * 0.25;
+    tmp.set(P.x - cf.x * 5 + f.x * P.v * 0.18, hgt, P.z - cf.z * 5 + f.z * P.v * 0.18);
+    look.set(P.x + cf.x * 4 + f.x * P.v * 0.18, 0, P.z + cf.z * 4 + f.z * P.v * 0.18);
+    cam.up.set(cf.x, 0, cf.z);
+  } else {
+    tmp.set(P.x - f.x * 1.9, 1.75, P.z - f.z * 1.9);   // onboard: cámara pegada detrás del manillar
+    look.set(P.x + f.x * 12 + side.x * P.steer * 2, 0.7, P.z + f.z * 12 + side.z * P.steer * 2);
+    cam.up.set(-ski.body.rotation.z * 0.6, 1, 0).normalize();
+  }
+  if (!camInit || camMode !== camPrev) { if (camMode !== camPrev) camTh = P.th; camPos.copy(tmp); camLook.copy(look); camInit = true; camPrev = camMode; }
+  camPos.lerp(tmp, 1 - Math.exp(-dt * (camMode === 'dron' ? 6 : 14))); camLook.lerp(look, 1 - Math.exp(-dt * (camMode === 'dron' ? 6 : 9)));
   cam.position.copy(camPos); cam.lookAt(camLook);
-  cam.fov += ((58 + (P.v / 31) * 10 + (turboOn ? 5 : 0)) - cam.fov) * Math.min(1, dt * 3); cam.updateProjectionMatrix();
+  const fovT = camMode === 'dron' ? 42 + (P.v / 31) * 6 : 68 + (P.v / 31) * 12 + (turboOn ? 6 : 0);
+  cam.fov += (fovT - cam.fov) * Math.min(1, dt * 3); cam.updateProjectionMatrix();
   // sol con sombra siguiendo la moto (ajustado al texel)
   const q = 90 / 4096, cx = Math.round((P.x + f.x * 10) / q) * q, cz = Math.round((P.z + f.z * 10) / q) * q;
   sun.position.set(cx, 0, cz).addScaledVector(env.sunDir, 150); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
   spd.firstChild.nodeValue = Math.round(P.v * 3.6);
 }
-function frame() { const dt = Math.min(0.05, clock.getDelta()); if (!paused) step(dt); comp.render(); requestAnimationFrame(frame); }
+function frame() { const dt = Math.min(0.05, clock.getDelta()); if (!paused) step(dt); else snd.update(0, 0, false, true); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame();
 
 </script></body></html>
