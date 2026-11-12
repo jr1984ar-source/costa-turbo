@@ -163,10 +163,18 @@ export function makeYacht(seed = 1) {
   return g;
 }
 
+// boya con argolla, cadena hasta un muerto de piedra en el fondo; se mece con las olas (play.html la anima)
+const chainM = new THREE.MeshStandardMaterial({ color: 0x3a3631, roughness: .6, metalness: .6 }), stoneM = new THREE.MeshStandardMaterial({ color: 0x6f6a62, roughness: .95 }), ringG = new THREE.TorusGeometry(.06, .018, 6, 12), linkG = new THREE.TorusGeometry(.055, .016, 5, 10);
+export const BUOYS = [];
 export function makeBuoy(color = '#ff7a1a') {
-  const m = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 14), new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 }));
-  m.castShadow = true;
-  return m;
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.45, 20, 14), new THREE.MeshPhysicalMaterial({ color, roughness: 0.35, clearcoat: 0.6 })); m.castShadow = true; g.add(m);
+  const ring = new THREE.Mesh(ringG, chainM); ring.position.y = -.47; g.add(ring);
+  { const ch = new THREE.InstancedMesh(linkG, chainM, 44), o = new THREE.Object3D();   // cadena: 44 eslabones en una sola pieza
+    for (let i = 0; i < 44; i++) { o.position.set(Math.sin(i * .21) * .08 * i / 44, -.55 - i * .1, 0); o.rotation.set(Math.PI / 2, i % 2 ? Math.PI / 2 : 0, 0); o.updateMatrix(); ch.setMatrixAt(i, o.matrix); } g.add(ch); }
+  const st = new THREE.Mesh(new THREE.DodecahedronGeometry(.42, 0), stoneM); st.scale.set(1.2, .7, 1); st.position.set(.2, -5.1, 0); st.rotation.y = .7; g.add(st);
+  g.userData.buoy = true; BUOYS.push(g);
+  return g;
 }
 
 export function makeUmbrella(c1 = '#ff5a0a', c2 = '#ffffff') {
