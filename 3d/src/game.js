@@ -601,6 +601,8 @@ export async function createGame(ctx) {
     if (!R || state === 'pause' || R.done) return;
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k + (window.__swell ? window.__swell(b.position.x, b.position.z) * (u.k > .5 ? .8 : .4) : 0); b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
+    if (state === 'race' && !window.__autoQ && S.set.q === 'alta') { R.fpsT = (R.fpsT || 0) + dt; R.fpsN = (R.fpsN || 0) + 1;   // calidad automática: si va lento, baja los gráficos
+      if (R.fpsT > 5) { window.__autoQ = 1; if (R.fpsN / R.fpsT < 38) { S.set.q = 'baja'; save(); applySettings(); toast('GRÁFICOS EN BAJA PARA IR MÁS FLUIDO', true); } } }
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
@@ -665,7 +667,7 @@ export async function createGame(ctx) {
         const q = place(r.sk.root, path, r.s, r.lane); r.sk.root.rotation.y -= r.steer * .15;
         r.sk.body.rotation.z = -r.steer * .25; r.sk.body.position.y = -.05 + Math.sin(P.t * 3 + r.vmax) * .02 + (window.__swell ? window.__swell(r.sk.root.position.x, r.sk.root.position.z) : 0);
         r.rd.userData.pose({ barY: .13, steer: Math.max(-1, Math.min(1, r.steer)), k: Math.min(1, r.v / 33), t: P.t });
-        const f = { x: q.tx, z: q.tz }; r.wk.update(dt, r.sk.root.position.x - f.x * 1.5, r.sk.root.position.z - f.z * 1.5, Math.min(1, r.v / 10), r.v);
+        const f = { x: q.tx, z: q.tz }; r.wk.update(dt, r.sk.root.position.x - f.x * 1.5, r.sk.root.position.z - f.z * 1.5, Math.min(.55, r.v / 16), r.v);
         { const sp = window.__spray, rx = r.sk.root.position.x - f.x * 1.5, rz = r.sk.root.position.z - f.z * 1.5, Rn = Math.random;   // cola de gallo y cortina de proa de los rivales
           if (sp && r.v > 4 && Math.hypot(rx - P.x, rz - P.z) < 120) { const n = Math.floor(r.v * dt * 45 + Rn());
             for (let i = 0; i < n; i++) { const o = Rn() - .5; sp.emit(rx - f.z * o * .45, .22, rz + f.x * o * .45, -f.x * r.v * (.18 + Rn() * .22) - f.z * o * 2, 3 + Rn() * 4, -f.z * r.v * (.18 + Rn() * .22) + f.x * o * 2, .07 + Rn() * .1, .8 + Rn() * .7, .3 + Rn() * .3); }
