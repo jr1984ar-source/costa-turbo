@@ -207,10 +207,11 @@ function step(dt) {
   const look = new THREE.Vector3();
   if (camMode === 'dron') {
     camTh += Math.atan2(Math.sin(P.th - camTh), Math.cos(P.th - camTh)) * Math.min(1, dt * 1.6);
-    const cf = fwdOf(camTh), asp = innerWidth / innerHeight, hgt = (asp < 1 ? 50 : 34) + P.v * 0.25;
-    tmp.set(P.x - cf.x * 5 + f.x * P.v * 0.18, hgt, P.z - cf.z * 5 + f.z * P.v * 0.18);
-    look.set(P.x + cf.x * 4 + f.x * P.v * 0.18, 0, P.z + cf.z * 4 + f.z * P.v * 0.18);
-    cam.up.set(cf.x, 0, cf.z);
+    const cf = fwdOf(camTh), cs = new THREE.Vector3(-cf.z, 0, cf.x), asp = innerWidth / innerHeight, hgt = (asp < 1 ? 42 : 27) + P.v * 0.2;
+    // alta e inclinada, desde un lado y algo por detrás (como el reel), no cenital
+    tmp.set(P.x - cf.x * 15 - cs.x * 9 + f.x * P.v * 0.2, hgt, P.z - cf.z * 15 - cs.z * 9 + f.z * P.v * 0.2);
+    look.set(P.x + cf.x * 6 + f.x * P.v * 0.2, 0, P.z + cf.z * 6 + f.z * P.v * 0.2);
+    cam.up.set(0, 1, 0);
   } else {
     tmp.set(P.x - f.x * 1.9, 1.75, P.z - f.z * 1.9);   // onboard: cámara pegada detrás del manillar
     look.set(P.x + f.x * 12 + side.x * P.steer * 2, 0.7, P.z + f.z * 12 + side.z * P.steer * 2);
