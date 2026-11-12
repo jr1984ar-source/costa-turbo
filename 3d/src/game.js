@@ -138,6 +138,7 @@ const CSS = `
 #rh .fu{display:flex;align-items:center;gap:8px;font-size:22px;margin-top:4px;text-shadow:0 2px 0 #0b1630}
 #rh .fu span{display:block;width:120px;height:10px;border-radius:10px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.7);overflow:hidden}#rh .fu b{display:block;height:100%;background:linear-gradient(90deg,#ff6a1a,#ffd21a)}
 #rh .fu.low b{background:#ff3b4e}
+#rh .pt{font-size:20px;color:#ffe14d;text-shadow:0 2px 0 #0b1630;margin-top:2px}
 #rh .tu{font-size:22px;color:#33d6ff;text-shadow:0 2px 0 #0b1630;letter-spacing:1px}#rh .tu .off{color:rgba(255,255,255,.22)}
 #rh .co{font-size:22px;color:#ffd21a;text-shadow:0 2px 0 #0b1630;margin-top:2px}#rh .co span{color:#fff;margin-left:6px}
 #msg3{position:fixed;left:0;right:0;top:34%;z-index:16;text-align:center;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;font-weight:900;font-style:italic;
@@ -160,7 +161,7 @@ export async function createGame(ctx) {
   const { scene, P, env, heightAt, coastZ, makeBuoy, Wake, Snd } = ctx;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
-  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><canvas class="mini" width="380" height="240"></canvas><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div><div class="tu"></div></div>'; document.body.appendChild(rh);
+  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><canvas class="mini" width="380" height="240"></canvas><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div><div class="tu"></div><div class="pt"></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
   const rot = document.createElement('div'); rot.id = 'rot'; rot.innerHTML = '<i class="ti ti-device-mobile-rotated"></i>GIRA EL MÓVIL<br>PARA JUGAR EN HORIZONTAL'; document.body.appendChild(rot);   // aviso en vertical
   const sem = document.createElement('div'); sem.id = 'sem'; sem.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(sem);   // semáforo de salida
@@ -240,6 +241,7 @@ export async function createGame(ctx) {
       L0.appendChild(b); } refreshCash(); }
   function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
     rh.querySelector('.tu').innerHTML = Array.from({ length: 5 }, (_, k) => `<i class="ti ti-bolt-filled${k < (P.turboU ?? 3) ? '' : ' off'}"></i>`).join('');
+    rh.querySelector('.pt').textContent = S.cash.toLocaleString('es-ES') + ' PTA';
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
   window.__onDrift = q => { if (state === 'race' && R) { const p = Math.round(q * 40) * 5; R.pts = (R.pts || 0) + p; R.drifts = (R.drifts || 0) + 1; pop('DERRAPE +' + p, '#ff8c1e'); } };
   window.__onTurboUnit = () => { if (state === 'race') pop('+1 TURBO', '#33d6ff'); };
@@ -710,7 +712,7 @@ export async function createGame(ctx) {
       rh.querySelector('.pos').innerHTML = R.pos + '<small>º/' + (R.rivals.length + 1) + '</small>';
       if (R.prevPos && R.pos !== R.prevPos && R.t > 2 && !(R.posT > R.t)) { R.posT = R.t + .8; const up = R.pos < R.prevPos; R.prevPos = R.pos; if (up) { flash('¡ADELANTAS! ' + R.pos + 'º', .9, true, '#5be37a'); if (Snd.ok()) Snd.gate(); } else flash('TE ADELANTAN · ' + R.pos + 'º', .9, true, '#ff3b4e'); }
       if (!R.prevPos || R.t <= 2) R.prevPos = R.pos;
-    } else rh.querySelector('.pos').innerHTML = '';
+    } else rh.querySelector('.pos').innerHTML = Z.obj === 'slalom' ? R.gates.filter(q => q.done && !q.miss).length + '<small>/' + R.gates.length + ' boyas</small>' : (R.jumps ? R.jumps + '<small> saltos</small>' : '');
     rh.querySelector('.t').textContent = Z.obj === 'time' ? fmtT(R.time) : fmtT(R.t + R.pen);
     if (Math.abs(R.lat) > 45 && msgT <= 0) flash('VUELVE AL RECORRIDO', 1, true);
     if (R.s >= path.L - 4) { R.pfin = R.t; if (R.rivals.length) { const ahead = R.rivals.filter(r => r.fin && r.fin < R.t).length; R.pos = ahead + 1; } finishRace(true, Z.obj === 'time' ? '¡META!' : '¡META!'); }

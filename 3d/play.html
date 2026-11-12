@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Costa Turbo 3D</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#061428"><link rel="apple-touch-icon" href="assets/icon192.png"><meta name="apple-mobile-web-app-capable" content="yes"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}
 #hud{position:fixed;inset:0;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;color:#fff;display:none}
-.sp{position:absolute;left:22px;top:14px;font-weight:800;font-size:44px;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.45)}.sp small{font-size:16px;opacity:.85;margin-left:4px}
+.sp{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:210px;height:118px;text-align:center;font-weight:900;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.45)}.sp svg{position:absolute;inset:0;width:100%;height:100%}.sp path{fill:none;stroke-width:14;stroke-linecap:round}.sp .bg{stroke:rgba(0,0,0,.35)}.sp .fg{stroke:#ffb02e;stroke-dasharray:251.3;transition:stroke .2s}.sp b{position:absolute;left:0;right:0;bottom:22px;font-size:46px}.sp small{position:absolute;left:0;right:0;bottom:6px;font-size:15px;opacity:.85}
 .pad{position:absolute;bottom:14px}.l{left:18px}.r{right:18px;display:flex;gap:10px;align-items:flex-end}
 .arrows{display:flex;gap:10px}.ar{width:64px;height:64px;border-radius:50%;background:rgba(11,22,48,.42);border:2px solid rgba(255,255,255,.55);display:grid;place-items:center;font-size:26px;font-weight:800}
 .tag{font-size:12px;font-weight:700;letter-spacing:.08em;opacity:.85;margin-bottom:4px}
@@ -13,7 +13,7 @@
 </style>
 <script type="importmap">{"imports":{"three":"./vendor/three/build/three.module.js","three/addons/":"./vendor/three/examples/jsm/"}}</script>
 </head><body>
-<div id="hud"><div class="sp">68<small>km/h</small></div>
+<div id="hud"><div class="sp"><svg viewBox="0 0 210 118"><path class="bg" d="M25 108 A80 80 0 0 1 185 108"/><path class="fg" d="M25 108 A80 80 0 0 1 185 108"/></svg><b>0</b><small>km/h</small></div>
 <div class="pad l"><div class="tag">GIRAR</div><div class="arrows"><div class="ar">‹</div><div class="ar">›</div></div></div>
 <div class="pad r"><div class="col"><div class="pill tur">TURBO</div><div class="pill">DERRAPE</div></div><div class="acc">ACELERAR</div></div></div>
 <script>window.addEventListener('error', e => { window.__err = String(e.message); window.__done = true; });</script>
@@ -199,7 +199,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=69';
+import { createGame } from './src/game.js?v=70';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -347,7 +347,7 @@ function step(dt) {
   // sol con sombra siguiendo la moto (ajustado al texel)
   const q = 90 / 4096, cx = Math.round((P.x + f.x * 10) / q) * q, cz = Math.round((P.z + f.z * 10) / q) * q;
   sun.position.set(cx, 0, cz).addScaledVector(env.sunDir, 150); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
-  spd.firstChild.nodeValue = Math.round(P.v * 3.6);
+  { const kmh = Math.round(P.v * 3.6); spd.querySelector('b').textContent = kmh; const fg = spd.querySelector('.fg'); fg.style.strokeDashoffset = 251.3 * (1 - Math.min(1, kmh / 160)); fg.style.stroke = P.boostT > 0 ? '#33d6ff' : kmh > 118 ? '#ff6a1a' : '#ffb02e'; }   // velocímetro en arco
 }
 function frame() { const dt = Math.min(0.05, clock.getDelta());
   { const open = GAME.uiOpen(), st = GAME.state(); hud.style.visibility = open ? 'hidden' : 'visible'; hint.style.visibility = open ? 'hidden' : 'visible';   // nada del juego detrás de los menús
