@@ -204,7 +204,7 @@ export async function createGame(ctx) {
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
-    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br><br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- pausa ----------
