@@ -162,9 +162,10 @@ export async function createGame(ctx) {
   const rot = document.createElement('div'); rot.id = 'rot'; rot.innerHTML = '<i class="ti ti-device-mobile-rotated"></i>GIRA EL MÓVIL<br>PARA JUGAR EN HORIZONTAL'; document.body.appendChild(rot);   // aviso en vertical
   const sem = document.createElement('div'); sem.id = 'sem'; sem.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(sem);   // semáforo de salida
   const semSet = n => { sem.style.display = 'flex'; [...sem.children].forEach((l, k) => l.className = n < 0 ? 'g' : k < n ? 'r' : ''); };
+  const homeB = document.createElement('button'); homeB.className = 'btn'; homeB.dataset.a = 'menu'; homeB.innerHTML = '<i class="ti ti-home"></i>INICIO'; Object.assign(homeB.style, { position: 'absolute', top: '14px', left: '18px', minWidth: '0', fontSize: '18px', padding: '6px 16px', zIndex: 2 }); ui.appendChild(homeB);   // botón INICIO en todas las pantallas
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
-  const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
+  const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
   const flash = (txt, t = 1.2, small = false, col = '') => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.color = col; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
   // aviso de compra, equipado o dinero insuficiente (por encima de los menús)
@@ -176,12 +177,13 @@ export async function createGame(ctx) {
   mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
     <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button></div>
     <div class="row"><button class="btn" data-a="pilot"><i class="ti ti-user"></i>PILOTO Y MOTO</button><button class="btn" data-a="taller"><i class="ti ti-tools"></i>TALLER</button></div>
-    <div class="row"><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button></div>
+    <div class="row"><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button><button class="btn" data-a="fs"><i class="ti ti-maximize"></i>PANTALLA COMPLETA</button></div>
     <div style="position:absolute;bottom:10px;right:16px;font-weight:800;font-size:14px;opacity:.6">v${VERSION}</div>`);
   // ---------- mapa ----------
   mk('map', `<h2>ELIGE PANTALLA</h2><div class="cash"></div><div class="zone"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- piloto ----------
   mk('pilot', `<h2>PILOTO Y MOTO</h2><div class="cash"></div><div class="grid av"></div>
+    <div class="row" style="align-items:center;gap:10px;font-weight:900;letter-spacing:.1em">TU NOMBRE <input class="pname" maxlength="12" style="width:200px"></div>
     <div class="moto"><div class="tabs mo"></div><div class="stats"></div></div>
     <div class="sub" style="font-weight:900;letter-spacing:.12em">PINTURA</div><div class="grid pt"></div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-check"></i>LISTO</button></div>`);
@@ -214,6 +216,8 @@ export async function createGame(ctx) {
     · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br>· Tropical Stroll, Tropical Confidence y Tropical Leaf Bikini — restore50<br>· Bikini Swimsuit V4 — Fadly.W<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
+  let wl = null; const keepAwake = on => { try { if (on && !wl && navigator.wakeLock) navigator.wakeLock.request('screen').then(l => { wl = l; l.addEventListener('release', () => wl = null); }).catch(() => {}); else if (!on && wl) { wl.release(); wl = null; } } catch (e) {} };
+  document.addEventListener('visibilitychange', () => { if (document.hidden && (state === 'race' || state === 'count')) togglePause(); if (!document.hidden && (state === 'race' || state === 'count')) keepAwake(true); });
   // ---------- pausa ----------
   mk('pause', `<h2>PAUSA</h2><div class="row"><button class="btn main" data-a="resume"><i class="ti ti-player-play-filled"></i>CONTINUAR</button></div><div class="row"><button class="btn" data-a="retry"><i class="ti ti-reload"></i>REPETIR</button><button class="btn" data-a="map"><i class="ti ti-map"></i>MAPA</button><button class="btn" data-a="menu"><i class="ti ti-home"></i>MENÚ</button></div>
     <div class="row"><button class="btn" data-a="tsnd"></button><button class="btn" data-a="tmus"></button></div>`);
@@ -246,6 +250,7 @@ export async function createGame(ctx) {
     refreshCash();
   }
   function renderPilot() {
+    { const pn = scr.pilot.querySelector('.pname'); pn.value = S.name || 'JUGADOR'; pn.onkeydown = e => e.stopPropagation(); pn.onchange = () => { S.name = (pn.value || 'JUGADOR').toUpperCase().slice(0, 12); pn.value = S.name; save(); toast('NOMBRE GUARDADO: ' + S.name, true); }; }
     const g = scr.pilot.querySelector('.av'); g.innerHTML = '';
     AVATARS.forEach((A, i) => { const b = document.createElement('button'); b.className = 'card' + (S.pilot === i ? ' sel' : '');
       b.innerHTML = `<div class="img" style="background-image:url('assets/taller/p_${A.id}.jpg')"></div><b>${A.name}</b><i>${A.bio}</i>`;
@@ -517,10 +522,10 @@ export async function createGame(ctx) {
     if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
     window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.y = 0; P.vy = 0; P.air = false; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
-    msg.style.display = 'none'; ctx.setPaused(false); state = 'count';
+    msg.style.display = 'none'; ctx.setPaused(false); state = 'count'; keepAwake(true);
   }
   function finishRace(ok, title) {
-    if (R.done) return; R.done = true; state = 'result'; rh.style.display = 'none'; const Z = R.Z;
+    if (R.done) return; R.done = true; state = 'result'; keepAwake(false); rh.style.display = 'none'; const Z = R.Z;
     let prize = 0, line = '', t = R.t + R.pen;
     const coinTxt = R.coinN ? ' · ' + R.coinN + ' monedas: +' + (R.coinN * 25).toLocaleString('es-ES') + ' PTA' : '';
     if (Z.obj === 'time') { line = ok ? 'Tiempo: ' + fmtT(R.t) : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'; if (ok) prize = Z.prize; }
@@ -570,6 +575,7 @@ export async function createGame(ctx) {
     if (a === 'resume') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); }
     if (a === 'jjout') { ctx.setPaused(false); state = 'race'; show(null); flash('-3 s', 1, true); }
     if (a === 'exp') { const code = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); try { await navigator.clipboard.writeText(code); toast('CÓDIGO COPIADO: PÉGALO EN EL OTRO APARATO', true); } catch (e) { const im = scr.set.querySelector('[data-imp]'); im.value = code; im.select(); toast('CÓDIGO LISTO: CÓPIALO', true); } }
+    if (a === 'fs') { try { document.fullscreenElement ? await document.exitFullscreen() : await document.documentElement.requestFullscreen({ navigationUI: 'hide' }); screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
     if (a === 'savename') saveName(); });
   scr.result.querySelector('input').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') saveName(); });
 
