@@ -25,6 +25,8 @@ export function wakeMaterial(env) {
         float st  = fbm2(vec2(vU * 0.55, d * 0.9) + warp * 1.6);          // vetas largas
         float st2 = fbm2(vec2(vU * 1.6 + 11.0, d * 2.6) + warp * 2.4);
         float bub = ct_n(pw * 8.0 + uTime * 0.6) * 0.6 + ct_n(pw * 21.0 - uTime) * 0.4;
+        float en = fbm2(vec2(vU * 0.9 + 3.0, vSide * 1.7 + uTime * 0.15));
+        float s2 = s + (en - 0.5) * 0.60 * smoothstep(0.10, 0.65, s);                       // borde irregular, nada de líneas rectas
         float lace  = smoothstep(0.42, 0.62, st * 0.55 + st2 * 0.45);
         float lace2 = smoothstep(0.48, 0.66, st2 * 0.55 + bub * 0.45);
         // 1) chorro de la turbina: franja blanca estrecha y larga, muy blanca junto a la popa
@@ -38,9 +40,9 @@ export function wakeMaterial(env) {
         float loose = (1.0 - smoothstep(0.0, 1.0, s)) * exp(-age / 6.0) * 0.30 * lace2 * smoothstep(0.6, 2.0, age);
         float foam = jet + churn + arm + shoulder + loose;
         float on = vK * smoothstep(0.0, 0.05, age);
-        foam = clamp(foam, 0.0, 1.0) * on * (1.0 - smoothstep(0.92, 1.0, s));
+        foam = clamp(foam, 0.0, 1.0) * on * (1.0 - smoothstep(0.62, 0.98, s2));
         // 4) agua removida: turquesa claro entre los brazos
-        float tint = (1.0 - smoothstep(0.1, 1.0, s)) * exp(-age / 9.0) * 0.24 * on;
+        float tint = (1.0 - smoothstep(0.1, 0.95, s2)) * exp(-age / 9.0) * 0.24 * on;
         vec3 foamC = vec3(0.97, 0.99, 1.0) * (uSunCol.g * 0.42 + 0.42);
         vec3 tintC = vec3(0.30, 0.84, 0.90) * (uSunCol.g * 0.30 + 0.30);
         float a = clamp(foam + tint, 0.0, 1.0);
@@ -75,7 +77,7 @@ function fillWake(g, path, n) {
   for (let i = 0; i < n; i++) {
     const p = path[i], q = path[Math.min(n - 1, i + 1)], o = path[Math.max(0, i - 1)];
     let tx = q.x - o.x, tz = q.z - o.z; const L = Math.hypot(tx, tz) || 1; tx /= L; tz /= L;
-    const w = Math.min(34, 0.9 + 0.30 * (p.sp ?? 12) * Math.min(p.age, 5.5));   // la V se abre con la velocidad (ángulo casi fijo)
+    const w = Math.min(34, 0.6 + 0.30 * (p.sp ?? 12) * Math.pow(Math.min(p.age, 5.5), 0.82) * 1.12);   // la V se abre con la velocidad (ángulo casi fijo)
     pos[i * 6] = p.x - tz * w; pos[i * 6 + 1] = 0.03; pos[i * 6 + 2] = p.z + tx * w;
     pos[i * 6 + 3] = p.x + tz * w; pos[i * 6 + 4] = 0.03; pos[i * 6 + 5] = p.z - tx * w;
     side[i * 2] = -1; side[i * 2 + 1] = 1; age[i * 2] = age[i * 2 + 1] = p.age; kk[i * 2] = kk[i * 2 + 1] = p.k ?? 1; uu[i * 2] = uu[i * 2 + 1] = p.u ?? i * 0.6; ww[i * 2] = ww[i * 2 + 1] = w;
