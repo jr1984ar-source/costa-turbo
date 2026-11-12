@@ -99,6 +99,13 @@ const CSS = `
 #ui .setrow .row{justify-content:flex-start}#ui .setrow .btn{min-width:0;font-size:17px;padding:6px 16px}
 #ui .setrow .btn.sel{background:#ffe14d;color:#0b1630;border-color:#ffe14d}
 #ui input[type=range]{width:100%;accent-color:#ffb02e;border:0;background:none}
+#ui.dark .bg{background:radial-gradient(90% 70% at 50% 35%,rgba(20,34,60,.9),rgba(2,3,6,.97))}
+#ui .vit{position:relative;background:#05070b;border:2px solid rgba(255,255,255,.12);border-radius:16px;padding:8px 8px 10px;text-align:center;overflow:hidden;transition:transform .15s}
+#ui .vit .vimg{width:100%;aspect-ratio:1;border-radius:10px;background:#05070b center/cover;filter:grayscale(1) brightness(.28) contrast(1.1);transition:filter .3s}
+#ui .vit.on{border-color:#ffe14d;box-shadow:0 0 22px rgba(255,210,26,.25)}#ui .vit.on .vimg{filter:none}#ui .vit:hover{transform:translateY(-3px)}
+#ui .vit b{display:block;font-size:16px;margin-top:6px;line-height:1.05}#ui .vit i{display:block;font-style:normal;font-size:12px;opacity:.7;margin-top:2px}#ui .vit em{display:block;font-style:normal;font-weight:900;font-size:14px;color:#ffe14d;margin-top:4px}
+#ui .vit .vlock{position:absolute;top:18px;right:18px;font-size:22px;opacity:.6;margin:0}
+#ui .tro{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:10px;width:min(1200px,96vw)}
 #ui .cred{max-width:720px;font-size:16px;line-height:1.5;text-align:left;opacity:.92}
 #ui .moto{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center}
 #ui .stats{display:grid;grid-template-columns:auto 160px auto;gap:4px 10px;font-weight:800;font-size:15px;align-items:center}
@@ -183,7 +190,7 @@ export async function createGame(ctx) {
   const homeB = document.createElement('button'); homeB.className = 'btn'; homeB.dataset.a = 'menu'; homeB.innerHTML = '<i class="ti ti-home"></i>INICIO'; Object.assign(homeB.style, { position: 'absolute', top: '14px', left: '18px', minWidth: '0', fontSize: '18px', padding: '6px 16px', zIndex: 2 }); ui.appendChild(homeB);   // botón INICIO en todas las pantallas
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
-  const show = id => { if (id === 'menu' && typeof renderCard === 'function') try { renderCard(); } catch (e) {} for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); ui.classList.toggle('studio', id === 'pilot' || id === 'taller'); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
+  const show = id => { if (id === 'menu' && typeof renderCard === 'function') try { renderCard(); } catch (e) {} for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); ui.classList.toggle('studio', id === 'pilot' || id === 'taller'); ui.classList.toggle('dark', id === 'ach' || id === 'rank'); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
   const flash = (txt, t = 1.2, small = false, col = '') => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.color = col; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
   const pop = (txt, col = '#ffe14d', dx = 0) => { const e = document.createElement('div'); e.className = 'pop'; e.textContent = txt; e.style.color = col; e.style.marginLeft = dx + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 1000); };   // puntos emergentes
@@ -225,10 +232,12 @@ export async function createGame(ctx) {
   function renderCard() { const A = AVATARS[S.pilot], won = Object.keys(S.done).length, nA = Object.keys(S.ach || {}).length, tr = TROF.filter(t => nA >= t[0]).pop();
     scr.menu.querySelector('.pcard').innerHTML = `<div style="width:58px;height:58px;border-radius:12px;background:#05070b url('assets/taller/p_${A.id}.jpg') center/cover"></div><div><b style="font-size:20px;display:block">${S.name || 'JUGADOR'}</b><span style="color:#ffe14d;font-weight:900">${S.cash.toLocaleString('es-ES')} PTA</span><br><span style="font-size:14px;opacity:.85">Pantallas ${won}/${ZONES.length} · Medallas ${nA}/13${tr ? ' · Trofeo ' + tr[1] : ''}</span></div>`; }
   // ---------- medallas y trofeos ----------
-  mk('ach', `<h2>MEDALLAS Y TROFEOS</h2><div class="cash"></div><div class="tro row"></div><div class="grid ach" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
+  mk('ach', `<h2>MEDALLAS Y TROFEOS</h2><div class="cash"></div><div class="tro"></div><div class="grid ach" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr));width:min(1200px,96vw)"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
+  // vitrina: fotos de estudio; lo que no tienes queda a oscuras, lo conseguido iluminado
+  const vit = (img, on, nm, sub, tag) => `<div class="vit${on ? ' on' : ''}"><div class="vimg" style="background-image:url('assets/medallas/${img}.jpg')"></div>${on ? '' : '<i class="ti ti-lock vlock"></i>'}<b>${nm}</b><i>${sub}</i>${tag ? `<em>${tag}</em>` : ''}</div>`;
   function renderAch() { const n = Object.keys(S.ach).length;
-    scr.ach.querySelector('.tro').innerHTML = CUPS.map((c, k) => `<div class="card" style="min-width:110px;${S.cups[k] ? '' : 'opacity:.35'}"><i class="ti ti-cup" style="font-size:40px;color:#ffe14d;opacity:1"></i><b>${c}</b><i>${S.cups[k] ? S.cups[k].toLocaleString('es-ES') + ' pts' : 'Sin ganar'}</i></div>`).join('') + TROF.map(([k, nm, c]) => `<div class="card" style="min-width:110px;${n >= k ? '' : 'opacity:.35'}"><i class="ti ti-trophy" style="font-size:40px;color:${c};opacity:1"></i><b>${nm}</b><i>${k} medallas</i></div>`).join('');
-    scr.ach.querySelector('.ach').innerHTML = ACH.map(([id, nm, d, p, ic]) => `<div class="card" style="${S.ach[id] ? 'border-color:#ffe14d' : 'opacity:.45'}"><i class="ti ti-${ic}" style="font-size:38px;color:${S.ach[id] ? '#ffe14d' : '#fff'};opacity:1"></i><b>${nm}</b><i>${d}</i><em>${S.ach[id] ? 'CONSEGUIDA' : '+' + p + ' PTA'}</em></div>`).join(''); refreshCash(); }
+    scr.ach.querySelector('.tro').innerHTML = CUPS.map((c, k) => vit('c' + k, !!S.cups[k], c, S.cups[k] ? S.cups[k].toLocaleString('es-ES') + ' pts' : 'Gana el campeonato en ' + ['muy fácil', 'fácil', 'normal', 'difícil', 'experto'][k], '')).join('') + TROF.map(([k, nm], j) => vit('t' + j, n >= k, 'TROFEO ' + nm, k + ' medallas', '')).join('');
+    scr.ach.querySelector('.ach').innerHTML = ACH.map(([id, nm, d, p]) => vit('a_' + id, !!S.ach[id], nm, d, S.ach[id] ? 'CONSEGUIDA' : '+' + p + ' PTA')).join(''); refreshCash(); }
   const award = id => { if (S.ach[id]) return; const a = ACH.find(x => x[0] === id); if (!a) return; S.ach[id] = 1; S.cash += a[3]; save(); toast('MEDALLA: ' + a[1].toUpperCase() + ' +' + a[3] + ' PTA', true); if (Snd.ok()) Snd.win();
     const n = Object.keys(S.ach).length, t = TROF.find(x => x[0] === n); if (t) setTimeout(() => toast('¡TROFEO DE ' + t[1] + '!', true), 1900); };
   // ---------- ajustes ----------
