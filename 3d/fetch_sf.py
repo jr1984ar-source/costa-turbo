@@ -1,7 +1,11 @@
 # Descarga modelos de Sketchfab (la clave la añade el proxy del entorno) y guarda autor y licencia
 import json, os, sys, io, zipfile, urllib.request
 UA = {'User-Agent': 'CostaTurbo3D-asset-fetch/1.0'}
-def get(u, t=120): return urllib.request.urlopen(urllib.request.Request(u, headers=UA), timeout=t).read()
+TOKEN = os.environ.get('SKETCHFAB_TOKEN') or (open(os.path.expanduser('~/Desktop/Api token.txt')).read().strip() if os.path.exists(os.path.expanduser('~/Desktop/Api token.txt')) else '')
+def get(u, t=120):
+    h = dict(UA)
+    if TOKEN and 'api.sketchfab.com' in u: h['Authorization'] = 'Token ' + TOKEN
+    return urllib.request.urlopen(urllib.request.Request(u, headers=h), timeout=t).read()
 credits = json.load(open('assets/sketchfab/CREDITOS.json')) if os.path.exists('assets/sketchfab/CREDITOS.json') else {}
 for a in sys.argv[1:]:
     name, uid = a.split('=')
