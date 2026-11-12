@@ -53,7 +53,7 @@ export function sprayMaterial(env) {
     ...premult,
     uniforms: { uSunCol: { value: env.sunCol }, uScale: { value: 900 } },
     vertexShader: `attribute float aSize; attribute float aAlpha; uniform float uScale; varying float vA;
-      void main(){ vA = aAlpha; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = aSize * uScale / -mv.z; gl_Position = projectionMatrix * mv; }`,
+      void main(){ vec4 mv = modelViewMatrix * vec4(position, 1.0); vA = aAlpha * smoothstep(1.5, 8.0, -mv.z); gl_PointSize = min(aSize * uScale / -mv.z, 34.0); gl_Position = projectionMatrix * mv; }`,
     fragmentShader: `uniform vec3 uSunCol; varying float vA;
       void main(){ vec2 d = gl_PointCoord - 0.5; float r = length(d) * 2.0; if (r > 1.0) discard;
         float a = (1.0 - r * r) * vA; float lit = 0.75 + 0.25 * (0.5 - d.y);

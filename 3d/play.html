@@ -29,7 +29,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { makeGrass, makePalms, makeGull, makeYacht, makeBuoy, makeUmbrella } from './src/props.js';
-import { Wake, Spray } from './src/fx.js?v=6';
+import { Wake, Spray } from './src/fx.js?v=7';
 
 const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = Q.get('paint') || 'kawasaki';
 const W = innerWidth, H = innerHeight;
@@ -120,6 +120,8 @@ const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
 const wake = new Wake(env); scene.add(wake.mesh); window.__wake = wake;
 const spray = new Spray(env, 7000); scene.add(spray.points);
+import { makeRider } from './src/rider.js?v=5';
+const rider = await makeRider({ vest: '#ff7a1a' }); rider.position.set(0, 0.74, -0.75); ski.body.add(rider);
 scene.add(ski.root);
 const PR = renderer.getPixelRatio();
 const rt = new THREE.WebGLRenderTarget(W * PR, H * PR, { type: THREE.HalfFloatType, samples: 4 });
@@ -162,6 +164,9 @@ hud.appendChild(camBtn);
 const toggleCam = () => { camMode = camMode === 'dron' ? 'onboard' : 'dron'; camBtn.textContent = 'CÁMARA: ' + (camMode === 'dron' ? 'DRON' : 'ONBOARD'); };
 camBtn.addEventListener('pointerdown', e => { e.preventDefault(); toggleCam(); });
 const spd = hud.querySelector('.sp');
+// música (Suno, "Jet-Ski Paradise"): empieza con el primer gesto y se pausa con la pausa del juego
+const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false;
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (!musicOn) { musicOn = true; music.play().catch(() => { musicOn = false; }); } }, { passive: true }));
 const clock = new THREE.Clock();
 function step(dt) {
   const I = input(), f = fwdOf(P.th), side = new THREE.Vector3(-f.z, 0, f.x);
@@ -223,7 +228,7 @@ function step(dt) {
     look.set(P.x + cf.x * 6 + f.x * P.v * 0.2, 0, P.z + cf.z * 6 + f.z * P.v * 0.2);
     cam.up.set(0, 1, 0);
   } else {
-    tmp.set(P.x - f.x * 1.9, 1.75, P.z - f.z * 1.9);   // onboard: cámara pegada detrás del manillar
+    tmp.set(P.x - f.x * 2.6, 2.15, P.z - f.z * 2.6);   // onboard: cámara pegada detrás del manillar
     look.set(P.x + f.x * 12 + side.x * P.steer * 2, 0.7, P.z + f.z * 12 + side.z * P.steer * 2);
     cam.up.set(-ski.body.rotation.z * 0.6, 1, 0).normalize();
   }
@@ -237,7 +242,7 @@ function step(dt) {
   sun.position.set(cx, 0, cz).addScaledVector(env.sunDir, 150); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
   spd.firstChild.nodeValue = Math.round(P.v * 3.6);
 }
-function frame() { const dt = Math.min(0.05, clock.getDelta()); if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); comp.render(); requestAnimationFrame(frame); }
+function frame() { const dt = Math.min(0.05, clock.getDelta()); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame();
 
 </script></body></html>
