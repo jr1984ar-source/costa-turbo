@@ -272,7 +272,7 @@ export async function createGame(ctx) {
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   // vidas como en el 2D: 1/3 de corazón por choque y 2/3 por volcar; sin corazones, GAME OVER
   const loseLife = (k, txt) => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.crashed = true; R.invT = R.t + 1.6; S.lives = Math.max(0, S.lives - k); save(); hud();
-    if (S.lives <= .01) { S.lives = 3; save(); return finishRace(false, 'GAME OVER'); } flash(txt, 1, true, '#ff3b4e'); };
+    if (S.lives <= .01) { S.lives = 3; save(); if (Snd.ok()) Snd.thunder(); return finishRace(false, 'GAME OVER'); } flash(txt, 1, true, '#ff3b4e'); };
   window.__onCrash = () => loseLife(1 / 3, '¡CHOQUE! −⅓ ♥');
 
   const refreshCash = () => ui.querySelectorAll('.cash').forEach(e => e.textContent = S.cash.toLocaleString('es-ES') + ' PTA');
