@@ -349,7 +349,7 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { ctx.setTime && ctx.setTime('mediodia'); sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { if (Snd.sirenStop) Snd.sirenStop(); ctx.setTime && ctx.setTime('mediodia'); sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
   const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
@@ -554,6 +554,19 @@ export async function createGame(ctx) {
       const mkBox = () => { const b = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ map: textTex(['?'], 128, 128, '#8a5530', '#ffe14d'), roughness: .8 })); return b; };
       const kinds = [['heart', mkHeart, .35, 0], ['fuel', mkCan, .55, 5], ['drink', mkDrink, .7, -5], ['box', mkBox, .85, 30]];
       for (const [k, mk, f, lat] of kinds) { const o = mk(); o.traverse(m => m.castShadow = true); place(o, R.path, R.path.L * f + (k === 'box' ? 0 : 23), lat); o.position.y = 1.2; o.scale.setScalar(1.3); add(o); R.picks.push({ k, o, got: false }); } }
+    // penalizaciones como en el 2D: zona de baño con policía y multa, medusas, red de pesca y posidonia
+    { const path = R.path, q0 = at(path, path.L * .58), sh = Math.sign(q0.tx) || 1; R.shore = sh; R.bano = { s0: path.L * .52, s1: path.L * .64, lat: 13 * sh };
+      for (let s = R.bano.s0; s <= R.bano.s1; s += 9) { const b = makeBuoy('#ffe14d'); b.scale.setScalar(.8); place(b, path, s, R.bano.lat, .05); add(b); }
+      const pol = (await glb('barco_riva')).clone(); pol.traverse(m => { if (m.isMesh) { m.material = m.material.clone(); m.material.color.lerp(new THREE.Color(0x1e5eff), .6); } }); pol.visible = false; add(pol);
+      const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(['POLICÍA'], 512, 128, '#1e5eff', '#ffffff'), transparent: true, depthWrite: false, sizeAttenuation: false })); tag.scale.set(.1, .025, 1); tag.position.y = 3; pol.add(tag);
+      const lamp = new THREE.PointLight(0x3a6bff, 0, 18); lamp.position.y = 2.4; pol.add(lamp); R.pol = { o: pol, lamp, on: false, t: 0 };
+      const jm = new THREE.MeshPhysicalMaterial({ color: 0xff7ad9, transparent: true, opacity: .55, roughness: .2, emissive: 0xff4fc8, emissiveIntensity: .3 });
+      R.haz = [];
+      for (const [f, lat] of [[.22, -6], [.47, 7], [.82, -4]]) { const j = new THREE.Mesh(new THREE.SphereGeometry(.7, 16, 10, 0, Math.PI * 2, 0, Math.PI / 2), jm); place(j, path, path.L * f, lat, .02); add(j); R.haz.push({ k: 'medusa', o: j, r: 1.6 }); }
+      { const net = new THREE.Group(), fl = new THREE.MeshStandardMaterial({ color: 0xff7a1a }); for (let i = 0; i < 14; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 6), fl); b.position.set((i % 7 - 3) * 1.4, .05, (i < 7 ? -1 : 1) * 3); net.add(b); }
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({ color: 0x2a2a2a, transparent: true, opacity: .25, depthWrite: false })); mesh.rotation.x = -Math.PI / 2; mesh.position.y = .03; net.add(mesh);
+        place(net, path, path.L * .38, -10 * sh, 0); add(net); R.haz.push({ k: 'red', o: net, r: 4.5 }); }
+      { const pos = new THREE.Mesh(new THREE.CircleGeometry(6, 24), new THREE.MeshBasicMaterial({ color: 0x1f4a2a, transparent: true, opacity: .5, depthWrite: false })); pos.rotation.x = -Math.PI / 2; place(pos, path, path.L * .7, 9 * sh, -.25); add(pos); R.haz.push({ k: 'posidonia', o: pos, r: 6 }); } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -563,7 +576,7 @@ export async function createGame(ctx) {
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count'; keepAwake(true);
   }
   function finishRace(ok, title) {
-    if (R.done) return; R.done = true; state = 'result'; keepAwake(false); rh.style.display = 'none'; const Z = R.Z;
+    if (R.done) return; R.done = true; state = 'result'; keepAwake(false); if (Snd.sirenStop) Snd.sirenStop(); rh.style.display = 'none'; const Z = R.Z;
     let prize = 0, line = '', t = R.t + R.pen;
     const coinTxt = R.coinN ? ' · ' + R.coinN + ' monedas: +' + (R.coinN * 25).toLocaleString('es-ES') + ' PTA' : '';
     if (Z.obj === 'time') { const pp = ok && Z.posPrize && R.pos <= 3 ? Z.posPrize[R.pos - 1] : 0; line = (ok ? 'Tiempo: ' + fmtT(R.t) + (R.rivals.length ? ' · ' + R.pos + 'º de ' + (R.rivals.length + 1) + (pp ? ' (+' + pp.toLocaleString('es-ES') + ' PTA por puesto)' : '') : '') : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'); if (ok) prize = Z.prize + pp; }
@@ -669,6 +682,18 @@ export async function createGame(ctx) {
         if (pk.k === 'drink') { P.turboU = Math.min(5, (P.turboU ?? 3) + 1); pop('+1 TURBO', '#33d6ff'); }
         if (pk.k === 'box') { const all = Object.values(GEAR).flat().filter(it => !S.own.includes(it.id)); if (all.length) { const it = all[Math.floor(Math.random() * all.length)]; S.own.push(it.id); flash('¡CAJA SORPRESA! ' + it.n.toUpperCase(), 1.6, true, '#ffe14d'); } else { S.cash += 500; pop('+500 PTA', '#ffe14d'); } }
         save(); hud(); } }
+    if (R.haz && state === 'race') for (const h of R.haz) { const d = Math.hypot(h.o.position.x - P.x, h.o.position.z - P.z);
+      if (d < h.r && !(h.t > R.t)) { h.t = R.t + 2.5;
+        if (h.k === 'medusa') { P.v *= .5; loseLife(1 / 3, '¡MEDUSA! −⅓ ♥'); }
+        if (h.k === 'red') { P.v *= .35; flash('¡RED DE PESCA!', 1, true, '#ff8c1e'); if (Snd.ok()) Snd.bump(); }
+        if (h.k === 'posidonia') { P.v *= .6; flash('POSIDONIA: ¡NO LA PISES!', 1, true, '#5be37a'); } } }
+    if (R.pol && state === 'race') { const pl = R.pol, inB = R.s > R.bano.s0 && R.s < R.bano.s1 && R.lat * Math.sign(R.bano.lat) > Math.abs(R.bano.lat);
+      if (inB && !pl.on && !(pl.cd > R.t)) { pl.on = true; pl.t = 0; const q = at(R.path, Math.max(0, R.s - 30)); pl.o.position.set(q.x, -.3, q.z); pl.o.visible = true; flash('¡ZONA DE BAÑO! ¡POLICÍA DETRÁS!', 1.4, true, '#33d6ff'); if (Snd.ok()) Snd.sirenStart && Snd.sirenStart(); }
+      if (pl.on) { pl.t += dt; const dx = P.x - pl.o.position.x, dz = P.z - pl.o.position.z, d = Math.hypot(dx, dz) || 1, sp = Math.max(28, P.v + 4);
+        pl.o.position.x += dx / d * sp * dt; pl.o.position.z += dz / d * sp * dt; pl.o.rotation.y = Math.atan2(dx, dz); pl.lamp.intensity = Math.sin(R.t * 18) > 0 ? 40 : 0;
+        if (d < 5) { S.cash = Math.max(0, S.cash - 500); save(); flash('¡MULTA! −500 PTA', 1.5, true, '#ff3b4e'); if (Snd.ok()) Snd.fine(); pl.on = false; }
+        else if (!inB && pl.t > 4) { pl.on = false; flash('¡TE HAS ESCAPADO!', 1, true, '#5be37a'); }
+        if (!pl.on) { pl.cd = R.t + 8; pl.o.visible = false; pl.lamp.intensity = 0; if (Snd.sirenStop) Snd.sirenStop(); } } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
       if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }
