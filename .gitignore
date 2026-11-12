@@ -4,3 +4,7 @@
 /dev/*.out
 /dev/node_modules/
 /dev/package-lock.json
+
+# 3D: descargas en bruto y dependencias (se regeneran con fetch_sf.py y npm i)
+/3d/node_modules/
+/3d/assets/sketchfab/*/

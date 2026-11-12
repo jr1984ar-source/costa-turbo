@@ -31,7 +31,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { makeGrass, makePalms, makeGull, makeYacht, makeBuoy, makeUmbrella } from './src/props.js';
 import { makeWake, makeSpray, sprayForPose } from './src/fx.js';
 
-const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = Q.get('paint') || 'naranja';
+const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = Q.get('paint') || 'kawasaki';
 const W = innerWidth, H = innerHeight;
 const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
 renderer.setPixelRatio(devicePixelRatio); renderer.setSize(W, H);
@@ -80,8 +80,10 @@ const path = []; { let x = x0, z = z0; for (let s = 0; s < 150; s += 0.5) { cons
 const fwd = fwdOf(th0);
 const gl = new GLTFLoader();
 async function loadSki(k) {
-  const g = await gl.loadAsync('models/jetski_' + k + '.glb');
-  const root = new THREE.Group(), body = new THREE.Group(), rider = new THREE.Group(); root.add(body); body.add(g.scene);
+  const REAL = { kawasaki: ['kawasaki_ultra310', -Math.PI / 2, -0.14], seadoo: ['seadoo_gti', 0, -0.14], negra_turquesa: ['jetski_negra_turquesa', 0, -0.14] };   // motos reales (Sketchfab): [archivo, giro para que la proa mire a +z, altura]
+  const [file, oriY, offY] = REAL[k] || ['jetski_' + k, 0, 0];
+  const g = await gl.loadAsync('models/' + file + '.glb');
+  const root = new THREE.Group(), body = new THREE.Group(), rider = new THREE.Group(); root.add(body); const pivot = new THREE.Group(); pivot.rotation.y = oriY; pivot.position.y = offY; pivot.add(g.scene); body.add(pivot);
   g.scene.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; addUnderwater(o.material, env); } });
   return { root, body, rider };
 }
@@ -94,17 +96,20 @@ if (SHOT !== 'D') { scene.add(ski.root);
 const stern = new THREE.Vector3(x0, 0.2, z0).addScaledVector(fwd, -1.6);
 scene.add(makeSpray(env, sprayForPose(stern, fwd, 18, 1))); }
 const xd = 30, zd = coastZ(30) - 7;
-if (SHOT === 'D') { for (const [k, dx, r] of [['negra', -3.6, 0.5], ['naranja', 0, 0.25], ['dorada', 3.6, 0.0]]) { const m = await loadSki(k); m.root.position.set(xd + dx, 0, zd); m.root.rotation.y = Math.PI + 0.5 + r; m.body.position.y = -0.24; m.body.rotation.set(0.03, 0, 0); scene.add(m.root); } }
+if (SHOT === 'D') { for (const [k, dx, r] of [['kawasaki', -3.6, 0.5], ['seadoo', 0, 0.25], ['negra_turquesa', 3.6, 0.0]]) { const m = await loadSki(k); m.root.position.set(xd + dx, 0, zd); m.root.rotation.y = Math.PI + 0.5 + r; m.body.position.y = -0.24; m.body.rotation.set(0.03, 0, 0); scene.add(m.root); } }
 
 // vegetación y ambiente
 scene.add(makeGrass({ x0: -160, x1: 160, z0: 40, z1: 220 }, 8000));
 // palmeras reales de la costa: washingtonias en fila (paseo) y palmeras canarias en grupos
-const PW = [], PP = [];
-for (let i = 0; i < 3; i++) { PW.push((await gl.loadAsync(`models/washingtonia_${i}.glb`)).scene); PP.push((await gl.loadAsync(`models/phoenix_${i}.glb`)).scene); }
-[...PW, ...PP].forEach(m => m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material.map) { o.material.alphaTest = 0.5; o.material.side = THREE.DoubleSide; } } }));
-for (let i = 0, x = -150; x < 150; i++, x += 8.5 + (i % 3)) { const z = coastZ(x) + 27 + Math.sin(i * 1.3) * 1.5; const t = PW[i % 3].clone(); t.scale.setScalar(0.9 + (i % 4) * 0.08); t.rotation.y = i * 2.1; t.position.set(x, heightAt(x, z) - 0.1, z); scene.add(t); }
-for (let i = 0; i < 14; i++) { const x = -75 + i * 11 + Math.sin(i * 3.1) * 3, z = coastZ(x) + 42 + Math.cos(i * 2.3) * 6; const t = PP[i % 3].clone(); t.scale.setScalar(0.85 + (i % 3) * 0.12); t.rotation.y = i * 1.3; t.position.set(x, heightAt(x, z) - 0.1, z); scene.add(t); }
-const rock = (await gl.loadAsync('models/coast_rocks_02.glb')).scene; rock.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+const PW = [], PP = [], PC = [];
+for (const n of ['washingtonia_a', 'washingtonia_b']) PW.push((await gl.loadAsync(`models/${n}.glb`)).scene);
+PP.push((await gl.loadAsync('models/palmera_canaria.glb')).scene);
+for (const n of ['palmera_coco', 'palmera_datilera']) PC.push((await gl.loadAsync(`models/${n}.glb`)).scene);
+[...PW, ...PP, ...PC].forEach(m => m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; if (o.material.map) { o.material.alphaTest = 0.5; o.material.side = THREE.DoubleSide; } } }));
+for (let i = 0, x = -150; x < 150; i++, x += 8.5 + (i % 3)) { const z = coastZ(x) + 27 + Math.sin(i * 1.3) * 1.5; const t = PW[i % 2].clone(); t.scale.setScalar(0.85 + (i % 4) * 0.08); t.rotation.y = i * 2.1; t.position.set(x, heightAt(x, z) - 0.1, z); scene.add(t); }
+for (let i = 0; i < 14; i++) { const x = -75 + i * 11 + Math.sin(i * 3.1) * 3, z = coastZ(x) + 42 + Math.cos(i * 2.3) * 6; const t = PP[0].clone(); t.scale.setScalar(0.85 + (i % 3) * 0.2); t.rotation.y = i * 1.3; t.position.set(x, heightAt(x, z) - 0.1, z); scene.add(t); }
+for (let i = 0; i < 5; i++) { const x = -60 + i * 33 + Math.sin(i * 2.1) * 5, z = coastZ(x) + 34 + Math.cos(i * 1.7) * 4; const t = PC[i % 2].clone(); t.scale.setScalar(0.8 + (i % 3) * 0.1); t.rotation.y = i * 1.9; t.position.set(x, heightAt(x, z) - 0.1, z); scene.add(t); }
+const rock = (await gl.loadAsync('models/coast_rocks_02_lite.glb')).scene; rock.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
 rock.position.set(-100, -0.7, coastZ(-100) - 2); rock.rotation.y = 2.4; scene.add(rock);
 for (let i = 0; i < 7; i++) { const x = -40 + i * 7, u = makeUmbrella(i % 2 ? '#ff5a0a' : '#1e63d6'); u.position.set(x, heightAt(x, coastZ(x) + 12), coastZ(x) + 12); u.rotation.y = i; scene.add(u); }
 const yacht = makeYacht(); yacht.position.set(-60, -0.45, coastZ(-60) - 70); yacht.rotation.y = 0.9; scene.add(yacht);
