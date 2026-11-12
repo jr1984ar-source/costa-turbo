@@ -349,7 +349,7 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { ctx.setTime && ctx.setTime('mediodia'); sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
   const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
@@ -525,7 +525,7 @@ export async function createGame(ctx) {
     R = { Z, path, t: 0, pen: 0, time: 0, cps: [], gates: [], rivals: [], hint: 0, s: 0, lat: 0, done: false, count: 3.6, lastCount: 4, maxS: 0, finished: [] };
     // salida y meta
     arch('META', path, path.L - 4, 16, true); arch('SALIDA', path, 22, 16, false);
-    window.__RAMPS = [];
+    window.__RAMPS = []; ctx.setTime && ctx.setTime(Z.id === 'puerto' ? 'manana' : 'mediodia');
     if (Z.id === 'puerto') await puertoScene();
     if (Z.id === 'cala') await calaScene();
     if (Z.id === 'mago') await magoScene();

@@ -200,15 +200,17 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=83';
+import { createGame } from './src/game.js?v=84';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
   ski.body.remove(rider); ski.body.add(nr); rider = nr; window.__rider = nr; }
 const setQuality = q => { const hi = q !== 'baja'; gtao.enabled = hi; bloomPass.enabled = hi; const ms = hi ? 4096 : 1536; if (sun.shadow.mapSize.x !== ms) { sun.shadow.mapSize.set(ms, ms); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } renderer.setPixelRatio(hi ? Math.min(devicePixelRatio, 1.5) : 1); comp.setPixelRatio(renderer.getPixelRatio()); comp.setSize(innerWidth, innerHeight); };
+const SUN0 = sun.color.clone(), SUNI0 = sun.intensity, EXP0 = renderer.toneMappingExposure;
+const setTime = k => { const m = k === 'manana'; sun.color.copy(SUN0).lerp(new THREE.Color(1, .84, .66), m ? 1 : 0); sun.intensity = SUNI0 * (m ? .82 : 1); renderer.toneMappingExposure = EXP0 * (m ? .93 : 1); };   // hora del día: EL PUERTO por la mañana, el resto a mediodía
 const setHideControls = v => { hud.querySelectorAll('.pad').forEach(e => e.style.display = v ? 'none' : ''); };
 const paintPlayer = (m, c) => { if (!m) { ski.root.traverse(o => { if (o.isMesh && o.userData.mat0) o.material = o.userData.mat0; }); return; } paintSki(ski.root, m, c); };
-const GAME = await createGame({ paintSki, paintPlayer, scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls,
+const GAME = await createGame({ paintSki, paintPlayer, scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls, setTime,
   setPaused: v => { paused = v; }, resetFx: () => { wake.pts.length = 0; } });
 window.__GAME = GAME;
 if (new URLSearchParams(location.search).has('test')) import('./src/autotest.js').then(m => setTimeout(() => m.runAutotest(GAME), 1500));   // prueba automática de las 3 pantallas
