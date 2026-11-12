@@ -194,6 +194,7 @@ export async function createGame(ctx) {
   // ---------- resultados ----------
   mk('result', `<div class="md" style="display:none;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em"></div><h2 class="rt"></h2><div class="sub rs" style="font-size:24px"></div><div class="sub rp" style="color:#ffe14d;font-size:30px;font-weight:900"></div>
     <div class="nm" style="display:none;text-align:center"><div class="sub" style="font-weight:800">¡TOP 10! TU NOMBRE:</div><input maxlength="12"><div class="row" style="margin-top:8px"><button class="btn" data-a="savename">GUARDAR</button></div></div>
+    <table class="desg" style="font-size:17px;min-width:340px"></table>
     <div class="podio"></div>
     <div><div class="sub" style="font-weight:900;letter-spacing:.1em">TOP 10</div><table class="tt"></table></div>
     <div class="row"><button class="btn main" data-a="retry">REPETIR</button><button class="btn nx" data-a="next">SIGUIENTE PANTALLA</button><button class="btn" data-a="map">MAPA</button></div>`);
@@ -235,7 +236,7 @@ export async function createGame(ctx) {
       L0.appendChild(b); } refreshCash(); }
   function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
-  window.__onJump = () => { if (state === 'race') flash('¡SALTO!', .8, true, '#9fe6ff'); };
+  window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; flash('¡SALTO!', .8, true, '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
     if (S.lives <= 0) { S.lives = 3; save(); return finishRace(false, '¡SIN VIDAS!'); } flash('-1 VIDA', 1, true); };
@@ -531,6 +532,9 @@ export async function createGame(ctx) {
     if (Z.obj === 'time') { line = ok ? 'Tiempo: ' + fmtT(R.t) : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'; if (ok) prize = Z.prize; }
     if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; line = 'Tiempo ' + fmtT(R.t) + ' + ' + miss + ' s de boyas = ' + fmtT(t); if (ok) prize = Math.max(300, Z.prize - miss * 100); }
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
+    // bonus de tiempo como en el 2D: en EL PUERTO 50 PTA por segundo sobrante; en LA CALA 30 PTA por segundo por debajo de 30 s
+    const tBonus = !ok ? 0 : Z.obj === 'time' ? Math.round(R.time) * 50 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
+    const unl = ok && zone + 1 < ZONES.length && !S.done[ZONES[zone + 1].id] && !S.done[Z.id] ? ZONES[zone + 1].name : '';
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
     // medalla y récord
     let md = -1; if (ok) { if (Z.obj === 'race3') md = R.pos - 1; else { const k = [1.12, 1, .92][S.set.dif]; md = MEDAL_T[Z.id].findIndex(v => t <= v * k); } }
@@ -538,6 +542,14 @@ export async function createGame(ctx) {
     if (md >= 0 && (S.medal[Z.id] == null || md < S.medal[Z.id])) S.medal[Z.id] = md;
     const mdE = scr.result.querySelector('.md'); mdE.style.display = md >= 0 || rec ? 'block' : 'none';
     mdE.innerHTML = (md >= 0 ? `<i class="ti ti-medal" style="font-size:64px;color:${MEDAL_C[md]};filter:drop-shadow(0 4px 0 #0b1630)"></i><div style="color:${MEDAL_C[md]}">MEDALLA DE ${MEDAL_N[md]}</div>` : '') + (rec ? '<div style="color:#5be37a">¡NUEVO RÉCORD!</div>' : '');
+    // desglose como en el 2D
+    { const rows = [['Monedas', R.coinN + ' × 25', R.coinN * 25]];
+      if (Z.obj === 'race3') rows.push(['Puesto', R.pos + 'º', null]); else rows.push(['Tiempo', fmtT(R.t), null]);
+      if (Z.obj === 'time') rows.push(['Tiempo sobrante', ok ? fmtT(R.time) : '—', tBonus]);
+      if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; rows.push(['Boyas', (R.gates.length - miss) + ' de ' + R.gates.length, null], ['Bonus de tiempo', '', tBonus]); }
+      rows.push(['Saltos', String(R.jumps || 0), null], ['Premio', '', base]);
+      const pts = R.coinN * 25 + prize; rows.push(['PUNTOS', '', pts]); if (unl) rows.push(['Desbloqueado', unl, null]);
+      scr.result.querySelector('.desg').innerHTML = rows.map(([a, b, c]) => `<tr><td style="text-align:left">${a}</td><td>${b}</td><td style="text-align:right;color:#ffe14d">${c == null ? '' : '+' + c.toLocaleString('es-ES') + ' PTA'}</td></tr>`).join(''); }
     // podio de EL MAGO: los que han llegado por tiempo y el resto por lo que les falta
     const pod = scr.result.querySelector('.podio'); pod.style.display = 'none';
     if (Z.obj === 'race3') { const all = [{ n: S.name || 'TÚ', me: 1, f: R.pfin ?? null, s: R.s }].concat(R.rivals.map(r => ({ n: r.name, f: r.fin, s: r.s })));
