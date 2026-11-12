@@ -194,7 +194,7 @@ export async function createGame(ctx) {
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
-    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br><br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br>· lighthouse on a sea rock — Nikseno<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- pausa ----------
@@ -422,6 +422,22 @@ export async function createGame(ctx) {
     anch(barca, -150, 16, .6, -.18, 1.4); anch(barca, -40, 14, -.8, -.18, 1.4); anch(pesca2, 60, 78, 2.2, -.5); anch(barca, 130, 15, 1.9, -.18, 1.4); anch(riva, 200, 74, -1.1, -.32); anch(pesca2, -210, 80, .9, -.5);
   }
 
+  // ---------- escenario de EL MAGO: la isla del faro en mitad del recorrido (se rodea por los dos lados) y barcos fondeados antes de la meta ----------
+  async function magoScene() {
+    const [isla, yate, pesca, pesca2, barca, riva] = await Promise.all(['isla_mago', 'yate', 'barco_pesca', 'barco_pesca2', 'barca', 'barco_riva'].map(glb));
+    const path = R.path, sI = path.L * .5, q = at(path, sI), i0 = isla.clone(); i0.position.set(q.x, -5, q.z); i0.rotation.y = Math.atan2(q.tx, q.tz) + .4; add(i0);
+    for (const [a, b, r] of [[0, 0, 11], [6, 0, 8], [-6, 0, 8], [0, 7, 7], [0, -7, 7]]) solid(q.x - q.tz * b + q.tx * a, q.z + q.tx * b + q.tz * a, r);
+    // letrero EL MAGO en la isla, mirando a la salida
+    const sg = new THREE.Mesh(new THREE.PlaneGeometry(9, 2.2), new THREE.MeshStandardMaterial({ map: textTex(['EL MAGO'], 1024, 256, '#0b1630', '#ffe14d'), roughness: .5, side: THREE.DoubleSide }));
+    sg.position.set(q.x - q.tx * 17, 4.6, q.z - q.tz * 17); sg.rotation.y = Math.atan2(q.tx, q.tz) + Math.PI; add(sg);
+    for (const s of [-1, 1]) { const p = new THREE.Mesh(new THREE.CylinderGeometry(.18, .18, 8, 8), new THREE.MeshStandardMaterial({ color: 0x6b4a2c })); p.position.set(sg.position.x - q.tz * s * 4.3, 1.2, sg.position.z + q.tx * s * 4); add(p); }
+    // barcos fondeados antes de la meta, dejando el canal libre
+    const boats = R.boats = [];
+    [[yate, 150, 34, .4, -1.3, 4.2], [pesca, 118, -26, 1.2, -.55, 2.2], [barca, 96, 23, -.6, -.18, 1], [riva, 80, -24, 2.2, -.32, 1.6], [pesca2, 64, 27, -1.4, -.5, 2], [barca, 52, -22, .9, -.18, 1], [riva, 40, 25, -2.6, -.32, 1.6], [pesca, 170, -30, -.2, -.55, 2.2]].forEach(([src, back, lat, ry, y, r]) => {
+      const p0 = at(path, path.L - back), x = p0.x - p0.tz * lat, z = p0.z + p0.tx * lat, b = src.clone(); b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .3, k: src === yate ? .4 : 1 }; add(b); boats.push(b);
+      const L = r * 2.2; for (let k = -1; k <= 1; k++) solid(x + Math.sin(ry) * k * L, z + Math.cos(ry) * k * L, r); });
+  }
+
   // ---------- rivales ----------
   const RIVC = ['#e3202b', '#1e5eff', '#7be35a', '#ffd21a', '#ff3f8e'], RIVN = ['Toni Marín', 'Carla Ruiz', 'El Tito', 'Sandra Vidal', 'Javi Rubio'];
   let rivPool = null;
@@ -441,6 +457,7 @@ export async function createGame(ctx) {
     arch('META', path, path.L - 4, 16, true); arch('SALIDA', path, 22, 16, false);
     if (Z.id === 'puerto') await puertoScene();
     if (Z.id === 'cala') await calaScene();
+    if (Z.id === 'mago') await magoScene();
     if (Z.obj === 'time') { jjBar(); R.time = [14, 11, 10][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [8, 7, 6][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
@@ -449,7 +466,8 @@ export async function createGame(ctx) {
     { const cg = new THREE.CylinderGeometry(.6, .6, .12, 28), cm = new THREE.MeshStandardMaterial({ color: 0xffc21a, metalness: .85, roughness: .22, emissive: 0x5a3a00, emissiveIntensity: .6 }); cg.rotateX(Math.PI / 2);
       R.coins = []; R.coinN = 0; let k = 0;
       for (let s = 50; s < R.path.L - 30; s += 64, k++) { const lat0 = [-9, 0, 9, -5, 5][k % 5], ln = Z.obj === 'slalom' ? (R.gates.find(q => Math.abs(q.s - s - 10) < 23)?.c ?? lat0) : lat0;
-        for (let j = 0; j < 5; j++) { const c = new THREE.Mesh(cg, cm); c.castShadow = true; const q = place(c, R.path, s + j * 4, ln); c.position.y = 1; add(c); R.coins.push({ m: c, got: false }); } } }
+        for (let j = 0; j < 5; j++) { const c = new THREE.Mesh(cg, cm); c.castShadow = true; place(c, R.path, s + j * 4, ln); c.position.y = 1;
+          if (window.__COLZ.some(o => Math.hypot(o.x - c.position.x, o.z - c.position.z) < o.r + 1.5)) continue; add(c); R.coins.push({ m: c, got: false }); } } }
     if (Z.obj === 'slalom') {   // flecha que marca la siguiente puerta de boyas
       const ar = new THREE.Group(), am = new THREE.MeshStandardMaterial({ color: 0x2bd94f, emissive: 0x2bd94f, emissiveIntensity: .6, roughness: .4 });
       const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 2, 4), am); cone.rotation.x = Math.PI; ar.add(cone);
