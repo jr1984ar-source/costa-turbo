@@ -544,6 +544,14 @@ export async function createGame(ctx) {
       const st = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, .7), am); st.position.y = 1.7; ar.add(st); ar.traverse(o => o.castShadow = true); add(ar); R.gArrow = ar; }
     // rampas en cada pantalla, fuera de las puertas de boyas
     for (const [f, lat, k] of { puerto: [[.42, 7, 'amarilla'], [.78, -6, 'roja']], cala: [[.93, 0, 'naranja']], mago: [[.3, -8, 'naranja'], [.72, 8, 'mega']] }[Z.id] || []) { let s = path.L * f; while (R.gates.some(q => Math.abs(q.s - s) < 16)) s += 6; ramp(path, s, lat, k); }
+    // recogibles como en el 2D: corazón, garrafa de gasolina, refresco turbo y una caja de equipo escondida
+    { R.picks = []; const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .4, emissive: c, emissiveIntensity: .15 });
+      const mkHeart = () => { const s = new THREE.Shape(); s.moveTo(0, -.6); s.bezierCurveTo(-.9, 0, -.6, .7, 0, .35); s.bezierCurveTo(.6, .7, .9, 0, 0, -.6); const m = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .25, bevelEnabled: true, bevelSize: .06, bevelThickness: .06 }), M(0xff2b3a)); m.geometry.center(); return m; };
+      const mkCan = () => { const gg = new THREE.Group(); const b = new THREE.Mesh(new THREE.BoxGeometry(.8, 1, .45), M(0xd8231c)); gg.add(b); const h = new THREE.Mesh(new THREE.TorusGeometry(.18, .05, 6, 12, Math.PI), M(0x222222)); h.position.y = .55; gg.add(h); return gg; };
+      const mkDrink = () => { const gg = new THREE.Group(); const c = new THREE.Mesh(new THREE.CylinderGeometry(.28, .28, .8, 16), M(0x33d6ff)); gg.add(c); const t = new THREE.Mesh(new THREE.CylinderGeometry(.27, .27, .05, 16), M(0xcfd6dd)); t.position.y = .42; gg.add(t); return gg; };
+      const mkBox = () => { const b = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshStandardMaterial({ map: textTex(['?'], 128, 128, '#8a5530', '#ffe14d'), roughness: .8 })); return b; };
+      const kinds = [['heart', mkHeart, .35, 0], ['fuel', mkCan, .55, 5], ['drink', mkDrink, .7, -5], ['box', mkBox, .85, 30]];
+      for (const [k, mk, f, lat] of kinds) { const o = mk(); o.traverse(m => m.castShadow = true); place(o, R.path, R.path.L * f + (k === 'box' ? 0 : 23), lat); o.position.y = 1.2; o.scale.setScalar(1.3); add(o); R.picks.push({ k, o, got: false }); } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -652,6 +660,13 @@ export async function createGame(ctx) {
     if (state === 'race' && !window.__autoQ && S.set.q === 'alta') { R.fpsT = (R.fpsT || 0) + dt; R.fpsN = (R.fpsN || 0) + 1;   // calidad automática: si va lento, baja los gráficos
       if (R.fpsT > 5) { window.__autoQ = 1; if (R.fpsN / R.fpsT < 38) { S.set.q = 'baja'; save(); applySettings(); toast('GRÁFICOS EN BAJA PARA IR MÁS FLUIDO', true); } } }
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
+    if (R.picks) for (const pk of R.picks) { if (pk.got) continue; pk.o.rotation.y += dt * 2; pk.o.position.y = 1.2 + Math.sin(P.t * 2.5 + pk.o.position.x) * .2;
+      if (state === 'race' && Math.hypot(pk.o.position.x - P.x, pk.o.position.z - P.z) < 2.6) { pk.got = true; pk.o.visible = false; if (Snd.ok()) Snd.pickup();
+        if (pk.k === 'heart') { S.lives = Math.min(6, S.lives + 1); pop('+1 ♥', '#ff3b4e'); }
+        if (pk.k === 'fuel') { S.fuel = Math.min(100, S.fuel + 40); pop('+40 % GASOLINA', '#ffb02e'); }
+        if (pk.k === 'drink') { P.turboU = Math.min(5, (P.turboU ?? 3) + 1); pop('+1 TURBO', '#33d6ff'); }
+        if (pk.k === 'box') { const all = Object.values(GEAR).flat().filter(it => !S.own.includes(it.id)); if (all.length) { const it = all[Math.floor(Math.random() * all.length)]; S.own.push(it.id); flash('¡CAJA SORPRESA! ' + it.n.toUpperCase(), 1.6, true, '#ffe14d'); } else { S.cash += 500; pop('+500 PTA', '#ffe14d'); } }
+        save(); hud(); } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
       if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }
