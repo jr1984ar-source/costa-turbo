@@ -401,6 +401,21 @@ export async function createGame(ctx) {
     boat(yate, 150, coastZ(150) - 92, .35, -1.3, 4.2, .4);
   }
 
+  // ---------- escenario de LA CALA: rocas a los lados de la entrada y barcas fondeadas ----------
+  async function calaScene() {
+    const [roca, barca, pesca2, riva] = await Promise.all(['namaqualand_boulder_02', 'barca', 'barco_pesca2', 'barco_riva'].map(glb));
+    const boats = R.boats = [];
+    const rock = (x, z, sc, ry, sy = .8) => { const r0 = roca.clone(); r0.scale.set(sc, sc * sy, sc); r0.rotation.set((ry % 1) * .4 - .2, ry * 3, (ry % .7) * .5 - .17); r0.position.set(x, -sc * .25, z); add(r0); solid(x, z, sc * 1.05); };
+    // dos cabos de roca que cierran la cala, uno a cada lado, metiéndose en el agua
+    for (const [xc, dir] of [[-262, -1], [244, 1]]) for (let k = 0; k < 70; k++) { const h = (k * 37 % 11) / 11, h2 = (k * 53 % 7) / 7, along = (k % 10) * 3.6 + h2 * 2, x = xc + dir * (Math.floor(k / 10) * 5.5 + h * 4), z = coastZ(x) + 6 - along;
+      if (z < coastZ(x) - 30) continue; const big = 1 - along / 40; rock(x, z, 3 + big * 4 + h * 2, k * .37 + h, .8 + big * .7 + h2 * .3); }
+    // rocas sueltas por la orilla
+    for (let k = 0; k < 10; k++) { const x = -200 + k * 43 + (k % 2) * 9, z = coastZ(x) + 1.5 + (k % 3); rock(x, z, 1.2 + (k % 4) * .35, k * .53); }
+    // barcas y llaüts fondeados, fuera del recorrido
+    const anch = (src, x, dz, ry, y, k = 1) => { const b = src.clone(); const z = coastZ(x) - dz; b.position.set(x, y, z); b.rotation.y = ry; b.userData.bob = { y, ph: x * .3, k }; add(b); boats.push(b); solid(x, z, 2.4); };
+    anch(barca, -150, 16, .6, -.18, 1.4); anch(barca, -40, 14, -.8, -.18, 1.4); anch(pesca2, 60, 78, 2.2, -.5); anch(barca, 130, 15, 1.9, -.18, 1.4); anch(riva, 200, 74, -1.1, -.32); anch(pesca2, -210, 80, .9, -.5);
+  }
+
   // ---------- rivales ----------
   const RIVC = ['#e3202b', '#1e5eff', '#7be35a', '#ffd21a', '#ff3f8e'], RIVN = ['Toni Marín', 'Carla Ruiz', 'El Tito', 'Sandra Vidal', 'Javi Rubio'];
   let rivPool = null;
@@ -419,6 +434,7 @@ export async function createGame(ctx) {
     // salida y meta
     arch('META', path, path.L - 4, 16, true); arch('SALIDA', path, 22, 16, false);
     if (Z.id === 'puerto') await puertoScene();
+    if (Z.id === 'cala') await calaScene();
     if (Z.obj === 'time') { jjBar(); R.time = [14, 11, 10][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [8, 7, 6][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
