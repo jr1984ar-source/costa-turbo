@@ -1,6 +1,7 @@
 // Costa Turbo 3D: menú, piloto, taller, mapa de pantallas, 3 pantallas jugables (EL PUERTO, LA CALA, EL MAGO),
 // rivales, resultados, TOP 10, dinero y pausa. Se apoya en la escena y la física de play.html (ctx).
 import * as THREE from 'three';
+import { PAINTS } from './paint.js';
 
 // ---------- datos (nombres y precios del juego 2D) ----------
 export const AVATARS = [
@@ -42,6 +43,7 @@ export const ZONES = [
 const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
+S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 1, hide: 0, q: 'alta' }, S.set || {});
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 const gearById = id => { for (const k in GEAR) { const g = GEAR[k].find(x => x.id === id); if (g) return g; } return null; };
@@ -64,6 +66,10 @@ const CSS = `
 #ui .setrow .btn.sel{background:#ffe14d;color:#0b1630;border-color:#ffe14d}
 #ui input[type=range]{width:100%;accent-color:#ffb02e;border:0;background:none}
 #ui .cred{max-width:720px;font-size:16px;line-height:1.5;text-align:left;opacity:.92}
+#ui .moto{display:flex;gap:18px;align-items:center;flex-wrap:wrap;justify-content:center}
+#ui .stats{display:grid;grid-template-columns:auto 160px auto;gap:4px 10px;font-weight:800;font-size:15px;align-items:center}
+#ui .stats i{display:block;height:9px;border-radius:9px;background:rgba(255,255,255,.15);overflow:hidden}#ui .stats i b{display:block;height:100%;background:linear-gradient(90deg,#ffb02e,#ff6a1a)}
+#ui .grid.pt{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}#ui .grid.pt .card .img{aspect-ratio:1.6}
 #ui .keys{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:14px;width:min(900px,94vw);font-size:16px}
 #ui .keys div{background:rgba(11,22,48,.6);border:2px solid rgba(255,255,255,.3);border-radius:14px;padding:12px}#ui .keys b{display:block;color:#ffe14d;font-size:19px;margin-bottom:6px}
 #ui h1{margin:0;font-weight:900;font-style:italic;font-size:clamp(56px,11vw,128px);line-height:.86;letter-spacing:.01em;text-align:center;
@@ -127,7 +133,10 @@ export async function createGame(ctx) {
   // ---------- mapa ----------
   mk('map', `<h2>ELIGE PANTALLA</h2><div class="cash"></div><div class="zone"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- piloto ----------
-  mk('pilot', `<h2>PILOTO Y MOTO</h2><div class="cash"></div><div class="grid av"></div><div class="tabs mo"></div><div class="row"><button class="btn main" data-a="menu">LISTO</button></div>`);
+  mk('pilot', `<h2>PILOTO Y MOTO</h2><div class="cash"></div><div class="grid av"></div>
+    <div class="moto"><div class="tabs mo"></div><div class="stats"></div></div>
+    <div class="sub" style="font-weight:900;letter-spacing:.12em">PINTURA</div><div class="grid pt"></div>
+    <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-check"></i>LISTO</button></div>`);
   // ---------- taller ----------
   mk('taller', `<h2>TALLER</h2><div class="cash"></div><div class="tabs cat"></div><div class="grid it"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- briefing ----------
@@ -173,6 +182,14 @@ export async function createGame(ctx) {
     AVATARS.forEach((A, i) => { const b = document.createElement('button'); b.className = 'card' + (S.pilot === i ? ' sel' : '');
       b.innerHTML = `<div class="img" style="background-image:url('assets/taller/p_${A.id}.jpg')"></div><b>${A.name}</b><i>${A.bio}</i>`;
       b.onclick = async () => { click(); S.pilot = i; save(); renderPilot(); await ctx.applyGear(gearLook()); }; g.appendChild(b); });
+    scr.pilot.querySelector('.stats').innerHTML = [['VELOCIDAD', .78, '120 km/h'], ['TURBO', .9, '150 km/h'], ['ACELERACIÓN', .72, ''], ['GIRO', .7, '']].map(([n, v, t]) => `<span>${n}</span><i><b style="width:${v * 100}%"></b></i><span>${t}</span>`).join('');
+    const pt = scr.pilot.querySelector('.pt'); pt.innerHTML = '';
+    PAINTS.forEach(P0 => { const own = S.ownPaint.includes(P0.id), on = S.paint === P0.id, b = document.createElement('button'); b.className = 'card' + (on ? ' sel' : '');
+      const c1 = P0.main || '#16b3c7', c2 = P0.acc || '#d6e816';
+      b.innerHTML = `<div class="img" style="background:linear-gradient(135deg,${c1} 0 58%,${c2} 58% 70%,#14161b 70%)"></div><b>${P0.n}</b><em>${on ? 'PUESTA' : own ? 'PONER' : P0.p + ' PTA'}</em>`;
+      b.onclick = () => { if (!own) { if (S.cash < P0.p) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; } S.cash -= P0.p; S.ownPaint.push(P0.id); if (Snd.ok()) Snd.cash(); } else click();
+        S.paint = P0.id; save(); ctx.paintPlayer && ctx.paintPlayer(P0.main, P0.acc); renderPilot(); };
+      pt.appendChild(b); });
     const mo = scr.pilot.querySelector('.mo'); mo.innerHTML = '';
     MOTOS.forEach(([k, n]) => { const b = document.createElement('button'); b.className = 'btn' + (ctx.PAINT === k ? ' sel' : ''); b.textContent = n;
       b.onclick = () => { click(); if (ctx.PAINT !== k) { try { localStorage.setItem('ct3d_moto', k); } catch (e) {} location.search = '?paint=' + k; } }; mo.appendChild(b); });
@@ -275,7 +292,7 @@ export async function createGame(ctx) {
   let rivPool = null;
   async function makeRivals(n) {
     if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i], body: ['piloto_eric', 'piloto_carla', 'piloto_eric', 'piloto_claudia', 'piloto_eric'][i], skin: [1, 1, .7, .92, 1][i] });
-        rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
+        rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); const pp = PAINTS[[1, 3, 2, 9, 6][i]]; ctx.paintSki && ctx.paintSki(sk.root, pp.main, pp.acc); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
     return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [0.9, 1, 1.07][S.set.dif], fin: null, tl: 0, steer: 0 }));
   }
@@ -414,6 +431,7 @@ export async function createGame(ctx) {
 
   // estado inicial: portada
   refreshCash(); applySettings(); show('menu');
+  { const P0 = PAINTS.find(x => x.id === S.paint); if (P0 && P0.main && ctx.paintPlayer) ctx.paintPlayer(P0.main, P0.acc); }
   await ctx.applyGear(gearLook());
   return { update, drive: () => state === 'race', togglePause, state: () => state, uiOpen: () => ui.classList.contains('on'), dbg: { R: () => R, at, S } };
 }
