@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Costa Turbo 3D</title><style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Costa Turbo 3D</title><link rel="manifest" href="manifest.webmanifest"><meta name="theme-color" content="#061428"><link rel="apple-touch-icon" href="assets/icon192.png"><meta name="apple-mobile-web-app-capable" content="yes"><style>html,body{margin:0;background:#000;overflow:hidden}canvas{display:block}
 #hud{position:fixed;inset:0;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;color:#fff;display:none}
 .sp{position:absolute;left:22px;top:14px;font-weight:800;font-size:44px;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,.45)}.sp small{font-size:16px;opacity:.85;margin-left:4px}
 .pad{position:absolute;bottom:14px}.l{left:18px}.r{right:18px;display:flex;gap:10px;align-items:flex-end}
@@ -132,7 +132,8 @@ const flock = []; for (let i = 0; i < 14; i++) { const cx = -280 + i * 43 + Math
 window.__flock = flock;
 
 import { Snd, updateSound, updateAmbient } from './src/sound.js?v=2';
-const MUDO = new URLSearchParams(location.search).has('mudo'); if (MUDO) Snd.on = false;   // pruebas sin sonido
+const MUDO = new URLSearchParams(location.search).has('mudo');
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw3d.js', { scope: './' }).catch(() => {});   // sin conexión e instalable if (MUDO) Snd.on = false;   // pruebas sin sonido
 // ---------- pantalla de carga ----------
 const LOAD = document.createElement('div');
 LOAD.style.cssText = 'position:fixed;inset:0;z-index:60;background:radial-gradient(120% 90% at 50% 20%,#0b2a52,#040a16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:Arial Narrow,Arial;color:#9fe6ff;transition:opacity .6s';
