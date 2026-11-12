@@ -91,7 +91,7 @@ export async function makeRider({ vest = '#ff7a1a', helmetColor = null, base = '
       // manillar: gira con el volante y las manos van agarradas
       const a = -steer * 0.38, c = Math.cos(a), si = Math.sin(a), px = 0, pz = 0.52, dx = 0.27 * s - px, dz = 0.64 - pz;
       const hx = px + dx * c + dz * si, hz = pz - dx * si + dz * c;
-      ik2(bn('upperarm' + side), bn('lowerarm' + side), bn('hand' + side), P3(V(hx, 0.13 + shake + (s * steer > 0 ? 0.015 : 0), hz)), D(V(1.0 * s, -0.25, -0.25)));
+      ik2(bn('upperarm' + side), bn('lowerarm' + side), bn('hand' + side), P3(V(hx, (st.barY ?? 0.13) + shake + (s * steer > 0 ? 0.015 : 0), hz)), D(V(1.0 * s, -0.25, -0.25)));
     }
     root.updateMatrixWorld(true);
     // casco sobre la cabeza, girado hacia la curva
