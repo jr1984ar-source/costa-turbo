@@ -566,7 +566,8 @@ export async function createGame(ctx) {
       { const net = new THREE.Group(), fl = new THREE.MeshStandardMaterial({ color: 0xff7a1a }); for (let i = 0; i < 14; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(.18, 8, 6), fl); b.position.set((i % 7 - 3) * 1.4, .05, (i < 7 ? -1 : 1) * 3); net.add(b); }
         const mesh = new THREE.Mesh(new THREE.PlaneGeometry(9, 6), new THREE.MeshBasicMaterial({ color: 0x2a2a2a, transparent: true, opacity: .25, depthWrite: false })); mesh.rotation.x = -Math.PI / 2; mesh.position.y = .03; net.add(mesh);
         place(net, path, path.L * .38, -10 * sh, 0); add(net); R.haz.push({ k: 'red', o: net, r: 4.5 }); }
-      { const pos = new THREE.Mesh(new THREE.CircleGeometry(6, 24), new THREE.MeshBasicMaterial({ color: 0x1f4a2a, transparent: true, opacity: .5, depthWrite: false })); pos.rotation.x = -Math.PI / 2; place(pos, path, path.L * .7, 9 * sh, -.25); add(pos); R.haz.push({ k: 'posidonia', o: pos, r: 6 }); } }
+      { const pos = new THREE.Mesh(new THREE.CircleGeometry(6, 24), new THREE.MeshBasicMaterial({ color: 0x1f4a2a, transparent: true, opacity: .5, depthWrite: false })); pos.rotation.x = -Math.PI / 2; place(pos, path, path.L * .7, 9 * sh, -.25); add(pos); R.haz.push({ k: 'posidonia', o: pos, r: 6 });
+        const cor = new THREE.Mesh(new THREE.CircleGeometry(4, 20), new THREE.MeshBasicMaterial({ color: 0xff6f61, transparent: true, opacity: .45, depthWrite: false })); cor.rotation.x = -Math.PI / 2; place(cor, path, path.L * .12, -9 * sh, -.25); add(cor); R.haz.push({ k: 'coral', o: cor, r: 4 }); } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -686,7 +687,8 @@ export async function createGame(ctx) {
       if (d < h.r && !(h.t > R.t)) { h.t = R.t + 2.5;
         if (h.k === 'medusa') { P.v *= .5; loseLife(1 / 3, '¡MEDUSA! −⅓ ♥'); }
         if (h.k === 'red') { P.v *= .35; flash('¡RED DE PESCA!', 1, true, '#ff8c1e'); if (Snd.ok()) Snd.bump(); }
-        if (h.k === 'posidonia') { P.v *= .6; flash('POSIDONIA: ¡NO LA PISES!', 1, true, '#5be37a'); } } }
+        if (h.k === 'posidonia') { P.v *= .6; flash('POSIDONIA: ¡NO LA PISES!', 1, true, '#5be37a'); }
+        if (h.k === 'coral') { P.v *= .5; S.cash = Math.max(0, S.cash - 200); save(); flash('¡CORAL! MULTA −200 PTA', 1.2, true, '#ff6f61'); if (Snd.ok()) Snd.fine(); } } }
     if (R.pol && state === 'race') { const pl = R.pol, inB = R.s > R.bano.s0 && R.s < R.bano.s1 && R.lat * Math.sign(R.bano.lat) > Math.abs(R.bano.lat);
       if (inB && !pl.on && !(pl.cd > R.t)) { pl.on = true; pl.t = 0; const q = at(R.path, Math.max(0, R.s - 30)); pl.o.position.set(q.x, -.3, q.z); pl.o.visible = true; flash('¡ZONA DE BAÑO! ¡POLICÍA DETRÁS!', 1.4, true, '#33d6ff'); if (Snd.ok()) Snd.sirenStart && Snd.sirenStart(); }
       if (pl.on) { pl.t += dt; const dx = P.x - pl.o.position.x, dz = P.z - pl.o.position.z, d = Math.hypot(dx, dz) || 1, sp = Math.max(28, P.v + 4);
