@@ -448,6 +448,10 @@ export async function createGame(ctx) {
       R.coins = []; R.coinN = 0; let k = 0;
       for (let s = 50; s < R.path.L - 30; s += 64, k++) { const lat0 = [-9, 0, 9, -5, 5][k % 5], ln = Z.obj === 'slalom' ? (R.gates.find(q => Math.abs(q.s - s - 10) < 23)?.c ?? lat0) : lat0;
         for (let j = 0; j < 5; j++) { const c = new THREE.Mesh(cg, cm); c.castShadow = true; const q = place(c, R.path, s + j * 4, ln); c.position.y = 1; add(c); R.coins.push({ m: c, got: false }); } } }
+    if (Z.obj === 'slalom') {   // flecha que marca la siguiente puerta de boyas
+      const ar = new THREE.Group(), am = new THREE.MeshStandardMaterial({ color: 0x2bd94f, emissive: 0x2bd94f, emissiveIntensity: .6, roughness: .4 });
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 2, 4), am); cone.rotation.x = Math.PI; ar.add(cone);
+      const st = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, .7), am); st.position.y = 1.7; ar.add(st); ar.traverse(o => o.castShadow = true); add(ar); R.gArrow = ar; }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -527,6 +531,7 @@ export async function createGame(ctx) {
     if (!R || state === 'pause' || R.done) return;
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k; b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
+    if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
       if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); rh.querySelector('.co span').textContent = R.coinN; } }
