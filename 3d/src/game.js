@@ -49,7 +49,7 @@ export const PARTS = [
 const PART_NEED = [0, 1, 3];   // pantallas ganadas para STAGE 1, 2 y 3
 const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 // pantallas: recorridos comprobados en agua profunda
-const MEDAL_T = { puerto: [21, 23.5, 99], cala: [36, 42, 50] }, MEDAL_C = ['#ffd21a', '#d9dde3', '#d08a4a'], MEDAL_N = ['ORO', 'PLATA', 'BRONCE'];
+const MEDAL_T = { puerto: [21, 23.5, 99], cala: [22, 26, 32] }, MEDAL_C = ['#ffd21a', '#d9dde3', '#d08a4a'], MEDAL_N = ['ORO', 'PLATA', 'BRONCE'];
 export const VERSION = '1.0.0';   // número de versión (cambios en LEEME.md)
 export const ZONES = [
   { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 0 },
@@ -599,7 +599,7 @@ export async function createGame(ctx) {
   function update(dt) {
     pollPad();
     if (msgT > 0) { msgT -= dt; if (msgT <= 0) msg.style.display = 'none'; }
-    if (!R || state === 'pause' || R.done) return;
+    if (!R || state === 'pause' || state === 'loading' || R.done) return;   // mientras carga la pantalla no corre el tiempo
     if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k + (window.__swell ? window.__swell(b.position.x, b.position.z) * (u.k > .5 ? .8 : .4) : 0); b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
     if (state === 'race' && !window.__autoQ && S.set.q === 'alta') { R.fpsT = (R.fpsT || 0) + dt; R.fpsN = (R.fpsN || 0) + 1;   // calidad automática: si va lento, baja los gráficos

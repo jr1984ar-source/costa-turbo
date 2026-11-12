@@ -199,7 +199,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=63';
+import { createGame } from './src/game.js?v=65';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -210,6 +210,7 @@ const paintPlayer = (m, c) => { if (!m) { ski.root.traverse(o => { if (o.isMesh 
 const GAME = await createGame({ paintSki, paintPlayer, scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls,
   setPaused: v => { paused = v; }, resetFx: () => { wake.pts.length = 0; } });
 window.__GAME = GAME;
+if (new URLSearchParams(location.search).has('test')) import('./src/autotest.js').then(m => setTimeout(() => m.runAutotest(GAME), 1500));   // prueba automática de las 3 pantallas
 function step(dt) {
   const I = input(), f = fwdOf(P.th), side = new THREE.Vector3(-f.z, 0, f.x);
   const PT = window.__parts || {}, L = k => Math.min(3, PT[k] | 0);   // piezas STAGE compradas en el taller
