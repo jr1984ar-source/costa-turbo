@@ -63,7 +63,7 @@ const ACH = [['win1', 'Primera victoria', 'Gana una pantalla', 300, 'flag'], ['o
 const TROF = [[3, 'BRONCE', '#d08a4a'], [6, 'PLATA', '#d9dde3'], [9, 'ORO', '#ffd21a'], [11, 'PLATINO', '#a8f0e8'], [13, 'DIAMANTE', '#9fe6ff']];
 const CUPS = ['COPA BRONCE', 'COPA PLATA', 'COPA ORO', 'COPA PLATINO', 'COPA DIAMANTE'];   // una copa por dificultad; EL MAGO es La Final
 export const ZONES = [
-  { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 5, posPrize: [1500, 1000, 500] },
+  { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta lo más rápido que puedas pasando por los puntos de control.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 5, posPrize: [1500, 1000, 500] },
   { id: 'cala', name: 'LA CALA', obj: 'slalom', goal: 'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.', xa: -290, xb: 270, off: 42, amp: 0, per: 1, prize: 1200, riv: 0 },
   { id: 'mago', name: 'EL MAGO', obj: 'race3', goal: 'Llega a la meta entre los 3 primeros. Cinco rivales salen contigo.', xa: 300, xb: -305, off: 62, amp: 16, per: 120, prize: [3000, 2000, 1000], riv: 5 }];
 
@@ -691,7 +691,7 @@ export async function createGame(ctx) {
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
     // bonus de tiempo como en el 2D: en EL PUERTO 50 PTA por segundo sobrante; en LA CALA 30 PTA por segundo por debajo de 30 s
     if (R.free) prize = 0;   // la carrera libre no da premio
-    const tBonus = !ok || R.free ? 0 : Z.obj === 'time' ? Math.round(R.time) * 50 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
+    const tBonus = !ok || R.free ? 0 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
     const unl = ok && zone + 1 < ZONES.length && !S.done[ZONES[zone + 1].id] && !S.done[Z.id] ? ZONES[zone + 1].name : '';
     if (ok && !R.free) { award('win1'); if (Z.id === 'mago' && R.pos === 1) award('oroM'); if (Z.obj === 'slalom' && !R.gates.some(q => q.miss)) award('perf'); if (!R.crashed) award('clean'); }
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
@@ -705,7 +705,6 @@ export async function createGame(ctx) {
     // desglose como en el 2D
     { const rows = [['Monedas', R.coinN + ' × 25', R.coinN * 25]];
       if (Z.obj === 'race3') rows.push(['Puesto', R.pos + 'º', null]); else rows.push(['Tiempo', fmtT(R.t), null]);
-      if (Z.obj === 'time') rows.push(['Tiempo sobrante', ok ? fmtT(R.time) : '—', tBonus]);
       if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; rows.push(['Boyas', (R.gates.length - miss) + ' de ' + R.gates.length, null], ['Bonus de tiempo', '', tBonus]); }
       rows.push(['Saltos', String(R.jumps || 0), null], ['Trucos', String(R.tricks || 0), null], ['Derrapes', String(R.drifts || 0), null], ['Premio', '', base]);
       const pts = R.coinN * 25 + prize + (R.pts || 0); R.points = pts; rows.push(['PUNTOS', String(pts), null]); if (unl) rows.push(['Desbloqueado', unl, null]);
@@ -843,7 +842,7 @@ export async function createGame(ctx) {
     const Z = R.Z, path = R.path;
     if (state === 'count') { R.count -= dt; const c = Math.ceil(R.count - .6);
       if (c !== R.lastCount && c >= 0) { R.lastCount = c; if (c > 0) { flash(String(c), .9); semSet(4 - c); if (Snd.ok()) Snd.beep(false); } else { flash('¡YA!', .8); semSet(-1); setTimeout(() => sem.style.display = 'none', 1200); if (Snd.ok()) Snd.beep(true); state = 'race'; R.started = true; } }
-      rh.querySelector('.t').textContent = Z.obj === 'time' ? fmtT(R.time) : fmtT(0); P.v = 0; return; }
+      rh.querySelector('.t').textContent = fmtT(0); P.v = 0; return; }
     // gasolina: se gasta al correr; sin gasolina la moto va muy lenta
     if (S.fuel > 0) { S.fuel = Math.max(0, S.fuel - (.12 + 1.13 * Math.min(1, P.v / 33)) * (P.v > 35 ? 2.2 : 1) * dt);
       if (S.fuel <= 0) { flash(R.jjPos ? '¡SIN GASOLINA! PARA EN EL JJ\'S' : '¡SIN GASOLINA!', 2.2, true); save(); } }
@@ -853,7 +852,7 @@ export async function createGame(ctx) {
       if (dr > 16) R.rxIn = false; else if (!R.rxIn && dr < 9 && P.v < 4) { R.rxIn = true; R.pen += 3; ctx.setPaused(true); state = 'jj'; save(); renderRoxy(); show('roxy'); return; } }
     if (R.jjPos) { const dj = Math.hypot(P.x - R.jjPos.x, P.z - R.jjPos.z);
       if (dj > 16) R.jjIn = false;
-      else if (!R.jjIn && dj < 9 && P.v < 4) { R.jjIn = true; R.time = Math.max(.5, R.time - 3); ctx.setPaused(true); state = 'jj'; save(); renderJJ(); show('jj'); return; } }
+      else if (!R.jjIn && dj < 9 && P.v < 4) { R.jjIn = true; R.t += 3; ctx.setPaused(true); state = 'jj'; save(); renderJJ(); show('jj'); return; } }
     if ((R.miniT = (R.miniT || 0) - dt) <= 0) { R.miniT = .1; const cv = rh.querySelector('.mini'), c = cv.getContext('2d'), pts = R.path.pts || null;
       if (!R.mb) { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; for (let s = 0; s <= R.path.L; s += 8) { const q = at(R.path, s); x0 = Math.min(x0, q.x); x1 = Math.max(x1, q.x); z0 = Math.min(z0, q.z); z1 = Math.max(z1, q.z); }
         const k = Math.min(340 / (x1 - x0 + 1), 200 / (z1 - z0 + 1)); R.mb = { x0, z0, k, ox: (380 - (x1 - x0) * k) / 2, oz: (240 - (z1 - z0) * k) / 2 }; }
@@ -873,9 +872,8 @@ export async function createGame(ctx) {
         if (i >= 0) { ghostSki.root.position.set(a[j] + (a[j + 3] - a[j]) * f, 0, a[j + 1] + (a[j + 4] - a[j + 1]) * f); ghostSki.root.rotation.y = a[j + 2] + (a[j + 5] - a[j + 2]) * f; } } }
     // jugador en el recorrido
     const L = locate(path, P.x, P.z, R.hint); R.hint = L.i; const prevS = R.s; R.s = L.s; R.lat = L.lat; R.maxS = Math.max(R.maxS, R.s);
-    if (Z.obj === 'time') { R.time -= dt; R.t += dt;
-      for (const c of R.cps) if (!c.hit && prevS < c.s && R.s >= c.s) { c.hit = true; R.time += c.add; flash('+' + c.add + ' s', 1.2, true); if (Snd.ok()) Snd.check(); }
-      if (R.time <= 0 && !R.free) { R.time = 0; return finishRace(false, '¡SE ACABÓ EL TIEMPO!'); } }
+    if (Z.obj === 'time') { R.t += dt;   // sin límite de tiempo
+      for (const c of R.cps) if (!c.hit && prevS < c.s && R.s >= c.s) { c.hit = true; flash('CHECKPOINT', 1.2, true); if (Snd.ok()) Snd.check(); } }
     else R.t += dt;
     if (Z.obj === 'slalom') for (const g of R.gates) if (!g.done && prevS < g.s && R.s >= g.s) { g.done = true;
       const okG = Math.abs(R.lat - g.c) <= 4.6, tint = okG ? 0x2bd94f : 0xff2b3a;
@@ -923,7 +921,7 @@ export async function createGame(ctx) {
       if (R.prevPos && R.pos !== R.prevPos && R.t > 2 && !(R.posT > R.t)) { R.posT = R.t + .8; const up = R.pos < R.prevPos; R.prevPos = R.pos; if (up) { flash('¡ADELANTAS! ' + R.pos + 'º', .9, true, '#5be37a'); if (Snd.ok()) Snd.gate(); } else flash('TE ADELANTAN · ' + R.pos + 'º', .9, true, '#ff3b4e'); }
       if (!R.prevPos || R.t <= 2) R.prevPos = R.pos;
     } else rh.querySelector('.pos').innerHTML = Z.obj === 'slalom' ? R.gates.filter(q => q.done && !q.miss).length + '<small>/' + R.gates.length + ' boyas</small>' : (R.jumps ? R.jumps + '<small> saltos</small>' : '');
-    rh.querySelector('.t').textContent = Z.obj === 'time' ? fmtT(R.time) : fmtT(R.t + R.pen);
+    rh.querySelector('.t').textContent = fmtT(R.t + R.pen);
     if (Math.abs(R.lat) > 45 && msgT <= 0) flash('VUELVE AL RECORRIDO', 1, true);
     if (R.s >= path.L - 4) { R.pfin = R.t; if (R.rivals.length) { const ahead = R.rivals.filter(r => r.fin && r.fin < R.t).length; R.pos = ahead + 1; } finishRace(true, Z.obj === 'time' ? '¡META!' : '¡META!'); }
   }
