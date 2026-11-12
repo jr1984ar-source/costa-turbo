@@ -476,7 +476,7 @@ export async function createGame(ctx) {
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
-    if (Z.obj !== 'time' && S.fuel < 25) S.fuel = 25; window.__noFuel = S.fuel <= 0; hud();
+    if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
     window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count';
@@ -620,6 +620,8 @@ export async function createGame(ctx) {
         window.__rivNear = [Math.max(0, 1 - best / 45), Math.min(1, bv / 33)]; }   // para el sonido del rival más cercano
       const ahead = R.rivals.filter(r => (r.fin && (!R.pfin || r.fin < R.pfin)) || (!r.fin && r.s > R.s)).length; R.pos = ahead + 1;
       rh.querySelector('.pos').innerHTML = R.pos + '<small>º/' + (R.rivals.length + 1) + '</small>';
+      if (R.prevPos && R.pos !== R.prevPos && R.t > 2 && !(R.posT > R.t)) { R.posT = R.t + .8; const up = R.pos < R.prevPos; R.prevPos = R.pos; if (up) { flash('¡ADELANTAS! ' + R.pos + 'º', .9, true, '#5be37a'); if (Snd.ok()) Snd.gate(); } else flash('TE ADELANTAN · ' + R.pos + 'º', .9, true, '#ff3b4e'); }
+      if (!R.prevPos || R.t <= 2) R.prevPos = R.pos;
     } else rh.querySelector('.pos').innerHTML = '';
     rh.querySelector('.t').textContent = Z.obj === 'time' ? fmtT(R.time) : fmtT(R.t + R.pen);
     if (Math.abs(R.lat) > 45 && msgT <= 0) flash('VUELVE AL RECORRIDO', 1, true);
