@@ -52,7 +52,7 @@ const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 const MEDAL_T = { puerto: [21, 23.5, 99], cala: [22, 26, 32] }, MEDAL_C = ['#ffd21a', '#d9dde3', '#d08a4a'], MEDAL_N = ['ORO', 'PLATA', 'BRONCE'];
 export const VERSION = '1.0.0';   // número de versión (cambios en LEEME.md)
 export const ZONES = [
-  { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 0 },
+  { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 5, posPrize: [1500, 1000, 500] },
   { id: 'cala', name: 'LA CALA', obj: 'slalom', goal: 'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.', xa: -290, xb: 270, off: 42, amp: 0, per: 1, prize: 1200, riv: 0 },
   { id: 'mago', name: 'EL MAGO', obj: 'race3', goal: 'Llega a la meta entre los 3 primeros. Cinco rivales salen contigo.', xa: 300, xb: -305, off: 62, amp: 16, per: 120, prize: [3000, 2000, 1000], riv: 5 }];
 
@@ -547,8 +547,9 @@ export async function createGame(ctx) {
     if (R.done) return; R.done = true; state = 'result'; keepAwake(false); rh.style.display = 'none'; const Z = R.Z;
     let prize = 0, line = '', t = R.t + R.pen;
     const coinTxt = R.coinN ? ' · ' + R.coinN + ' monedas: +' + (R.coinN * 25).toLocaleString('es-ES') + ' PTA' : '';
-    if (Z.obj === 'time') { line = ok ? 'Tiempo: ' + fmtT(R.t) : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'; if (ok) prize = Z.prize; }
-    if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; line = 'Tiempo ' + fmtT(R.t) + ' + ' + miss + ' s de boyas = ' + fmtT(t); if (ok) prize = Math.max(300, Z.prize - miss * 100); }
+    if (Z.obj === 'time') { const pp = ok && Z.posPrize && R.pos <= 3 ? Z.posPrize[R.pos - 1] : 0; line = (ok ? 'Tiempo: ' + fmtT(R.t) + (R.rivals.length ? ' · ' + R.pos + 'º de ' + (R.rivals.length + 1) + (pp ? ' (+' + pp.toLocaleString('es-ES') + ' PTA por puesto)' : '') : '') : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'); if (ok) prize = Z.prize + pp; }
+    if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; line = 'Tiempo ' + fmtT(R.t) + ' + ' + miss + ' s de boyas = ' + fmtT(t); if (ok) prize = Math.max(300, Z.prize - miss * 100);
+      if (ok && !miss) { prize += 500; S.perfect = 1; line += ' · ¡SLALOM PERFECTO! +500 PTA'; } }
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
     // bonus de tiempo como en el 2D: en EL PUERTO 50 PTA por segundo sobrante; en LA CALA 30 PTA por segundo por debajo de 30 s
     const tBonus = !ok ? 0 : Z.obj === 'time' ? Math.round(R.time) * 50 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
@@ -684,7 +685,7 @@ export async function createGame(ctx) {
     if (Z.obj === 'slalom') for (const g of R.gates) if (!g.done && prevS < g.s && R.s >= g.s) { g.done = true;
       const okG = Math.abs(R.lat - g.c) <= 4.6, tint = okG ? 0x2bd94f : 0xff2b3a;
       for (const b of g.b) b.traverse(o => { if (o.isMesh && o.material && o.material.color && ['ff7a1a', 'ffd21a'].includes(o.material.color.getHexString())) { o.material = o.material.clone(); o.material.color.setHex(tint); if (o.material.emissive) { o.material.emissive.setHex(tint); o.material.emissiveIntensity = .55; } } });
-      if (okG) { flash('¡BIEN!', .7, true, '#5be37a'); if (Snd.ok()) Snd.gate(); } else { g.miss = true; R.pen += 1; flash('+1 s', .9, true, '#ff3b4e'); if (Snd.ok()) Snd.miss(); } }
+      if (okG) { flash('¡BIEN!', .7, true, '#5be37a'); if (Snd.ok()) Snd.gate(); R.pts = (R.pts || 0) + 50; pop('+50', '#5be37a'); } else { g.miss = true; R.pen += 1; flash('+1 s', .9, true, '#ff3b4e'); if (Snd.ok()) Snd.miss(); } }
     // rivales
     if (R.rivals.length) {
       for (const r of R.rivals) {

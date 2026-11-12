@@ -21,7 +21,7 @@ export async function runAutotest(G) {
       await wait(40); }
     ['ArrowUp', 'ArrowLeft', 'ArrowRight'].forEach(k => kd(k, 'keyup'));
     const t = document.querySelector('.scr.on .rt')?.textContent, s = document.querySelector('.scr.on .rs')?.textContent;
-    const ok = G.state() === 'result' && /META|GANADO|PODIO/.test(t || ''); res.push(ok); log(`${ok ? 'OK ' : 'MAL'} pantalla ${z + 1}: ${t} · ${s}`);
+    const ok = G.state() === 'result' && /META|GANADO|^¡PODIO/.test(t || ''); res.push(ok); log(`${ok ? 'OK ' : 'MAL'} pantalla ${z + 1}: ${t} · ${s}`);
   }
   log(errs.length ? 'ERRORES: ' + errs.join(' | ') : 'Sin errores en la consola');
   log(res.every(Boolean) && !errs.length ? 'TODO BIEN' : 'HAY FALLOS');
