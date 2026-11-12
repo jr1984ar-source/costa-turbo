@@ -118,7 +118,14 @@ for (let i = 0; i < 6; i++) { const b = makeBuoy(i % 2 ? '#ffe14d' : '#ff7a1a');
 const gulls = [[6, 9, -6, 0.5], [-3, 12, 4, -0.2], [12, 14, 2, 0.1], [-8, 10, -12, 0.35]];
 for (const [dx, y, dz, fl] of gulls) { const gl = makeGull(fl); gl.position.set(x0 + dx, y, z0 + dz); gl.rotation.y = th0 + 0.4 + dx * 0.05; scene.add(gl); }
 
-import { Snd, updateSound, updateAmbient } from './src/sound.js?v=2'; window.__Snd = Snd;
+import { Snd, updateSound, updateAmbient } from './src/sound.js?v=2';
+const MUDO = new URLSearchParams(location.search).has('mudo'); if (MUDO) Snd.on = false;   // pruebas sin sonido
+// ---------- pantalla de carga ----------
+const LOAD = document.createElement('div');
+LOAD.style.cssText = 'position:fixed;inset:0;z-index:60;background:radial-gradient(120% 90% at 50% 20%,#0b2a52,#040a16);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;font-family:Arial Narrow,Arial;color:#9fe6ff;transition:opacity .6s';
+LOAD.innerHTML = '<img src="assets/logo.png" style="width:150px;height:150px;border-radius:32px;box-shadow:0 12px 40px rgba(0,0,0,.6)"><div style="font:italic 900 46px Arial Narrow,Arial;color:#ffd21a;text-shadow:0 4px 0 #0b1630">COSTA TURBO</div><div style="width:min(420px,70vw);height:12px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden"><i id="loadBar" style="display:block;height:100%;width:3%;background:linear-gradient(90deg,#ffb02e,#ff6a1a);border-radius:99px;transition:width .3s"></i></div><div id="loadTx" style="font-weight:800;letter-spacing:.25em;font-size:15px">CARGANDO 0%</div>';
+document.body.appendChild(LOAD);
+THREE.DefaultLoadingManager.onProgress = (u, l, t) => { const k = Math.round(l / Math.max(1, t) * 100); const b = document.getElementById('loadBar'), x = document.getElementById('loadTx'); if (b) b.style.width = Math.max(3, k) + '%'; if (x) x.textContent = 'CARGANDO ' + k + '%'; }; window.__Snd = Snd;
 // --- JUEGO: cámara detrás, controles (teclado, táctil, mando) y bucle
 const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
@@ -134,7 +141,7 @@ comp.addPass(new RenderPass(scene, cam));
 const gtao = new GTAOPass(scene, cam, W * PR, H * PR); gtao.blendIntensity = 0.85;
 gtao.updateGtaoMaterial({ radius: 0.9, distanceExponent: 1.5, thickness: 1.5, scale: 1.0, samples: 16 }); comp.addPass(gtao);
 gtao.overrideVisibility = function () { const c = this._visibilityCache; this.scene.traverse(o => { c.set(o, o.visible); if (o.isPoints || o.isLine || o.userData.noAO) o.visible = false; }); };
-comp.addPass(new UnrealBloomPass(new THREE.Vector2(W, H), 0.22, 0.35, 2.4));
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(W, H), 0.22, 0.35, 2.4); comp.addPass(bloomPass);
 comp.addPass(new OutputPass());
 addEventListener('resize', () => { const w = innerWidth, h = innerHeight; renderer.setSize(w, h); comp.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); });
 
@@ -170,18 +177,20 @@ const toggleCam = () => { camMode = camMode === 'dron' ? 'onboard' : 'dron'; cam
 camBtn.addEventListener('pointerdown', e => { e.preventDefault(); toggleCam(); });
 const spd = hud.querySelector('.sp');
 // música (Suno, "Jet-Ski Paradise"): empieza con el primer gesto y se pausa con la pausa del juego
-const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false; window.__music = music; const MUSIC = (() => { try { return localStorage.getItem('ct3d_mus') !== '0'; } catch (e) { return true; } })();   // música de Suno, se puede quitar en Ajustes
+const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false; window.__music = music; const MUSIC = !MUDO && (() => { try { return localStorage.getItem('ct3d_mus') !== '0'; } catch (e) { return true; } })();   // música de Suno, se puede quitar en Ajustes
 ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (MUSIC && !musicOn) { musicOn = true; music.play().catch(() => { musicOn = false; }); } }, { passive: true }));
 const hint = document.createElement('div'); hint.textContent = 'HAZ CLIC O PULSA UNA TECLA PARA ACTIVAR EL SONIDO';
 hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(11,22,48,.55);border:2px solid rgba(255,255,255,.55);color:#fff;font:800 14px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.06em;pointer-events:none;z-index:5';
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=6';
+import { createGame } from './src/game.js?v=8';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
   ski.body.remove(rider); ski.body.add(nr); rider = nr; window.__rider = nr; }
-const GAME = await createGame({ scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear,
+const setQuality = q => { const hi = q !== 'baja'; gtao.enabled = hi; bloomPass.enabled = hi; renderer.setPixelRatio(hi ? Math.min(devicePixelRatio, 1.5) : 1); comp.setPixelRatio(renderer.getPixelRatio()); comp.setSize(innerWidth, innerHeight); };
+const setHideControls = v => { hud.querySelectorAll('.pad').forEach(e => e.style.display = v ? 'none' : ''); };
+const GAME = await createGame({ scene, P, env, heightAt, coastZ, makeBuoy, makeUmbrella, Wake, Snd, loadSki, makeRider, PAINT, applyGear, music, MUDO, setQuality, setHideControls,
   setPaused: v => { paused = v; }, resetFx: () => { wake.pts.length = 0; } });
 window.__GAME = GAME;
 function step(dt) {
@@ -220,7 +229,7 @@ function step(dt) {
   // choques con barcos, rocas, boyas y arcos: se empuja fuera y se pierde velocidad
   for (const c of window.__COL.concat(window.__COLZ)) { const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz), mn = c.r + 1.25;
     if (d < mn && d > 1e-4) { const nx = dx / d, nz = dz / d; P.x = c.x + nx * mn; P.z = c.z + nz * mn;
-      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t)) { P.v *= 0.5; P._hitT = P.t + 0.4; if (Snd.ok()) Snd.bump(); } }
+      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t)) { P.v *= 0.5; P._hitT = P.t + 0.4; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(120); } }
       const tg = Math.atan2(f.x + nx * 0.8, f.z + nz * 0.8); P.th += Math.atan2(Math.sin(tg - P.th), Math.cos(tg - P.th)) * Math.min(1, dt * 3); } }
   P.t += dt; env.time.value += dt;
   // piloto vivo: se echa hacia delante, se inclina en las curvas, mira hacia donde gira y vibra con el manillar
@@ -258,7 +267,11 @@ function step(dt) {
   { const dShore = coastZ(P.x) - P.z, near = Math.max(0, Math.min(1, 1 - (dShore - 8) / 70)); const rv = window.__rivNear || [0, 0]; updateAmbient(dt, near, rv[0], rv[1], !!window.__quiet); }
   // cámara: modo 'dron' (cenital, como un reel) u 'onboard' (pegada a la moto)
   const look = new THREE.Vector3();
-  if (camMode === 'dron') {
+  const gst = window.__GAME ? window.__GAME.state() : '';
+  if (gst === 'menu' || gst === 'pilot' || gst === 'taller' || gst === 'set' || gst === 'cred' || gst === 'ctrl') {
+    const close = gst === 'pilot' || gst === 'taller', a = P.t * (close ? 0.25 : 0.07) + 0.6, rad = close ? 4.6 : 15, hy = close ? 1.9 : 6.5;
+    tmp.set(P.x + Math.sin(a) * rad, hy, P.z + Math.cos(a) * rad); look.set(P.x, close ? 1.15 : 1.2, P.z); cam.up.set(0, 1, 0);
+  } else if (camMode === 'dron') {
     camTh += Math.atan2(Math.sin(P.th - camTh), Math.cos(P.th - camTh)) * Math.min(1, dt * 1.6);
     const cf = fwdOf(camTh), cs = new THREE.Vector3(-cf.z, 0, cf.x), asp = innerWidth / innerHeight, hgt = (asp < 1 ? 34 : 19) + P.v * 0.2;
     // alta e inclinada, desde un lado y algo por detrás (como el reel), no cenital
@@ -282,7 +295,7 @@ function step(dt) {
 }
 function frame() { const dt = Math.min(0.05, clock.getDelta());
   { const open = GAME.uiOpen(), st = GAME.state(); hud.style.visibility = open ? 'hidden' : 'visible'; hint.style.visibility = open ? 'hidden' : 'visible';   // nada del juego detrás de los menús
-    window.__quiet = !(st === 'race' || st === 'count'); music.volume = st === 'pause' ? 0.18 : window.__quiet ? 0.45 : 0.3; } if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
-step(0.016); comp.render(); window.__done = true; frame();
+    window.__quiet = !(st === 'race' || st === 'count'); music.volume = (st === 'pause' ? 0.18 : window.__quiet ? 0.45 : 0.3) * (window.__musVol ?? 0.8); } if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
+step(0.016); comp.render(); window.__done = true; frame(); LOAD.style.opacity = '0'; setTimeout(() => LOAD.remove(), 700);
 
 </script></body></html>

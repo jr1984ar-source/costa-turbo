@@ -42,6 +42,7 @@ export const ZONES = [
 const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
+S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 1, hide: 0, q: 'alta' }, S.set || {});
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 const gearById = id => { for (const k in GEAR) { const g = GEAR[k].find(x => x.id === id); if (g) return g; } return null; };
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m * 60; return (m ? m + ':' + (s < 10 ? '0' : '') : '') + s.toFixed(2); };
@@ -49,11 +50,22 @@ const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m 
 // ---------- estilos ----------
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;800;900&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css');
 #ui{position:fixed;inset:0;z-index:20;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;color:#fff;display:none;pointer-events:auto}
 #ui.on{display:block}
 #ui .bg{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 10%,rgba(4,30,60,.25),rgba(2,10,24,.86))}
 #ui .scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 16px;box-sizing:border-box;overflow:auto}
-#ui .scr.on{display:flex}
+#ui .scr.on{display:flex;animation:ctin .28s ease-out}
+@keyframes ctin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+#ui .logo{width:120px;height:120px;border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+#ui .btn .ti{margin-right:8px;font-size:1.05em;vertical-align:-2px}
+#ui .setrow{display:grid;grid-template-columns:220px 1fr;align-items:center;gap:14px;width:min(640px,92vw);font-weight:800;font-size:20px}
+#ui .setrow .row{justify-content:flex-start}#ui .setrow .btn{min-width:0;font-size:17px;padding:6px 16px}
+#ui .setrow .btn.sel{background:#ffe14d;color:#0b1630;border-color:#ffe14d}
+#ui input[type=range]{width:100%;accent-color:#ffb02e;border:0;background:none}
+#ui .cred{max-width:720px;font-size:16px;line-height:1.5;text-align:left;opacity:.92}
+#ui .keys{display:grid;grid-template-columns:repeat(3,minmax(160px,1fr));gap:14px;width:min(900px,94vw);font-size:16px}
+#ui .keys div{background:rgba(11,22,48,.6);border:2px solid rgba(255,255,255,.3);border-radius:14px;padding:12px}#ui .keys b{display:block;color:#ffe14d;font-size:19px;margin-bottom:6px}
 #ui h1{margin:0;font-weight:900;font-style:italic;font-size:clamp(56px,11vw,128px);line-height:.86;letter-spacing:.01em;text-align:center;
   background:linear-gradient(180deg,#fff7c2 0%,#ffd21a 38%,#ff7a1a 70%,#e3202b 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 4px 0 #0b1630) drop-shadow(0 10px 24px rgba(0,0,0,.6))}
@@ -108,10 +120,10 @@ export async function createGame(ctx) {
   const click = () => { if (Snd.ok()) Snd.click(); };
 
   // ---------- portada ----------
-  mk('menu', `<h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
-    <div class="row" style="margin-top:22px"><button class="btn main" data-a="map">JUGAR</button></div>
-    <div class="row"><button class="btn" data-a="pilot">PILOTO Y MOTO</button><button class="btn" data-a="taller">TALLER</button></div>
-    <div class="sub" style="margin-top:10px;font-size:15px;opacity:.7">Teclado: flechas, Shift turbo, Espacio derrape, C cámara, P pausa · Mando: RT acelerar, X turbo, A derrape, START pausa</div>`);
+  mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
+    <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button></div>
+    <div class="row"><button class="btn" data-a="pilot"><i class="ti ti-user"></i>PILOTO Y MOTO</button><button class="btn" data-a="taller"><i class="ti ti-tools"></i>TALLER</button></div>
+    <div class="row"><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button></div>`);
   // ---------- mapa ----------
   mk('map', `<h2>ELIGE PANTALLA</h2><div class="cash"></div><div class="zone"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- piloto ----------
@@ -125,8 +137,27 @@ export async function createGame(ctx) {
     <div class="nm" style="display:none;text-align:center"><div class="sub" style="font-weight:800">¡TOP 10! TU NOMBRE:</div><input maxlength="12"><div class="row" style="margin-top:8px"><button class="btn" data-a="savename">GUARDAR</button></div></div>
     <div><div class="sub" style="font-weight:900;letter-spacing:.1em">TOP 10</div><table class="tt"></table></div>
     <div class="row"><button class="btn main" data-a="retry">REPETIR</button><button class="btn nx" data-a="next">SIGUIENTE PANTALLA</button><button class="btn" data-a="map">MAPA</button></div>`);
+  // ---------- ajustes ----------
+  mk('set', `<h2>AJUSTES</h2><div class="setrows"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-check"></i>LISTO</button></div>`);
+  // ---------- controles ----------
+  mk('ctrl', `<h2>CONTROLES</h2><div class="keys">
+    <div><b><i class="ti ti-keyboard"></i> TECLADO</b>Flechas o WASD: acelerar, frenar y girar<br>Shift o X: turbo<br>Espacio o Z: derrape<br>C: cámara dron / onboard<br>P o Esc: pausa</div>
+    <div><b><i class="ti ti-device-gamepad-2"></i> MANDO</b>Stick izquierdo: girar<br>RT o B: acelerar · LT: frenar<br>X: turbo · A: derrape<br>START: pausa<br>Menús: cruceta, A elegir, B volver</div>
+    <div><b><i class="ti ti-hand-finger"></i> TÁCTIL</b>Flechas abajo a la izquierda: girar<br>ACELERAR: el botón grande<br>TURBO y DERRAPE encima<br>CÁMARA: botón de la izquierda<br>Se pueden ocultar en Ajustes</div></div>
+    <div class="sub" style="font-size:15px">Derrape: mantén DERRAPE en la curva y suéltalo para un mini-turbo.</div>
+    <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
+  // ---------- créditos ----------
+  mk('cred', `<h2>CRÉDITOS</h2><div class="cred">
+    <b>COSTA TURBO 3D</b> · un juego de JRAR.<br><br>
+    Modelos 3D con licencia Creative Commons Attribution (CC BY 4.0), de Sketchfab:<br>
+    · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
+    · Eric Rigged 001 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
+    · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br><br>
+    Texturas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
+    <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- pausa ----------
-  mk('pause', `<h2>PAUSA</h2><div class="row"><button class="btn main" data-a="resume">CONTINUAR</button></div><div class="row"><button class="btn" data-a="retry">REPETIR</button><button class="btn" data-a="map">MAPA</button></div>`);
+  mk('pause', `<h2>PAUSA</h2><div class="row"><button class="btn main" data-a="resume"><i class="ti ti-player-play-filled"></i>CONTINUAR</button></div><div class="row"><button class="btn" data-a="retry"><i class="ti ti-reload"></i>REPETIR</button><button class="btn" data-a="map"><i class="ti ti-map"></i>MAPA</button><button class="btn" data-a="menu"><i class="ti ti-home"></i>MENÚ</button></div>
+    <div class="row"><button class="btn" data-a="tsnd"></button><button class="btn" data-a="tmus"></button></div>`);
 
   const refreshCash = () => ui.querySelectorAll('.cash').forEach(e => e.textContent = S.cash.toLocaleString('es-ES') + ' PTA');
   function renderMap() {
@@ -162,6 +193,30 @@ export async function createGame(ctx) {
       g.appendChild(b); });
     refreshCash();
   }
+  function applySettings() { const s = S.set;
+    Snd.on = !!s.snd && !ctx.MUDO; if (Snd.out) Snd.out.gain.value = Snd.on ? .8 * s.vol : 0;
+    if (ctx.music) { ctx.music.muted = !s.mus || !!ctx.MUDO; }
+    try { localStorage.setItem('ct3d_mus', s.mus ? '1' : '0'); } catch (e) {}
+    window.__musVol = s.vol; window.__vibrate = ms => { if (!S.set.vib) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {}
+      try { const gp = [...navigator.getGamepads()].find(x => x && x.connected); gp && gp.vibrationActuator && gp.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: .8, weakMagnitude: .5 }); } catch (e) {} };
+    ctx.setQuality && ctx.setQuality(s.q); ctx.setHideControls && ctx.setHideControls(!!s.hide);
+    const ps = scr.pause.querySelector('[data-a=tsnd]'), pm = scr.pause.querySelector('[data-a=tmus]');
+    if (ps) ps.innerHTML = '<i class="ti ti-volume' + (s.snd ? '' : '-off') + '"></i>SONIDO ' + (s.snd ? 'SÍ' : 'NO');
+    if (pm) pm.innerHTML = '<i class="ti ti-music' + (s.mus ? '' : '-off') + '"></i>MÚSICA ' + (s.mus ? 'SÍ' : 'NO'); }
+  function renderSet() { const s = S.set, box = scr.set.querySelector('.setrows');
+    const opt = (k, vals) => vals.map(([v, n]) => `<button class="btn${s[k] === v ? ' sel' : ''}" data-set="${k}" data-v="${v}">${n}</button>`).join('');
+    box.innerHTML = `<div class="setrow"><span><i class="ti ti-volume"></i> SONIDO</span><div class="row">${opt('snd', [[1, 'SÍ'], [0, 'NO']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-music"></i> MÚSICA</span><div class="row">${opt('mus', [[1, 'SÍ'], [0, 'NO']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-adjustments"></i> VOLUMEN</span><input type="range" min="0" max="1" step="0.05" value="${s.vol}" data-range="vol"></div>
+      <div class="setrow"><span><i class="ti ti-device-mobile-vibration"></i> VIBRACIÓN</span><div class="row">${opt('vib', [[1, 'SÍ'], [0, 'NO']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-gauge"></i> DIFICULTAD</span><div class="row">${opt('dif', [[0, 'FÁCIL'], [1, 'NORMAL'], [2, 'DIFÍCIL']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-hand-off"></i> BOTONES TÁCTILES</span><div class="row">${opt('hide', [[0, 'VER'], [1, 'OCULTAR']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-photo"></i> GRÁFICOS</span><div class="row">${opt('q', [['alta', 'ALTA'], ['baja', 'BAJA (MÓVIL)']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-id-badge"></i> TU NOMBRE</span><input maxlength="12" data-name="1" value="${S.name || 'JUGADOR'}"></div>
+      <div class="setrow"><span><i class="ti ti-trash"></i> PARTIDA</span><div class="row"><button class="btn" data-a="wipe">BORRAR PARTIDA</button></div></div>`;
+    box.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { click(); const k = b.dataset.set, v = b.dataset.v; s[k] = isNaN(+v) ? v : +v; save(); applySettings(); renderSet(); });
+    const r = box.querySelector('[data-range]'); r.oninput = () => { s.vol = +r.value; save(); applySettings(); };
+    const nm = box.querySelector('[data-name]'); nm.addEventListener('keydown', e => e.stopPropagation()); nm.onchange = () => { S.name = (nm.value || 'JUGADOR').toUpperCase().slice(0, 12); save(); }; }
   const gearLook = () => { const v = gearById(S.eq.vest), h = gearById(S.eq.helm), s = gearById(S.eq.suit);
     return { vest: (v && v.c) || AVATARS[S.pilot].vest, helmet: h && h.id !== 'h0' ? h.c : null, suit: s && s.c ? s.c : null }; };
 
@@ -222,7 +277,7 @@ export async function createGame(ctx) {
     if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i] });
         rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
-    return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: 30.2 + i * .85 + Math.random() * 1.2, fin: null, tl: 0, steer: 0 }));
+    return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [0.9, 1, 1.07][S.set.dif], fin: null, tl: 0, steer: 0 }));
   }
 
   // ---------- carrera ----------
@@ -232,7 +287,7 @@ export async function createGame(ctx) {
     R = { Z, path, t: 0, pen: 0, time: 0, cps: [], gates: [], rivals: [], hint: 0, s: 0, lat: 0, done: false, count: 3.6, lastCount: 4, maxS: 0, finished: [] };
     // salida y meta
     arch('META', path, path.L - 4, 16, true);
-    if (Z.obj === 'time') { jjBar(); R.time = 14; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 11 }));
+    if (Z.obj === 'time') { jjBar(); R.time = 14 + [4, 0, -2][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 11 }));
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
     if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5; R.gates.push({ s, c, done: false });
@@ -266,10 +321,16 @@ export async function createGame(ctx) {
 
   // ---------- acciones de botones ----------
   ui.addEventListener('click', async e => { const b = e.target.closest('[data-a]'); if (!b) return; const a = b.dataset.a; click();
-    if (a === 'menu') { state = 'menu'; refreshCash(); show('menu'); }
+    if (a === 'menu') { if (R) { clearZone(); R = null; rh.style.display = 'none'; ctx.setPaused(false); } state = 'menu'; refreshCash(); show('menu'); }
     if (a === 'map') { clearZone(); R = null; rh.style.display = 'none'; ctx.setPaused(false); state = 'map'; renderMap(); show('map'); }
     if (a === 'pilot') { state = 'pilot'; renderPilot(); show('pilot'); }
     if (a === 'taller') { state = 'taller'; renderTaller(); show('taller'); }
+    if (a === 'set') { state = 'set'; renderSet(); show('set'); }
+    if (a === 'ctrl') { state = 'ctrl'; show('ctrl'); }
+    if (a === 'cred') { state = 'cred'; show('cred'); }
+    if (a === 'tsnd') { S.set.snd = S.set.snd ? 0 : 1; save(); applySettings(); }
+    if (a === 'tmus') { S.set.mus = S.set.mus ? 0 : 1; save(); applySettings(); }
+    if (a === 'wipe') { if (b.dataset.sure) { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} location.reload(); } else { b.dataset.sure = 1; b.textContent = '¿SEGURO? PULSA OTRA VEZ'; } }
     if (a === 'go') await startRace(zone);
     if (a === 'retry') await startRace(zone);
     if (a === 'next') { if (zone + 1 < S.unlocked) openBrief(zone + 1); }
@@ -281,7 +342,7 @@ export async function createGame(ctx) {
   const focusables = () => [...ui.querySelectorAll('.scr.on .btn:not([disabled]), .scr.on .card:not(.lock), .scr.on input')].filter(e => e.offsetParent !== null);
   function nav(d) { const f = focusables(); if (!f.length) return; let i = f.indexOf(document.activeElement); i = i < 0 ? 0 : (i + d + f.length) % f.length; f[i].focus(); }
   function back() { if (state === 'pause') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); return; }
-    if (['map', 'pilot', 'taller'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
+    if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
   addEventListener('keydown', e => { if (!ui.classList.contains('on') || document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (['ArrowDown', 'ArrowRight'].includes(e.code)) { nav(1); e.preventDefault(); } if (['ArrowUp', 'ArrowLeft'].includes(e.code)) { nav(-1); e.preventDefault(); }
     if (e.code === 'Escape' || e.code === 'Backspace' || e.code === 'KeyP') { back(); e.preventDefault(); }
@@ -352,7 +413,7 @@ export async function createGame(ctx) {
   }
 
   // estado inicial: portada
-  refreshCash(); show('menu');
+  refreshCash(); applySettings(); show('menu');
   await ctx.applyGear(gearLook());
   return { update, drive: () => state === 'race', togglePause, state: () => state, uiOpen: () => ui.classList.contains('on'), dbg: { R: () => R, at, S } };
 }
