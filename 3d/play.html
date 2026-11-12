@@ -118,7 +118,7 @@ for (let i = 0; i < 6; i++) { const b = makeBuoy(i % 2 ? '#ffe14d' : '#ff7a1a');
 const gulls = [[6, 9, -6, 0.5], [-3, 12, 4, -0.2], [12, 14, 2, 0.1], [-8, 10, -12, 0.35]];
 for (const [dx, y, dz, fl] of gulls) { const gl = makeGull(fl); gl.position.set(x0 + dx, y, z0 + dz); gl.rotation.y = th0 + 0.4 + dx * 0.05; scene.add(gl); }
 
-import { Snd, updateSound } from './src/sound.js'; window.__Snd = Snd;
+import { Snd, updateSound, updateAmbient } from './src/sound.js?v=2'; window.__Snd = Snd;
 // --- JUEGO: cámara detrás, controles (teclado, táctil, mando) y bucle
 const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
@@ -170,14 +170,14 @@ const toggleCam = () => { camMode = camMode === 'dron' ? 'onboard' : 'dron'; cam
 camBtn.addEventListener('pointerdown', e => { e.preventDefault(); toggleCam(); });
 const spd = hud.querySelector('.sp');
 // música (Suno, "Jet-Ski Paradise"): empieza con el primer gesto y se pausa con la pausa del juego
-const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false; window.__music = music; const MUSIC = false;   // música apagada a petición de JRAR (el archivo sigue en assets/musica)
+const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false; window.__music = music; const MUSIC = (() => { try { return localStorage.getItem('ct3d_mus') !== '0'; } catch (e) { return true; } })();   // música de Suno, se puede quitar en Ajustes
 ['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (MUSIC && !musicOn) { musicOn = true; music.play().catch(() => { musicOn = false; }); } }, { passive: true }));
 const hint = document.createElement('div'); hint.textContent = 'HAZ CLIC O PULSA UNA TECLA PARA ACTIVAR EL SONIDO';
 hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(11,22,48,.55);border:2px solid rgba(255,255,255,.55);color:#fff;font:800 14px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.06em;pointer-events:none;z-index:5';
-document.body.appendChild(hint);
+// el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=5';
+import { createGame } from './src/game.js?v=6';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
   ski.body.remove(rider); ski.body.add(nr); rider = nr; window.__rider = nr; }
@@ -255,6 +255,7 @@ function step(dt) {
   spray.update(dt);
   if (wall && P.v > 6 && Snd.ok() && !(P._bumpT > P.t)) { Snd.bump(); P._bumpT = P.t + 0.6; }
   updateSound(P.v, 33, I.acc, turboOn, I.drift && P.v > 8, 3, !!window.__quiet);   // sin motor fuera de la carrera
+  { const dShore = coastZ(P.x) - P.z, near = Math.max(0, Math.min(1, 1 - (dShore - 8) / 70)); const rv = window.__rivNear || [0, 0]; updateAmbient(dt, near, rv[0], rv[1], !!window.__quiet); }
   // cámara: modo 'dron' (cenital, como un reel) u 'onboard' (pegada a la moto)
   const look = new THREE.Vector3();
   if (camMode === 'dron') {
@@ -281,7 +282,7 @@ function step(dt) {
 }
 function frame() { const dt = Math.min(0.05, clock.getDelta());
   { const open = GAME.uiOpen(), st = GAME.state(); hud.style.visibility = open ? 'hidden' : 'visible'; hint.style.visibility = open ? 'hidden' : 'visible';   // nada del juego detrás de los menús
-    window.__quiet = !(st === 'race' || st === 'count'); } if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
+    window.__quiet = !(st === 'race' || st === 'count'); music.volume = st === 'pause' ? 0.18 : window.__quiet ? 0.45 : 0.3; } if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame();
 
 </script></body></html>

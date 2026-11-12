@@ -107,3 +107,25 @@ export function updateSound(v, vmax, thr, turboOn, drift, stage, paused) {
   if (!wasTur && turboOn) Snd.boost();
   wasThr = thr; wasTur = turboOn;
 }
+
+// ---------- ambiente de playa (olas y gaviotas) y motor de los rivales ----------
+let amb = null, gullT = 4;
+function ambStart() {
+  const c = Snd.ctx; if (!c || amb) return;
+  const n = c.createBufferSource(); n.buffer = Snd.noise; n.loop = true; const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 520;
+  const g = c.createGain(); g.gain.value = 0; const lfo = c.createOscillator(); lfo.frequency.value = 1 / 7; const lg = c.createGain(); lg.gain.value = 0;
+  lfo.connect(lg); lg.connect(g.gain); n.connect(lp); lp.connect(g); g.connect(Snd.sfx); n.start(); lfo.start();
+  // motor de los rivales: zumbido que sube con la cercanía
+  const o = c.createOscillator(); o.type = 'sawtooth'; o.frequency.value = 70; const o2 = c.createOscillator(); o2.type = 'square'; o2.frequency.value = 35;
+  const rl = c.createBiquadFilter(); rl.type = 'lowpass'; rl.frequency.value = 600; const rg = c.createGain(); rg.gain.value = 0;
+  o.connect(rl); o2.connect(rl); rl.connect(rg); rg.connect(Snd.sfx); o.start(); o2.start();
+  amb = { g, lg, rg, o, o2, rl };
+}
+// near: 0..1 cercanía a la orilla; riv: 0..1 cercanía del rival más próximo; rv: velocidad relativa 0..1; quiet: menús
+export function updateAmbient(dt, near, riv, rv, quiet) {
+  if (!Snd.ctx || Snd.ctx.state !== 'running' || !Snd.on) return; ambStart(); const t = Snd.ctx.currentTime;
+  amb.g.gain.setTargetAtTime(quiet ? 0.04 : 0.05 + near * 0.16, t, .4); amb.lg.gain.setTargetAtTime((0.03 + near * 0.08), t, .4);
+  amb.rg.gain.setTargetAtTime(quiet ? 0 : riv * 0.07, t, .15); amb.o.frequency.setTargetAtTime(55 + rv * 85, t, .1); amb.o2.frequency.setTargetAtTime(27 + rv * 42, t, .1);
+  amb.rl.frequency.setTargetAtTime(300 + riv * 900, t, .1);
+  gullT -= dt; if (gullT <= 0) { gullT = 5 + Math.random() * 9; if (near > .25) Snd.gull(); }
+}

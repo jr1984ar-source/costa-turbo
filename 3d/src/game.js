@@ -172,7 +172,7 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { window.__COLZ.length = 0; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { window.__COLZ.length = 0; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
   const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
@@ -341,6 +341,8 @@ export async function createGame(ctx) {
       for (let a = 0; a < R.rivals.length; a++) for (let b = a + 1; b < R.rivals.length; b++) { const A = R.rivals[a], B = R.rivals[b];
         if (Math.abs(A.s - B.s) < 3.4 && Math.abs(A.lane - B.lane) < 2.6) { const ov = (2.6 - Math.abs(A.lane - B.lane)) * .5, sg = A.lane >= B.lane ? 1 : -1; A.lane += sg * ov; B.lane -= sg * ov;
           const back = A.s < B.s ? A : B; back.v *= .985; back.laneT = back.lane + sg * (back === A ? 3 : -3); } }
+      { let best = 1e9, bv = 0; for (const r of R.rivals) { const d = Math.hypot(r.sk.root.position.x - P.x, r.sk.root.position.z - P.z); if (d < best) { best = d; bv = r.v; } }
+        window.__rivNear = [Math.max(0, 1 - best / 45), Math.min(1, bv / 33)]; }   // para el sonido del rival más cercano
       const ahead = R.rivals.filter(r => (r.fin && (!R.pfin || r.fin < R.pfin)) || (!r.fin && r.s > R.s)).length; R.pos = ahead + 1;
       rh.querySelector('.pos').innerHTML = R.pos + '<small>º/' + (R.rivals.length + 1) + '</small>';
     } else rh.querySelector('.pos').innerHTML = '';
