@@ -142,6 +142,8 @@ const CSS = `
   padding:10px 26px;border-radius:999px;color:#fff;background:#0b1630;border:3px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:opacity .2s,transform .2s;white-space:nowrap}
 #toast.on{opacity:1;transform:translate(-50%,0)}#toast.ok{background:#14833b;border-color:#7be35a}#toast.bad{background:#a3121f;border-color:#ff7a84}
 #toast .ti{margin-right:8px;vertical-align:-2px}
+#sem{position:fixed;left:50%;top:84px;transform:translateX(-50%);z-index:16;display:none;gap:12px;padding:10px 14px;background:#111418;border:3px solid #2a2f37;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#sem i{width:38px;height:38px;border-radius:50%;background:#2b1214;display:block;box-shadow:inset 0 3px 6px rgba(0,0,0,.6)}#sem i.r{background:#ff2b3a;box-shadow:0 0 18px #ff2b3a}#sem i.g{background:#2bd94f;box-shadow:0 0 22px #2bd94f}
 #msg3.small{font-size:clamp(28px,5vw,52px);top:22%}
 `;
 
@@ -151,6 +153,8 @@ export async function createGame(ctx) {
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
   const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
+  const sem = document.createElement('div'); sem.id = 'sem'; sem.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(sem);   // semáforo de salida
+  const semSet = n => { sem.style.display = 'flex'; [...sem.children].forEach((l, k) => l.className = n < 0 ? 'g' : k < n ? 'r' : ''); };
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
   const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
@@ -308,7 +312,7 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { window.__COLZ.length = 0; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { sem.style.display = 'none'; window.__COLZ.length = 0; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
   const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
@@ -581,7 +585,7 @@ export async function createGame(ctx) {
       m.wk.update(dt, m.x - fx * m.r * 2.6, z - fz * m.r * 2.6, Math.min(1, mv / 8), mv); }
     const Z = R.Z, path = R.path;
     if (state === 'count') { R.count -= dt; const c = Math.ceil(R.count - .6);
-      if (c !== R.lastCount && c >= 0) { R.lastCount = c; if (c > 0) { flash(String(c), .9); if (Snd.ok()) Snd.beep(false); } else { flash('¡YA!', .8); if (Snd.ok()) Snd.beep(true); state = 'race'; R.started = true; } }
+      if (c !== R.lastCount && c >= 0) { R.lastCount = c; if (c > 0) { flash(String(c), .9); semSet(4 - c); if (Snd.ok()) Snd.beep(false); } else { flash('¡YA!', .8); semSet(-1); setTimeout(() => sem.style.display = 'none', 1200); if (Snd.ok()) Snd.beep(true); state = 'race'; R.started = true; } }
       rh.querySelector('.t').textContent = Z.obj === 'time' ? fmtT(R.time) : fmtT(0); P.v = 0; return; }
     // gasolina: se gasta al correr; sin gasolina la moto va muy lenta
     if (S.fuel > 0) { S.fuel = Math.max(0, S.fuel - (.12 + 1.13 * Math.min(1, P.v / 33)) * (P.v > 35 ? 2.2 : 1) * dt);
