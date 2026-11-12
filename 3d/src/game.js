@@ -4,10 +4,10 @@ import * as THREE from 'three';
 
 // ---------- datos (nombres y precios del juego 2D) ----------
 export const AVATARS = [
-  { id: 'alex', name: 'Álex', vest: '#ff7a1a', bio: 'Rápido en la salida. Corre en el puerto desde niño.' }, { id: 'dani', name: 'Dani', vest: '#33d6ff', bio: 'Le encantan las curvas cerradas.' },
-  { id: 'marc', name: 'Marc', vest: '#7be35a', bio: 'Turbo largo y mucha cabeza.' }, { id: 'leo', name: 'Leo', vest: '#e3202b', bio: 'Duro en los choques, no se rinde nunca.' },
-  { id: 'lucia', name: 'Lucía', vest: '#ff3f8e', bio: 'Reina del slalom: no falla una boya.' }, { id: 'sara', name: 'Sara', vest: '#1e5eff', bio: 'La más rápida en recta.' },
-  { id: 'nerea', name: 'Nerea', vest: '#ffd21a', bio: 'Derrapes perfectos.' }, { id: 'vega', name: 'Vega', vest: '#7b3fe4', bio: 'Arriesga en cada curva.' }];
+  { id: 'alex', name: 'Álex', vest: '#ff7a1a', bio: 'Rápido en la salida. Corre en el puerto desde niño.', body: 'piloto_eric', skin: 1 }, { id: 'dani', name: 'Dani', vest: '#33d6ff', bio: 'Le encantan las curvas cerradas.', body: 'piloto_eric', skin: 0.78 },
+  { id: 'marc', name: 'Marc', vest: '#7be35a', bio: 'Turbo largo y mucha cabeza.', body: 'piloto_eric', skin: 1 }, { id: 'leo', name: 'Leo', vest: '#e3202b', bio: 'Duro en los choques, no se rinde nunca.', body: 'piloto_eric', skin: 0.6 },
+  { id: 'lucia', name: 'Lucía', vest: '#ff3f8e', bio: 'Reina del slalom: no falla una boya.', body: 'piloto_claudia', skin: 1 }, { id: 'sara', name: 'Sara', vest: '#1e5eff', bio: 'La más rápida en recta.', body: 'piloto_carla', skin: 1 },
+  { id: 'nerea', name: 'Nerea', vest: '#ffd21a', bio: 'Derrapes perfectos.', body: 'piloto_claudia', skin: 0.9 }, { id: 'vega', name: 'Vega', vest: '#7b3fe4', bio: 'Arriesga en cada curva.', body: 'piloto_carla', skin: 1 }];
 export const GEAR = {
   helm: [{ id: 'h0', n: 'Casco de serie', b: 'De serie', p: 0, c: '#f4f6f9' },
     { id: 'h1', n: 'S-M3 Morado', b: 'Alpinestars', p: 3000, c: '#7b5cff' }, { id: 'h2', n: 'S-M5 Rojo', b: 'Alpinestars', p: 4500, c: '#d0151f' },
@@ -151,7 +151,7 @@ export async function createGame(ctx) {
     <b>COSTA TURBO 3D</b> · un juego de JRAR.<br><br>
     Modelos 3D con licencia Creative Commons Attribution (CC BY 4.0), de Sketchfab:<br>
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
-    · Eric Rigged 001 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
+    · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br><br>
     Texturas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
@@ -218,7 +218,7 @@ export async function createGame(ctx) {
     const r = box.querySelector('[data-range]'); r.oninput = () => { s.vol = +r.value; save(); applySettings(); };
     const nm = box.querySelector('[data-name]'); nm.addEventListener('keydown', e => e.stopPropagation()); nm.onchange = () => { S.name = (nm.value || 'JUGADOR').toUpperCase().slice(0, 12); save(); }; }
   const gearLook = () => { const v = gearById(S.eq.vest), h = gearById(S.eq.helm), s = gearById(S.eq.suit);
-    return { vest: (v && v.c) || AVATARS[S.pilot].vest, helmet: h && h.id !== 'h0' ? h.c : null, suit: s && s.c ? s.c : null }; };
+    const A = AVATARS[S.pilot]; return { vest: (v && v.c) || A.vest, helmet: h && h.id !== 'h0' ? h.c : null, suit: s && s.c ? s.c : null, body: A.body, skin: A.skin }; };
 
   function openBrief(i) { zone = i; const Z = ZONES[i];
     scr.brief.querySelector('.zn').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; scr.brief.querySelector('.zg').textContent = Z.goal;
@@ -274,7 +274,7 @@ export async function createGame(ctx) {
   const RIVC = ['#e3202b', '#1e5eff', '#7be35a', '#ffd21a', '#ff3f8e'], RIVN = ['Toni Marín', 'Carla Ruiz', 'El Tito', 'Sandra Vidal', 'Javi Rubio'];
   let rivPool = null;
   async function makeRivals(n) {
-    if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i] });
+    if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i], body: ['piloto_eric', 'piloto_carla', 'piloto_eric', 'piloto_claudia', 'piloto_eric'][i], skin: [1, 1, .7, .92, 1][i] });
         rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
     return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [0.9, 1, 1.07][S.set.dif], fin: null, tl: 0, steer: 0 }));
