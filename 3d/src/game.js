@@ -411,7 +411,7 @@ export async function createGame(ctx) {
     clearZone(); const Z = ZONES[i]; const path = buildPath(Z);
     R = { Z, path, t: 0, pen: 0, time: 0, cps: [], gates: [], rivals: [], hint: 0, s: 0, lat: 0, done: false, count: 3.6, lastCount: 4, maxS: 0, finished: [] };
     // salida y meta
-    arch('META', path, path.L - 4, 16, true);
+    arch('META', path, path.L - 4, 16, true); arch('SALIDA', path, 22, 16, false);
     if (Z.id === 'puerto') await puertoScene();
     if (Z.obj === 'time') { jjBar(); R.time = 14 + [4, 0, -2][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 11 }));
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
