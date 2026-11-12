@@ -150,6 +150,8 @@ const CSS = `
 #rot{position:fixed;inset:0;z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#061428;color:#fff;font:900 26px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.06em;text-align:center}
 #rot .ti{font-size:84px;color:#ffe14d;animation:rotph 1.6s ease-in-out infinite}@keyframes rotph{0%,30%{transform:rotate(0)}60%,100%{transform:rotate(-90deg)}}
 @media (orientation:portrait) and (pointer:coarse){#rot{display:flex}}
+#ui~.pop,.pop{position:fixed;left:50%;top:58%;z-index:17;pointer-events:none;font:900 italic 30px "Saira Condensed","Arial Narrow",Arial,sans-serif;text-shadow:0 3px 0 #0b1630;animation:popup 1s ease-out forwards}
+@keyframes popup{from{opacity:0;transform:translate(-50%,10px) scale(.8)}20%{opacity:1;transform:translate(-50%,0) scale(1.1)}to{opacity:0;transform:translate(-50%,-70px) scale(1)}}
 #msg3.small{font-size:clamp(28px,5vw,52px);top:22%}
 `;
 
@@ -168,6 +170,7 @@ export async function createGame(ctx) {
   const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
   const flash = (txt, t = 1.2, small = false, col = '') => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.color = col; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
+  const pop = (txt, col = '#ffe14d', dx = 0) => { const e = document.createElement('div'); e.className = 'pop'; e.textContent = txt; e.style.color = col; e.style.marginLeft = dx + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 1000); };   // puntos emergentes
   // aviso de compra, equipado o dinero insuficiente (por encima de los menús)
   const tst = document.createElement('div'); tst.id = 'toast'; document.body.appendChild(tst); let tstT = 0;
   const toast = (txt, ok) => { tst.className = (ok ? 'ok' : 'bad') + ' on'; tst.innerHTML = `<i class="ti ti-${ok ? 'circle-check' : 'alert-circle'}"></i>` + txt; clearTimeout(tstT); tstT = setTimeout(() => tst.classList.remove('on'), 1800); };
@@ -236,7 +239,8 @@ export async function createGame(ctx) {
       L0.appendChild(b); } refreshCash(); }
   function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
-  window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; flash('¡SALTO!', .8, true, '#9fe6ff'); } };
+  window.__onDrift = q => { if (state === 'race' && R) { const p = Math.round(q * 40) * 5; R.pts = (R.pts || 0) + p; R.drifts = (R.drifts || 0) + 1; pop('DERRAPE +' + p, '#ff8c1e'); } };
+  window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
     if (S.lives <= 0) { S.lives = 3; save(); return finishRace(false, '¡SIN VIDAS!'); } flash('-1 VIDA', 1, true); };
@@ -547,8 +551,8 @@ export async function createGame(ctx) {
       if (Z.obj === 'race3') rows.push(['Puesto', R.pos + 'º', null]); else rows.push(['Tiempo', fmtT(R.t), null]);
       if (Z.obj === 'time') rows.push(['Tiempo sobrante', ok ? fmtT(R.time) : '—', tBonus]);
       if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; rows.push(['Boyas', (R.gates.length - miss) + ' de ' + R.gates.length, null], ['Bonus de tiempo', '', tBonus]); }
-      rows.push(['Saltos', String(R.jumps || 0), null], ['Premio', '', base]);
-      const pts = R.coinN * 25 + prize; rows.push(['PUNTOS', '', pts]); if (unl) rows.push(['Desbloqueado', unl, null]);
+      rows.push(['Saltos', String(R.jumps || 0), null], ['Derrapes', String(R.drifts || 0), null], ['Premio', '', base]);
+      const pts = R.coinN * 25 + prize + (R.pts || 0); rows.push(['PUNTOS', String(pts), null]); if (unl) rows.push(['Desbloqueado', unl, null]);
       scr.result.querySelector('.desg').innerHTML = rows.map(([a, b, c]) => `<tr><td style="text-align:left">${a}</td><td>${b}</td><td style="text-align:right;color:#ffe14d">${c == null ? '' : '+' + c.toLocaleString('es-ES') + ' PTA'}</td></tr>`).join(''); }
     // podio de EL MAGO: los que han llegado por tiempo y el resto por lo que les falta
     const pod = scr.result.querySelector('.podio'); pod.style.display = 'none';
@@ -625,7 +629,7 @@ export async function createGame(ctx) {
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
-      if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); rh.querySelector('.co span').textContent = R.coinN; } }
+      if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }
     if (R.movers) for (const m of R.movers) { const L = Math.abs(m.zb - m.za);
       if (m.wait > 0) { m.wait -= dt; m.ry += (m.dir > 0 ? Math.PI : 0) - m.ry > 0 ? Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)) : -Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)); }
       else { m.u += m.dir * m.sp * dt / L; if (m.u >= 1 || m.u <= 0) { m.u = Math.max(0, Math.min(1, m.u)); m.dir *= -1; m.wait = 3; } else m.ry = m.dir > 0 ? Math.PI : 0; }

@@ -199,7 +199,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=67';
+import { createGame } from './src/game.js?v=68';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -225,7 +225,7 @@ function step(dt) {
   P.th += P.steer * rate * dt;
   const drifting = I.drift && P.v > 9 && Math.abs(P.steer) > 0.2;
   if (drifting) { P.dc = Math.min(1.6, (P.dc || 0) + dt); P.v -= P.v * 0.05 * dt; } else if ((P.dc || 0) > 0) {       // al soltar el derrape: mini-turbo si se cargó
-    if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(44, P.v + 4 + P.dc * 4); P.kick = 1; if (Snd.ok()) Snd.boost(); } P.dc = 0; }
+    if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(44, P.v + 4 + P.dc * 4); P.kick = 1; if (Snd.ok()) Snd.boost(); window.__onDrift && window.__onDrift(P.dc); } P.dc = 0; }
   P.kick = Math.max(0, (P.kick || 0) - dt * 1.6);
   { // aviso visual: bordes azules con turbo, naranja mientras carga el derrape (más fuerte al estar listo) y destello al soltar el mini-turbo
     const fx = window.__fxEdge || (window.__fxEdge = Object.assign(document.body.appendChild(document.createElement('div')), { id: 'fxEdge' }));
