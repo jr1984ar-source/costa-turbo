@@ -199,7 +199,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=73';
+import { createGame } from './src/game.js?v=75';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -259,7 +259,7 @@ function step(dt) {
   // choques con barcos, rocas, boyas y arcos: se empuja fuera y se pierde velocidad
   for (const c of window.__COL.concat(window.__COLZ)) { const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz), mn = c.r + 1.25;
     if (d < mn && d > 1e-4) { const nx = dx / d, nz = dz / d; P.x = c.x + nx * mn; P.z = c.z + nz * mn;
-      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t)) { if (P.v > 18 && window.__onCrash) window.__onCrash(); P.v *= 0.5; P._hitT = P.t + 0.4; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(120); } }
+      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t) && !(P._invT > P.t)) { if (P.v > 18 && window.__onCrash) window.__onCrash(); P._invT = P.t + 1.6; P._spinT = P.t + .75; P.boostT = 0; P.shake = .5; P.v *= 0.22; P._hitT = P.t + 0.4; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(120); } }
       const tg = Math.atan2(f.x + nx * 0.8, f.z + nz * 0.8); P.th += Math.atan2(Math.sin(tg - P.th), Math.cos(tg - P.th)) * Math.min(1, dt * 3); } }
   // rampas: la moto sube por la cuña y sale volando
   P.y = P.y || 0; P.vy = P.vy || 0;
@@ -300,7 +300,7 @@ function step(dt) {
   { const vs = (SWL[1] * f.x + SWL[2] * f.z) * P.v;   // la ola sube bajo la moto: al pasar la cresta rápido, sale volando
     if (!P.air && !(P.y > .05) && P.v > 22 && (P._vs || 0) > 1.4 && vs < (P._vs || 0) - .6) { P.air = true; P.y = .05; P.vy = P._vs * .95; }
     P._vs = vs; }
-  ski.root.position.set(P.x, (P.y || 0) + SWL[0], P.z); ski.root.rotation.y = P.th + (P.spin || 0);
+  ski.root.position.set(P.x, (P.y || 0) + SWL[0], P.z); ski.root.rotation.y = P.th + (P.spin || 0) + (P._spinT > P.t ? (1 - (P._spinT - P.t) / .75) * 6.283 : 0);   // choque: trompo de 0,75 s
   if (P.land) { P.land = 0; for (let i = 0; i < 90; i++) { const a = Math.random() * 6.28, sp0 = 2 + Math.random() * 5; spray.emit(P.x + Math.cos(a) * .8, .1, P.z + Math.sin(a) * .8, Math.cos(a) * sp0, 2 + Math.random() * 4, Math.sin(a) * sp0, .08 + Math.random() * .1, .8 + Math.random() * .6, .45); } }   // chapuzón al caer
   ski.body.position.y = -0.02 + (window.__quiet ? 0 : Math.sin(P.t * 3.1) * 0.02 * (0.3 + k)) - k * 0.03;   // quieta mientras eliges
   ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01 + (P.y > .05 ? 0 : (SWL[1] * side.x + SWL[2] * side.z) * .8)) - ski.body.rotation.z) * Math.min(1, dt * 5);
@@ -351,6 +351,7 @@ function step(dt) {
   if (!camInit || camMode !== camPrev) { if (camMode !== camPrev) camTh = P.th; camPos.copy(tmp); camLook.copy(look); camInit = true; camPrev = camMode; }
   camPos.lerp(tmp, 1 - Math.exp(-dt * (camMode === 'dron' ? 6 : 14))); camLook.lerp(look, 1 - Math.exp(-dt * (camMode === 'dron' ? 6 : 9)));
   cam.position.copy(camPos); cam.lookAt(camLook);
+  if (P.shake > 0) { P.shake = Math.max(0, P.shake - dt); const a = P.shake * .9; cam.position.x += (Math.random() - .5) * a; cam.position.y += (Math.random() - .5) * a; }   // sacudida al chocar
   if (window.__camDbg) { cam.position.fromArray(window.__camDbg[0]); cam.lookAt(...window.__camDbg[1]); }   // solo para revisar escenarios
   const fovT = (drifting ? 3 : 0) + (P.kick || 0) * 6 + (camMode === 'dron' ? 42 + (P.v / 31) * 6 : 68 + (P.v / 31) * 12 + (turboOn ? 6 : 0));
   cam.fov += (fovT - cam.fov) * Math.min(1, dt * 3); cam.updateProjectionMatrix();

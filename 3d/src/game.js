@@ -234,26 +234,29 @@ export async function createGame(ctx) {
   const JJ_ITEMS = [{ id: 'fuel', n: 'Llenar el depósito', ef: 'Gasolina al 100 %', p: 300, ic: 'gas-station' }, { id: 'life', n: 'Vida extra', ef: '+1 corazón', p: 1500, ic: 'heart' }, { id: 'turbo', n: 'Refresco turbo', ef: '+1 turbo', p: 500, ic: 'bottle' }];
   function renderJJ() { const L0 = scr.jj.querySelector('.jjl'); L0.innerHTML = '';
     for (const it of JJ_ITEMS) { const full = it.id === 'fuel' ? S.fuel >= 99 : it.id === 'life' ? S.lives >= 6 : (P.turboU ?? 3) >= 5, b = document.createElement('button');
-      const now = it.id === 'fuel' ? 'Ahora: ' + Math.ceil(S.fuel) + ' %' : it.id === 'life' ? 'Tienes ' + S.lives + ' corazones' : 'Tienes ' + (P.turboU ?? 3) + ' turbos';
+      const now = it.id === 'fuel' ? 'Ahora: ' + Math.ceil(S.fuel) + ' %' : it.id === 'life' ? 'Tienes ' + livesTxt() + ' corazones' : 'Tienes ' + (P.turboU ?? 3) + ' turbos';
       b.className = 'card' + (full ? ' sel' : ''); b.innerHTML = `<div class="img" style="display:grid;place-items:center;aspect-ratio:1.4;background:radial-gradient(circle at 50% 45%,#3a1220,#05070b 70%)"><i class="ti ti-${it.ic}" style="font-size:56px;color:#ffe14d"></i></div><b>${it.n}</b><i>${it.ef}</i><i>${now}</i><em>${full ? 'LLENO' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
       b.onclick = () => { if (full) return; if (S.cash < it.p) return noCash(it.p);
-        S.cash -= it.p; toast('COMPRADO: ' + it.n.toUpperCase(), true); if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives++; else P.turboU = Math.min(5, (P.turboU ?? 3) + 1); save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
+        S.cash -= it.p; toast('COMPRADO: ' + it.n.toUpperCase(), true); if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives = Math.min(6, S.lives + 1); else P.turboU = Math.min(5, (P.turboU ?? 3) + 1); save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
       L0.appendChild(b); } refreshCash(); }
-  function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
+  const livesTxt = () => { const f = Math.floor(S.lives + 1e-6), t = Math.round((S.lives - f) * 3); return f + (t ? ' y ' + t + '/3' : ''); };
+  function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, Math.ceil(S.lives - 1e-6)); hp.innerHTML = Array.from({ length: n }, (_, k) => { const fr = Math.max(0, Math.min(1, S.lives - k)); return `<i class="ti ti-heart-filled" style="background:linear-gradient(90deg,#ff3b4e ${fr * 100}%,rgba(255,255,255,.25) ${fr * 100}%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;filter:drop-shadow(0 2px 0 #0b1630)"></i>`; }).join('');
     rh.querySelector('.tu').innerHTML = Array.from({ length: 5 }, (_, k) => `<i class="ti ti-bolt-filled${k < (P.turboU ?? 3) ? '' : ' off'}"></i>`).join('');
     rh.querySelector('.pt').textContent = S.cash.toLocaleString('es-ES') + ' PTA';
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
   window.__onDrift = q => { if (state === 'race' && R) { const p = Math.round(q * 40) * 5; R.pts = (R.pts || 0) + p; R.drifts = (R.drifts || 0) + 1; pop('DERRAPE +' + p, '#ff8c1e'); } };
   window.__onTurboUnit = () => { if (state === 'race') pop('+1 TURBO', '#33d6ff'); };
   window.__onTrick = (spins, flips, sup) => { if (state !== 'race' || !R) return;
-    if (spins < 0) { flash('¡MAL ATERRIZAJE!', 1, true, '#ff3b4e'); if (Snd.ok()) Snd.miss(); return; }
+    if (spins < 0) { if (Snd.ok()) Snd.miss(); return loseLife(2 / 3, '¡VUELCO! −⅔ ♥'); }
     const names = []; if (flips) names.push(flips > 1 ? flips + ' MORTALES' : 'MORTAL'); if (spins) names.push(spins > 1 ? spins * 360 + '' : '360');
     if (sup) names.push('SUPERMAN'); let p = flips * 300 + spins * 200 + (sup ? 250 : 0); if ((flips > 0) + (spins > 0) + !!sup > 1) { p = Math.round(p * 1.5); names.push('COMBO ×1,5'); }
     R.pts = (R.pts || 0) + p; R.tricks = (R.tricks || 0) + 1; flash(names.join(' + '), 1.1, true, '#ffb02e'); pop('+' + p + ' PUNTOS', '#ffb02e'); if (Snd.ok()) Snd.cash(); };
   window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
-  window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
-    if (S.lives <= 0) { S.lives = 3; save(); return finishRace(false, '¡SIN VIDAS!'); } flash('-1 VIDA', 1, true); };
+  // vidas como en el 2D: 1/3 de corazón por choque y 2/3 por volcar; sin corazones, GAME OVER
+  const loseLife = (k, txt) => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.6; S.lives = Math.max(0, S.lives - k); save(); hud();
+    if (S.lives <= .01) { S.lives = 3; save(); return finishRace(false, 'GAME OVER'); } flash(txt, 1, true, '#ff3b4e'); };
+  window.__onCrash = () => loseLife(1 / 3, '¡CHOQUE! −⅓ ♥');
 
   const refreshCash = () => ui.querySelectorAll('.cash').forEach(e => e.textContent = S.cash.toLocaleString('es-ES') + ' PTA');
   function renderMap() {
