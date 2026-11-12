@@ -49,6 +49,7 @@ const PART_NEED = [0, 1, 3];   // pantallas ganadas para STAGE 1, 2 y 3
 const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 // pantallas: recorridos comprobados en agua profunda
 const MEDAL_T = { puerto: [21, 23.5, 99], cala: [36, 42, 50] }, MEDAL_C = ['#ffd21a', '#d9dde3', '#d08a4a'], MEDAL_N = ['ORO', 'PLATA', 'BRONCE'];
+export const VERSION = '1.0.0';   // número de versión (cambios en LEEME.md)
 export const ZONES = [
   { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 0 },
   { id: 'cala', name: 'LA CALA', obj: 'slalom', goal: 'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.', xa: -290, xb: 270, off: 42, amp: 0, per: 1, prize: 1200, riv: 0 },
@@ -174,7 +175,8 @@ export async function createGame(ctx) {
   mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
     <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button></div>
     <div class="row"><button class="btn" data-a="pilot"><i class="ti ti-user"></i>PILOTO Y MOTO</button><button class="btn" data-a="taller"><i class="ti ti-tools"></i>TALLER</button></div>
-    <div class="row"><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button></div>`);
+    <div class="row"><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button></div>
+    <div style="position:absolute;bottom:10px;right:16px;font-weight:800;font-size:14px;opacity:.6">v${VERSION}</div>`);
   // ---------- mapa ----------
   mk('map', `<h2>ELIGE PANTALLA</h2><div class="cash"></div><div class="zone"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- piloto ----------
