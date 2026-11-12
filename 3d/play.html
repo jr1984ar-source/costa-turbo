@@ -200,7 +200,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=82';
+import { createGame } from './src/game.js?v=83';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -216,7 +216,7 @@ function step(dt) {
   const I = input(), f = fwdOf(P.th), side = new THREE.Vector3(-f.z, 0, f.x);
   const PT = window.__parts || {}, L = k => Math.min(3, PT[k] | 0);   // piezas STAGE compradas en el taller
   // turbo por unidades (máx. 5) como en el 2D: cada pulsación gasta una y da un acelerón
-  if (P.turboU == null) P.turboU = 3;
+  if (P.turboU == null) P.turboU = 2;
   if (I.turbo && !P._tPrev && P.turboU > 0 && !(P.boostT > 0) && I.acc && !P.air && !window.__quiet) { P.turboU--; P.boostT = 2.2 * [1, 1.25, 1.5, 1.8][L('intercooler')]; }
   P._tPrev = I.turbo; P.boostT = Math.max(0, (P.boostT || 0) - dt);
   const turboOn = P.boostT > 0;

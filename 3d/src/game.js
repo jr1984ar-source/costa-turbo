@@ -58,7 +58,7 @@ export const ZONES = [
 
 // ---------- guardado ----------
 const SAVE_KEY = 'ct3d_save';
-function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 1500, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
 S.medal = S.medal || {}; S.best = S.best || {};
@@ -558,7 +558,7 @@ export async function createGame(ctx) {
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
     if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
-    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.turboU = 3; P.boostT = 0; P._bovT = 0; P.y = 0; P.vy = 0; P.air = false; P.dc = 0; ctx.resetFx && ctx.resetFx();
+    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.turboU = 2; P.boostT = 0; P._bovT = 0; P.y = 0; P.vy = 0; P.air = false; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count'; keepAwake(true);
   }
