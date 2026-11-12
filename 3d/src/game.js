@@ -224,6 +224,7 @@ export async function createGame(ctx) {
       L0.appendChild(b); } refreshCash(); }
   function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
+  window.__onJump = () => { if (state === 'race') flash('¡SALTO!', .8, true, '#9fe6ff'); };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
     if (S.lives <= 0) { S.lives = 3; save(); return finishRace(false, '¡SIN VIDAS!'); } flash('-1 VIDA', 1, true); };
@@ -313,7 +314,7 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { sem.style.display = 'none'; window.__COLZ.length = 0; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
   const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
@@ -449,6 +450,19 @@ export async function createGame(ctx) {
       const L = r * 2.2; for (let k = -1; k <= 1; k++) solid(x + Math.sin(ry) * k * L, z + Math.cos(ry) * k * L, r); });
   }
 
+  // ---------- rampas de salto (la física del salto está en play.html) ----------
+  function ramp(path, s, lat, len = 7, h = 1.6, w = 4.2) {
+    const q = at(path, s), x = q.x - q.tz * lat, z = q.z + q.tx * lat, th = Math.atan2(q.tx, q.tz), g = new THREE.Group();
+    const geo = new THREE.BufferGeometry(), hw = w / 2;   // cuña: sube de 0 a h a lo largo de len
+    const v = [-hw, 0, 0, hw, 0, 0, hw, h, len, -hw, h, len, -hw, 0, len, hw, 0, len];
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); geo.setIndex([0, 2, 1, 0, 3, 2, 0, 4, 3, 1, 2, 5, 3, 4, 5, 3, 5, 2]); geo.computeVertexNormals();
+    const top = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: textTex([''], 256, 256, '#ffb21a', '#ffb21a'), color: 0xffffff, roughness: .35, side: THREE.DoubleSide })); top.castShadow = top.receiveShadow = true; g.add(top);
+    for (let k = 0; k < 4; k++) { const st = new THREE.Mesh(new THREE.BoxGeometry(w + .02, .05, .35), new THREE.MeshStandardMaterial({ color: 0x14161b })); const u = (k + .5) / 4; st.position.set(0, h * u + .03, len * u); st.rotation.x = -Math.atan2(h, len); g.add(st); }   // franjas negras
+    for (const sx of [-1, 1]) { const fl = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, len + 1, 14), new THREE.MeshStandardMaterial({ color: 0xe3202b, roughness: .4 })); fl.rotation.x = Math.PI / 2; fl.position.set(sx * (hw + .35), .1, len / 2); g.add(fl); }   // flotadores
+    g.position.set(x, -.05, z); g.rotation.y = th; add(g);
+    window.__RAMPS.push({ x, z, th, len, h, w });
+  }
+
   // ---------- rivales ----------
   const RIVC = ['#e3202b', '#1e5eff', '#7be35a', '#ffd21a', '#ff3f8e'], RIVN = ['Toni Marín', 'Carla Ruiz', 'El Tito', 'Sandra Vidal', 'Javi Rubio'];
   let rivPool = null;
@@ -467,6 +481,7 @@ export async function createGame(ctx) {
     R = { Z, path, t: 0, pen: 0, time: 0, cps: [], gates: [], rivals: [], hint: 0, s: 0, lat: 0, done: false, count: 3.6, lastCount: 4, maxS: 0, finished: [] };
     // salida y meta
     arch('META', path, path.L - 4, 16, true); arch('SALIDA', path, 22, 16, false);
+    window.__RAMPS = [];
     if (Z.id === 'puerto') await puertoScene();
     if (Z.id === 'cala') await calaScene();
     if (Z.id === 'mago') await magoScene();
@@ -484,11 +499,13 @@ export async function createGame(ctx) {
       const ar = new THREE.Group(), am = new THREE.MeshStandardMaterial({ color: 0x2bd94f, emissive: 0x2bd94f, emissiveIntensity: .6, roughness: .4 });
       const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 2, 4), am); cone.rotation.x = Math.PI; ar.add(cone);
       const st = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, .7), am); st.position.y = 1.7; ar.add(st); ar.traverse(o => o.castShadow = true); add(ar); R.gArrow = ar; }
+    // rampas en cada pantalla, fuera de las puertas de boyas
+    for (const [f, lat] of { puerto: [[.42, 7], [.78, -6]], cala: [[.93, 0]], mago: [[.3, -8], [.72, 8]] }[Z.id] || []) { let s = path.L * f; while (R.gates.some(q => Math.abs(q.s - s) < 16)) s += 6; ramp(path, s, lat); }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
     if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
-    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
+    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.y = 0; P.vy = 0; P.air = false; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count';
   }

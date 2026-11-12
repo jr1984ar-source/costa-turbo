@@ -184,7 +184,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=50';
+import { createGame } from './src/game.js?v=51';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -235,20 +235,28 @@ function step(dt) {
     if (d < mn && d > 1e-4) { const nx = dx / d, nz = dz / d; P.x = c.x + nx * mn; P.z = c.z + nz * mn;
       const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t)) { if (P.v > 18 && window.__onCrash) window.__onCrash(); P.v *= 0.5; P._hitT = P.t + 0.4; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(120); } }
       const tg = Math.atan2(f.x + nx * 0.8, f.z + nz * 0.8); P.th += Math.atan2(Math.sin(tg - P.th), Math.cos(tg - P.th)) * Math.min(1, dt * 3); } }
+  // rampas: la moto sube por la cuña y sale volando
+  P.y = P.y || 0; P.vy = P.vy || 0;
+  if (P.y > 0 && P.air) { P.vy -= 19 * dt; P.y += P.vy * dt; if (P.y <= 0) { P.y = 0; P.air = false; P.vy = 0; P.land = 1; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(90); } }
+  else { let onR = null; for (const r of (window.__RAMPS || [])) { const dx = P.x - r.x, dz = P.z - r.z, u = (dx * Math.sin(r.th) + dz * Math.cos(r.th)) / r.len, lt = dx * Math.cos(r.th) - dz * Math.sin(r.th);
+      if (u >= 0 && u <= 1.02 && Math.abs(lt) < r.w / 2 && Math.cos(P.th - r.th) > .5) onR = [r, u]; }
+    if (onR && onR[1] < 1) P.y = onR[0].h * onR[1];
+    else if (onR || P.y > 0) { if (P.y > .3 && P.v > 8) { P.air = true; const sl = onR ? onR[0].h / onR[0].len : .2; P.vy = P.v * sl * 1.15 + 3; if (window.__onJump) window.__onJump(); } else P.y = 0; } }
   P.t += dt; env.time.value += dt;
   // piloto vivo: se echa hacia delante, se inclina en las curvas, mira hacia donde gira y vibra con el manillar
   rider.userData.pose({ barY: rider.userData.barY, steer: P.steer, k: Math.min(1, P.v / 33), drift: drifting ? 1 : 0, t: P.t,
     cel: window.__celebT != null && P.t - window.__celebT < 5 ? 1 : 0, hit: P._hitT > P.t ? 1 : 0 });   // celebrar al ganar, golpe al chocar
   rider.position.y = RP[1] + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14);
   // moto
-  ski.root.position.set(P.x, 0, P.z); ski.root.rotation.y = P.th;
+  ski.root.position.set(P.x, P.y || 0, P.z); ski.root.rotation.y = P.th;
+  if (P.land) { P.land = 0; for (let i = 0; i < 90; i++) { const a = Math.random() * 6.28, sp0 = 2 + Math.random() * 5; spray.emit(P.x + Math.cos(a) * .8, .1, P.z + Math.sin(a) * .8, Math.cos(a) * sp0, 2 + Math.random() * 4, Math.sin(a) * sp0, .08 + Math.random() * .1, .8 + Math.random() * .6, .45); } }   // chapuzón al caer
   ski.body.position.y = -0.02 + (window.__quiet ? 0 : Math.sin(P.t * 3.1) * 0.02 * (0.3 + k)) - k * 0.03;   // quieta mientras eliges
   ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01) - ski.body.rotation.z) * Math.min(1, dt * 5);
   ski.body.rotation.y += ((drifting ? P.steer * 0.32 : 0) - ski.body.rotation.y) * Math.min(1, dt * 6);   // la moto cruzada respecto a la trayectoria
-  ski.body.rotation.x += ((-0.02 - k * 0.07 - (I.acc ? 0.02 : 0)) - ski.body.rotation.x) * Math.min(1, dt * 4);
+  ski.body.rotation.x += ((P.y > .05 ? -Math.atan2(P.air ? P.vy : 3, Math.max(8, P.v)) * .7 : -0.02 - k * 0.07 - (I.acc ? 0.02 : 0)) - ski.body.rotation.x) * Math.min(1, dt * (P.y > .05 ? 6 : 4));   // en el aire la proa sigue la trayectoria
   // estela y salpicaduras
-  const sx = P.x - f.x * 1.5, sz = P.z - f.z * 1.5; wake.update(dt, sx, sz, Math.min(1, P.v / 10), P.v);
-  if (P.v > 4) {
+  const sx = P.x - f.x * 1.5, sz = P.z - f.z * 1.5; wake.update(dt, sx, sz, P.y > .3 ? 0 : Math.min(1, P.v / 10), P.v);
+  if (P.v > 4 && !(P.y > .3)) {
     const R = Math.random, k2 = Math.min(1, P.v / 24);
     // cola de gallo: chorro alto detrás de la popa, más fuerte con turbo
     const n = Math.floor(P.v * dt * (60 + (turboOn ? 40 : 0)));
