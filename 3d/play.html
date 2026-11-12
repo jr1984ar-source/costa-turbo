@@ -199,7 +199,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=72';
+import { createGame } from './src/game.js?v=73';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -216,7 +216,7 @@ function step(dt) {
   const PT = window.__parts || {}, L = k => Math.min(3, PT[k] | 0);   // piezas STAGE compradas en el taller
   // turbo por unidades (máx. 5) como en el 2D: cada pulsación gasta una y da un acelerón
   if (P.turboU == null) P.turboU = 3;
-  if (I.turbo && !P._tPrev && P.turboU > 0 && !(P.boostT > 0) && I.acc && !window.__quiet) { P.turboU--; P.boostT = 2.2 * [1, 1.25, 1.5, 1.8][L('intercooler')]; }
+  if (I.turbo && !P._tPrev && P.turboU > 0 && !(P.boostT > 0) && I.acc && !P.air && !window.__quiet) { P.turboU--; P.boostT = 2.2 * [1, 1.25, 1.5, 1.8][L('intercooler')]; }
   P._tPrev = I.turbo; P.boostT = Math.max(0, (P.boostT || 0) - dt);
   const turboOn = P.boostT > 0;
   const vmul = (1 + .045 * L('escape')) * [1, 1.08, 1.14, 1.19][L('turbina')];
@@ -267,10 +267,12 @@ function step(dt) {
     // trucos: girar en el aire = 360, derrape en el aire = mortal (los dos a la vez = combo)
     if (!big && !P.spin && !P.flip) {} else if (Math.abs(I.steer) > .3) { P.spin = (P.spin || 0) + Math.sign(I.steer) * dt * 9; P._sd = Math.sign(I.steer); }
     else if (P.spin) { const t = Math.ceil(Math.abs(P.spin) / 6.283 - .02) * 6.283, nx = Math.abs(P.spin) + dt * 9; P.spin = Math.sign(P.spin) * Math.min(t, nx); }   // al soltar, termina la vuelta empezada
+    if (big && I.turbo) P._sup = (P._sup || 0) + dt;   // SUPERMAN: turbo en el aire, el piloto se estira
     if (!big && !P.flip) {} else if (I.drift) P.flip = (P.flip || 0) + dt * 8; else if (P.flip) P.flip = Math.min(Math.ceil(P.flip / 6.283 - .02) * 6.283, P.flip + dt * 8);
     if (P.y <= 0) { P.y = 0; P.air = false; P.vy = 0; P.land = 1; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(90);
       const sp = Math.abs(P.spin || 0), fl = P.flip || 0, ns = Math.round(sp / 6.283), nf = Math.round(fl / 6.283), bad = Math.abs(sp - ns * 6.283) > .7 || Math.abs(fl - nf * 6.283) > .7;
-      if (bad) { P.v *= .25; P._hitT = P.t + .6; window.__onTrick && window.__onTrick(-1, 0); } else if (ns || nf) window.__onTrick && window.__onTrick(ns, nf);
+      const sup = (P._sup || 0) > .3; P._sup = 0;
+      if (bad) { P.v *= .25; P._hitT = P.t + .6; window.__onTrick && window.__onTrick(-1, 0); } else if (ns || nf || sup) window.__onTrick && window.__onTrick(ns, nf, sup);
       P.spin = 0; P.flip = 0; P._airT = 0; } }
   else { let onR = null; for (const r of (window.__RAMPS || [])) { const dx = P.x - r.x, dz = P.z - r.z, u = (dx * Math.sin(r.th) + dz * Math.cos(r.th)) / r.len, lt = dx * Math.cos(r.th) - dz * Math.sin(r.th);
       if (u >= 0 && u <= 1.02 && Math.abs(lt) < r.w / 2 && Math.cos(P.th - r.th) > .5) onR = [r, u]; }
@@ -291,7 +293,7 @@ function step(dt) {
     const w = fl ? Math.sin(P.t * 11 + b.ph) * .65 : .12; b.gl.userData.w[0].rotation.z = w; b.gl.userData.w[1].rotation.z = -w; }
   // piloto vivo: se echa hacia delante, se inclina en las curvas, mira hacia donde gira y vibra con el manillar
   rider.userData.pose({ barY: rider.userData.barY, steer: P.steer, k: Math.min(1, P.v / 33), drift: drifting ? 1 : 0, t: P.t,
-    cel: window.__celebT != null && P.t - window.__celebT < 5 ? 1 : 0, hit: P._hitT > P.t ? 1 : 0 });   // celebrar al ganar, golpe al chocar
+    cel: (window.__celebT != null && P.t - window.__celebT < 5) || (P._sup || 0) > .3 ? 1 : 0, hit: P._hitT > P.t ? 1 : 0 });   // celebrar al ganar, golpe al chocar
   rider.position.y = RP[1] + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14);
   // moto
   const SWL = swell(P.x, P.z, env.time.value); window.__swell = (x, z) => swell(x, z, env.time.value)[0];   // mar de fondo bajo la moto

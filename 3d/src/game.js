@@ -210,7 +210,7 @@ export async function createGame(ctx) {
     <div><b><i class="ti ti-keyboard"></i> TECLADO</b>Flechas o WASD: acelerar, frenar y girar<br>Shift o X: turbo<br>Espacio o Z: derrape<br>C: cámara dron / onboard<br>P o Esc: pausa</div>
     <div><b><i class="ti ti-device-gamepad-2"></i> MANDO</b>Stick izquierdo: girar<br>RT o B: acelerar · LT: frenar<br>X: turbo · A: derrape<br>START: pausa<br>Menús: cruceta, A elegir, B volver</div>
     <div><b><i class="ti ti-hand-finger"></i> TÁCTIL</b>Flechas abajo a la izquierda: girar<br>ACELERAR: el botón grande<br>TURBO y DERRAPE encima<br>CÁMARA: botón de la izquierda<br>Se pueden ocultar en Ajustes</div></div>
-    <div class="sub" style="font-size:15px">Derrape: mantén DERRAPE en la curva y suéltalo para un mini-turbo. En las rampas, en el aire: girar = 360, DERRAPE = mortal (los dos = combo). Suelta a tiempo para caer bien.</div>
+    <div class="sub" style="font-size:15px">Derrape: mantén DERRAPE en la curva y suéltalo para un mini-turbo. En las rampas, en el aire: girar = 360, DERRAPE = mortal, TURBO = superman (juntos = combo). Suelta a tiempo para caer bien.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- créditos ----------
   mk('cred', `<h2>CRÉDITOS</h2><div class="cred">
@@ -245,10 +245,10 @@ export async function createGame(ctx) {
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
   window.__onDrift = q => { if (state === 'race' && R) { const p = Math.round(q * 40) * 5; R.pts = (R.pts || 0) + p; R.drifts = (R.drifts || 0) + 1; pop('DERRAPE +' + p, '#ff8c1e'); } };
   window.__onTurboUnit = () => { if (state === 'race') pop('+1 TURBO', '#33d6ff'); };
-  window.__onTrick = (spins, flips) => { if (state !== 'race' || !R) return;
+  window.__onTrick = (spins, flips, sup) => { if (state !== 'race' || !R) return;
     if (spins < 0) { flash('¡MAL ATERRIZAJE!', 1, true, '#ff3b4e'); if (Snd.ok()) Snd.miss(); return; }
     const names = []; if (flips) names.push(flips > 1 ? flips + ' MORTALES' : 'MORTAL'); if (spins) names.push(spins > 1 ? spins * 360 + '' : '360');
-    let p = flips * 300 + spins * 200; if (flips && spins) { p = Math.round(p * 1.5); names.push('COMBO ×1,5'); }
+    if (sup) names.push('SUPERMAN'); let p = flips * 300 + spins * 200 + (sup ? 250 : 0); if ((flips > 0) + (spins > 0) + !!sup > 1) { p = Math.round(p * 1.5); names.push('COMBO ×1,5'); }
     R.pts = (R.pts || 0) + p; R.tricks = (R.tricks || 0) + 1; flash(names.join(' + '), 1.1, true, '#ffb02e'); pop('+' + p + ' PUNTOS', '#ffb02e'); if (Snd.ok()) Snd.cash(); };
   window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
