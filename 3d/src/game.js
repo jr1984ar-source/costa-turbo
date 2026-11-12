@@ -4,7 +4,9 @@ import * as THREE from 'three';
 import { PAINTS } from './paint.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 const GL = new GLTFLoader(), GLC = {};
-const glb = n => GLC[n] || (GLC[n] = GL.loadAsync('models/' + n + '.glb').then(r => { r.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; } }); return r.scene; }));
+const glb = n => GLC[n] || (GLC[n] = GL.loadAsync('models/' + n + '.glb').then(r => { r.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; const m = o.material; if (m && m.metalness > .9 && !m.metalnessMap) m.metalness = 0;
+  if (!o.geometry.attributes.normal) o.geometry.computeVertexNormals();
+  if (/^acantilado/.test(n) && m) o.material = new THREE.MeshStandardMaterial({ map: m.map, normalMap: m.normalMap || null, roughness: 1, metalness: 0, emissive: 0xffffff, emissiveMap: m.map, emissiveIntensity: .2 }); } }); return r.scene; }));
 
 // ---------- datos (nombres y precios del juego 2D) ----------
 export const AVATARS = [
@@ -190,7 +192,7 @@ export async function createGame(ctx) {
     · Kawasaki 310XUltra Jet Ski — XOIAL<br>· Motocross Helmet (Final) — Sharpsterman<br>· Life Vest / Life Jacket — DanTronMcTronDan<br>
     · Eric Rigged 001, Carla Rigged 001 y Claudia Rigged 002 — Renderpeople<br>· Realistic HD Mexican fan palm (8/10) y Canary Island date palm (31/40) — PlantCatalog<br>
     · Washingtonia Robusta Palm_03 — andre.arq.89<br>· Coconut Palm y Date Palm — evolveduk<br>
-    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br><br>
+    · bateau RIVA boat — maxipub<br>· Yacht II — agt14032013<br>· Fishing Ship game-ready asset — crazyyuan<br>· Fisher boat — Batuhan13<br>· Fishing Boat — RafaelBR873D<br>· lighthouse — Lora_o<br>· Rocky coast of the Sea of Japan N5 y N7 — sepett<br><br>
     Texturas, rocas y cielos de Poly Haven (CC0). Música: «Jet-Ski Paradise», creada con Suno. Motor 3D: three.js.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- pausa ----------
@@ -403,12 +405,14 @@ export async function createGame(ctx) {
 
   // ---------- escenario de LA CALA: rocas a los lados de la entrada y barcas fondeadas ----------
   async function calaScene() {
-    const [roca, barca, pesca2, riva] = await Promise.all(['namaqualand_boulder_02', 'barca', 'barco_pesca2', 'barco_riva'].map(glb));
+    const [roca, barca, pesca2, riva, acan5, acan7] = await Promise.all(['namaqualand_boulder_02', 'barca', 'barco_pesca2', 'barco_riva', 'acantilado_n5', 'acantilado_n7'].map(glb));
     const boats = R.boats = [];
     const rock = (x, z, sc, ry, sy = .8) => { const r0 = roca.clone(); r0.scale.set(sc, sc * sy, sc); r0.rotation.set((ry % 1) * .4 - .2, ry * 3, (ry % .7) * .5 - .17); r0.position.set(x, -sc * .25, z); add(r0); solid(x, z, sc * 1.05); };
     // dos cabos de roca que cierran la cala, uno a cada lado, metiéndose en el agua
-    for (const [xc, dir] of [[-262, -1], [244, 1]]) for (let k = 0; k < 70; k++) { const h = (k * 37 % 11) / 11, h2 = (k * 53 % 7) / 7, along = (k % 10) * 3.6 + h2 * 2, x = xc + dir * (Math.floor(k / 10) * 5.5 + h * 4), z = coastZ(x) + 6 - along;
-      if (z < coastZ(x) - 30) continue; const big = 1 - along / 40; rock(x, z, 3 + big * 4 + h * 2, k * .37 + h, .8 + big * .7 + h2 * .3); }
+    for (const [src, xc, s, sy] of [[acan5, -258, 1.15, 1.7], [acan7, 250, 1.35, 1.9]]) { const a = src.clone(), zc = coastZ(xc) + 1, len = (src === acan5 ? 40 : 30) * s;
+      a.scale.set(s, s * sy, s); a.rotation.y = Math.PI; a.position.set(xc, -1.2, zc); add(a);
+      for (let t = -.5; t <= .5; t += .08) solid(xc + t * len, coastZ(xc + t * len) - 1, 5);
+      for (let k = 0; k < 9; k++) { const h = (k * 37 % 11) / 11, x = xc + (h - .5) * len * .9; rock(x, coastZ(x) - 5 - (k % 3) * 1.8, 1.3 + h * 1.5, k * .41 + h); } }   // acantilados reales a los lados de la cala
     // rocas sueltas por la orilla
     for (let k = 0; k < 10; k++) { const x = -200 + k * 43 + (k % 2) * 9, z = coastZ(x) + 1.5 + (k % 3); rock(x, z, 1.2 + (k % 4) * .35, k * .53); }
     // barcas y llaüts fondeados, fuera del recorrido
