@@ -87,6 +87,9 @@ const CSS = `
 #ui{position:fixed;inset:0;z-index:20;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;color:#fff;display:none;pointer-events:auto}
 #ui.on{display:block}
 #ui .bg{position:absolute;inset:0;background:radial-gradient(120% 90% at 50% 10%,rgba(4,30,60,.25),rgba(2,10,24,.86))}
+#ui.studio .bg{background:linear-gradient(90deg,rgba(2,6,14,.9) 0,rgba(2,6,14,.75) 48%,rgba(2,6,14,0) 62%)}
+#ui.studio .scr.on{right:40vw;justify-content:flex-start;padding-top:64px}
+@media (max-aspect-ratio:1/1){#ui.studio .scr.on{right:0;padding-top:46vh}#ui.studio .bg{background:linear-gradient(0deg,rgba(2,6,14,.92) 0,rgba(2,6,14,.8) 55%,rgba(2,6,14,0) 70%)}}
 #ui .scr{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:20px 16px;box-sizing:border-box;overflow:auto}
 #ui .scr.on{display:flex;animation:ctin .28s ease-out}
 @keyframes ctin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -180,7 +183,7 @@ export async function createGame(ctx) {
   const homeB = document.createElement('button'); homeB.className = 'btn'; homeB.dataset.a = 'menu'; homeB.innerHTML = '<i class="ti ti-home"></i>INICIO'; Object.assign(homeB.style, { position: 'absolute', top: '14px', left: '18px', minWidth: '0', fontSize: '18px', padding: '6px 16px', zIndex: 2 }); ui.appendChild(homeB);   // botón INICIO en todas las pantallas
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
-  const show = id => { if (id === 'menu' && typeof renderCard === 'function') try { renderCard(); } catch (e) {} for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
+  const show = id => { if (id === 'menu' && typeof renderCard === 'function') try { renderCard(); } catch (e) {} for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); ui.classList.toggle('studio', id === 'pilot' || id === 'taller'); homeB.style.display = id && id !== 'menu' ? '' : 'none'; const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
   const flash = (txt, t = 1.2, small = false, col = '') => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.color = col; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
   const pop = (txt, col = '#ffe14d', dx = 0) => { const e = document.createElement('div'); e.className = 'pop'; e.textContent = txt; e.style.color = col; e.style.marginLeft = dx + 'px'; document.body.appendChild(e); setTimeout(() => e.remove(), 1000); };   // puntos emergentes
