@@ -196,7 +196,7 @@ export async function createGame(ctx) {
   // ---------- taller ----------
   mk('taller', `<h2>TALLER</h2><div class="cash"></div><div class="tabs cat"></div><div class="grid it"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- briefing ----------
-  mk('brief', `<img class="bimg" alt="" style="width:min(640px,90vw);aspect-ratio:2.05;object-fit:cover;border-radius:16px;border:3px solid rgba(255,255,255,.6);box-shadow:0 10px 30px rgba(0,0,0,.5)"><h2 class="zn"></h2><div class="sub zg"></div><div class="sub zb" style="color:#ffe14d"></div><div class="row"><button class="btn main" data-a="go">¡A CORRER!</button><button class="btn" data-a="map">VOLVER</button></div>`);
+  mk('brief', `<img class="bimg" alt="" style="width:min(640px,90vw);aspect-ratio:2.05;object-fit:cover;border-radius:16px;border:3px solid rgba(255,255,255,.6);box-shadow:0 10px 30px rgba(0,0,0,.5)"><h2 class="zn"></h2><div class="sub zg"></div><div class="sub zb" style="color:#ffe14d"></div><div class="row"><button class="btn main" data-a="go">¡A CORRER!</button><button class="btn" data-a="free"><i class="ti ti-ghost-2"></i>CARRERA LIBRE</button><button class="btn" data-a="map">VOLVER</button></div>`);
   // ---------- resultados ----------
   mk('result', `<div class="md" style="display:none;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em"></div><h2 class="rt"></h2><div class="sub rs" style="font-size:24px"></div><div class="sub rp" style="color:#ffe14d;font-size:30px;font-weight:900"></div>
     <div class="nm" style="display:none;text-align:center"><div class="sub" style="font-weight:800">¡TOP 10! TU NOMBRE:</div><input maxlength="12"><div class="row" style="margin-top:8px"><button class="btn" data-a="savename">GUARDAR</button></div></div>
@@ -349,7 +349,7 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { if (Snd.sirenStop) Snd.sirenStop(); ctx.setTime && ctx.setTime('mediodia'); sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { if (typeof ghostSki !== 'undefined' && ghostSki) scene.remove(ghostSki.root); if (Snd.sirenStop) Snd.sirenStop(); ctx.setTime && ctx.setTime('mediodia'); sem.style.display = 'none'; window.__COLZ.length = 0; window.__RAMPS = []; window.__rivNear = [0, 0]; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
   const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
@@ -519,6 +519,7 @@ export async function createGame(ctx) {
   }
 
   // ---------- carrera ----------
+  let freeMode = false, ghostSki = null;
   async function startRace(i) {
     state = 'loading'; show(null); flash('CARGANDO…', 99, true);
     clearZone(); const Z = ZONES[i]; const path = buildPath(Z);
@@ -574,7 +575,10 @@ export async function createGame(ctx) {
       const wy = new Wake(env); add(wy.mesh); wy.pts.length = 0; const m = rv.clone(); add(m); const wm = new Wake(env); add(wm.mesh); wm.pts.length = 0;
       R.traffic = [{ o: y, wk: wy, s: R.path.L * .15, lat: -34 * sh, v: 7, dir: 1, y: -1.3, girls: true, gave: false, cols: [] }, { o: m, wk: wm, s: R.path.L * .95, lat: -30 * sh, v: 12, dir: -1, y: -.32, cols: [] }];
       for (const t of R.traffic) for (let k = 0; k < 3; k++) { const c = { x: 0, z: 0, r: t.girls ? 4 : 1.7 }; window.__COLZ.push(c); t.cols.push(c); } }
-    if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
+    R.free = freeMode; R.rec = []; R.recT = 0;
+    if (freeMode) { if (!ghostSki) { ghostSki = await ctx.loadSki('kawasaki'); ghostSki.root.traverse(o => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = .38; o.material.depthWrite = false; o.castShadow = false; } }); }
+      const gh = S.ghost && S.ghost[Z.id]; R.ghost = gh || null; ghostSki.root.visible = !!gh; if (gh) scene.add(ghostSki.root); }
+    if (Z.riv && !freeMode) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
     if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
@@ -583,7 +587,8 @@ export async function createGame(ctx) {
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count'; keepAwake(true);
   }
   function finishRace(ok, title) {
-    if (R.done) return; R.done = true; state = 'result'; keepAwake(false); if (Snd.sirenStop) Snd.sirenStop(); rh.style.display = 'none'; const Z = R.Z;
+    if (R.done) return; R.done = true; state = 'result'; keepAwake(false);
+    if (R.free && ok) { S.ghost = S.ghost || {}; const old = S.ghost[R.Z.id]; if (!old || R.t < old.t) { S.ghost[R.Z.id] = { t: R.t, p: R.rec }; title = '¡NUEVO FANTASMA!'; } } if (Snd.sirenStop) Snd.sirenStop(); rh.style.display = 'none'; const Z = R.Z;
     let prize = 0, line = '', t = R.t + R.pen;
     const coinTxt = R.coinN ? ' · ' + R.coinN + ' monedas: +' + (R.coinN * 25).toLocaleString('es-ES') + ' PTA' : '';
     if (Z.obj === 'time') { const pp = ok && Z.posPrize && R.pos <= 3 ? Z.posPrize[R.pos - 1] : 0; line = (ok ? 'Tiempo: ' + fmtT(R.t) + (R.rivals.length ? ' · ' + R.pos + 'º de ' + (R.rivals.length + 1) + (pp ? ' (+' + pp.toLocaleString('es-ES') + ' PTA por puesto)' : '') : '') : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'); if (ok) prize = Z.prize + pp; }
@@ -591,7 +596,8 @@ export async function createGame(ctx) {
       if (ok && !miss) { prize += 500; S.perfect = 1; line += ' · ¡SLALOM PERFECTO! +500 PTA'; } }
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
     // bonus de tiempo como en el 2D: en EL PUERTO 50 PTA por segundo sobrante; en LA CALA 30 PTA por segundo por debajo de 30 s
-    const tBonus = !ok ? 0 : Z.obj === 'time' ? Math.round(R.time) * 50 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
+    if (R.free) prize = 0;   // la carrera libre no da premio
+    const tBonus = !ok || R.free ? 0 : Z.obj === 'time' ? Math.round(R.time) * 50 : Z.obj === 'slalom' ? Math.max(0, Math.round((30 - t) * 30)) : 0, base = prize; prize += tBonus;
     const unl = ok && zone + 1 < ZONES.length && !S.done[ZONES[zone + 1].id] && !S.done[Z.id] ? ZONES[zone + 1].name : '';
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
     // medalla y récord
@@ -639,7 +645,8 @@ export async function createGame(ctx) {
     if (a === 'tsnd') { S.set.snd = S.set.snd ? 0 : 1; save(); applySettings(); }
     if (a === 'tmus') { S.set.mus = S.set.mus ? 0 : 1; save(); applySettings(); }
     if (a === 'wipe') { if (b.dataset.sure) { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} location.reload(); } else { b.dataset.sure = 1; b.textContent = '¿SEGURO? PULSA OTRA VEZ'; } }
-    if (a === 'go') await startRace(zone);
+    if (a === 'go') { freeMode = false; await startRace(zone); }
+    if (a === 'free') { freeMode = true; await startRace(zone); }
     if (a === 'retry') await startRace(zone);
     if (a === 'next') { if (zone + 1 < S.unlocked) openBrief(zone + 1); }
     if (a === 'resume') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); }
@@ -741,11 +748,15 @@ export async function createGame(ctx) {
       c.save(); c.translate(X(P.x), Y(P.z)); c.rotate(Math.atan2(-Math.cos(P.th), -Math.sin(P.th))); c.fillStyle = '#ffe14d'; c.strokeStyle = '#0b1630'; c.lineWidth = 3; c.beginPath(); c.moveTo(14, 0); c.lineTo(-9, 9); c.lineTo(-5, 0); c.lineTo(-9, -9); c.closePath(); c.stroke(); c.fill(); c.restore(); }
     { const q = at(R.path, R.s), fx = Math.sin(P.th), fz = Math.cos(P.th); R.wrongT = (fx * q.tx + fz * q.tz < -.35 && P.v > 5) ? (R.wrongT || 0) + dt : 0;
       if (R.wrongT > 1 && msgT <= 0) flash('DIRECCIÓN CONTRARIA', 1, true, '#ff3b4e'); }
+    // carrera libre: graba tu recorrido y mueve el fantasma del récord
+    if (R.free && state === 'race') { R.recT += dt; if (R.recT >= .1) { R.recT -= .1; R.rec.push(+P.x.toFixed(2), +P.z.toFixed(2), +P.th.toFixed(3)); }
+      if (R.ghost && ghostSki) { const k = R.t / .1, i = Math.min(Math.floor(k), R.ghost.p.length / 3 - 2), f = Math.min(1, k - i), a = R.ghost.p, j = i * 3;
+        if (i >= 0) { ghostSki.root.position.set(a[j] + (a[j + 3] - a[j]) * f, 0, a[j + 1] + (a[j + 4] - a[j + 1]) * f); ghostSki.root.rotation.y = a[j + 2] + (a[j + 5] - a[j + 2]) * f; } } }
     // jugador en el recorrido
     const L = locate(path, P.x, P.z, R.hint); R.hint = L.i; const prevS = R.s; R.s = L.s; R.lat = L.lat; R.maxS = Math.max(R.maxS, R.s);
     if (Z.obj === 'time') { R.time -= dt; R.t += dt;
       for (const c of R.cps) if (!c.hit && prevS < c.s && R.s >= c.s) { c.hit = true; R.time += c.add; flash('+' + c.add + ' s', 1.2, true); if (Snd.ok()) Snd.check(); }
-      if (R.time <= 0) { R.time = 0; return finishRace(false, '¡SE ACABÓ EL TIEMPO!'); } }
+      if (R.time <= 0 && !R.free) { R.time = 0; return finishRace(false, '¡SE ACABÓ EL TIEMPO!'); } }
     else R.t += dt;
     if (Z.obj === 'slalom') for (const g of R.gates) if (!g.done && prevS < g.s && R.s >= g.s) { g.done = true;
       const okG = Math.abs(R.lat - g.c) <= 4.6, tint = okG ? 0x2bd94f : 0xff2b3a;
