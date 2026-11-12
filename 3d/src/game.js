@@ -5,6 +5,7 @@ import { PAINTS } from './paint.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
+import { buildLand } from './land.js?v=7';
 const GL = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), GLC = {};
 const GLA = {}, glbAnim = n => GLA[n] || (GLA[n] = GL.loadAsync('models/' + n + '.glb'));   // modelos con animación (delfines, tortugas)
 const glb = n => GLC[n] || (GLC[n] = GL.loadAsync('models/' + n + '.glb').then(r => { r.scene.traverse(o => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; const m = o.material; if (m && m.metalness > .9 && !m.metalnessMap) m.metalness = 0;
@@ -473,6 +474,7 @@ export async function createGame(ctx) {
       // choque: círculos a lo largo de la eslora
       const L = r * 2.2; for (let k = -1; k <= 1; k++) solid(x + Math.sin(ry) * k * L, z + Math.cos(ry) * k * L, r); return b; };
     const boats = []; R.boats = boats;
+    add(buildLand());   // montañas, acantilados con calas, pueblo, hoteles, villas, carreteras y pinares
     // muelle de salida de hormigón, detrás de la salida
     { const x = 318, z0 = coastZ(x) + 4, z1 = coastZ(x) - 46, L = z0 - z1, d = new THREE.Group();
       const deck = new THREE.Mesh(new THREE.BoxGeometry(6, 4.2, L), M(0xb9b2a4, .95)); deck.position.set(x, -1.05, (z0 + z1) / 2); deck.castShadow = deck.receiveShadow = true; d.add(deck);

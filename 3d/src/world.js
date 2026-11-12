@@ -297,7 +297,7 @@ export function makeWater(env, hdTex, waveTex) {
   const g = new THREE.PlaneGeometry(WORLD, WORLD, 220, 220); g.rotateX(-Math.PI / 2);   // malla con olas en la zona de juego
   const m = new THREE.Mesh(g, mat); m.renderOrder = 2; m.frustumCulled = false;
   const mo = mat.clone(); mo.uniforms = Object.assign({}, mat.uniforms, { uOuter: { value: 1 } });
-  const go = new THREE.PlaneGeometry(6000, 6000, 1, 1); go.rotateX(-Math.PI / 2); const outer = new THREE.Mesh(go, mo); outer.renderOrder = 2; m.add(outer);   // mar lejano, plano
+  const go = new THREE.PlaneGeometry(24000, 24000, 1, 1); go.rotateX(-Math.PI / 2); const outer = new THREE.Mesh(go, mo); outer.renderOrder = 2; m.add(outer);   // mar lejano, plano
   return m;
 }
 

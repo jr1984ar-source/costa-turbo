@@ -23,7 +23,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { swell, addUnderwater, WORLD, coastZ, heightAt, makeEnv, makeHeightTexture, makeWaveTexture, makeTerrain, makeWater, makeSkyDome, makeEnvMap } from './src/world.js?v=4';
+import { swell, addUnderwater, WORLD, coastZ, heightAt, makeEnv, makeHeightTexture, makeWaveTexture, makeTerrain, makeWater, makeSkyDome, makeEnvMap } from './src/world.js?v=5';
 import { makeJetSki } from './src/jetski.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
@@ -65,7 +65,7 @@ const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromEquirectangular(envHdr).texture; scene.environmentRotation.set(0, aEnv, 0); scene.environmentIntensity = 0.55;
 const hd = makeHeightTexture(512), waves = makeWaveTexture(256);
 scene.add(makeTerrain(env, hd, 400, T));
-scene.add(makeWater(env, hd, waves));
+const water = makeWater(env, hd, waves); scene.add(water);
 
 // sol con sombras que siguen a la acción
 const sun = new THREE.DirectionalLight(new THREE.Color(1.0, 0.93, 0.82), 4.2);
@@ -144,7 +144,7 @@ document.body.appendChild(LOAD);
 THREE.DefaultLoadingManager.onProgress = (u, l, t) => { const k = Math.round(l / Math.max(1, t) * 100); const b = document.getElementById('loadBar'), x = document.getElementById('loadTx'); if (b) b.style.width = Math.max(3, k) + '%'; if (x) x.textContent = 'CARGANDO ' + k + '%'; }; window.__Snd = Snd;
 // --- JUEGO: cámara detrás, controles (teclado, táctil, mando) y bucle
 const hud = document.getElementById('hud'); hud.style.display = 'block';
-const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
+const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 9000);
 const wake = new Wake(env); scene.add(wake.mesh); window.__wake = wake;
 const spray = new Spray(env, 12000); scene.add(spray.points); window.__spray = spray;
 import { makeRider } from './src/rider.js?v=16';
@@ -200,14 +200,16 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=113';
+import { createGame } from './src/game.js?v=120';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
   ski.body.remove(rider); ski.body.add(nr); rider = nr; window.__rider = nr; }
 const setQuality = q => { const hi = q !== 'baja'; gtao.enabled = hi; bloomPass.enabled = hi; const ms = hi ? 4096 : 1536; if (sun.shadow.mapSize.x !== ms) { sun.shadow.mapSize.set(ms, ms); if (sun.shadow.map) { sun.shadow.map.dispose(); sun.shadow.map = null; } } renderer.setPixelRatio(hi ? Math.min(devicePixelRatio, 1.5) : 1); comp.setPixelRatio(renderer.getPixelRatio()); comp.setSize(innerWidth, innerHeight); };
 const SUN0 = sun.color.clone(), SUNI0 = sun.intensity, EXP0 = renderer.toneMappingExposure;
-const setTime = k => { const m = k === 'manana'; sun.color.copy(SUN0).lerp(new THREE.Color(1, .84, .66), m ? 1 : 0); sun.intensity = SUNI0 * (m ? .82 : 1); renderer.toneMappingExposure = EXP0 * (m ? .93 : 1); };   // hora del día: EL PUERTO por la mañana, el resto a mediodía
+const setTime = k => { const m = k === 'manana'; sun.color.copy(SUN0).lerp(new THREE.Color(1, .84, .66), m ? 1 : 0); sun.intensity = SUNI0 * (m ? .82 : 1); renderer.toneMappingExposure = EXP0 * (m ? .93 : 1);
+  env.fogNear = m ? 600 : 260; env.fogFar = m ? 7000 : 900; if (scene.fog) { scene.fog.near = env.fogNear; scene.fog.far = env.fogFar; } water.material.uniforms.uFogNear.value = env.fogNear; water.material.uniforms.uFogFar.value = env.fogFar;   // EL PUERTO: se ven las montañas a lo lejos
+  for (const q of people) q.m.visible = !(m && q.x0 < -150); };   // en EL PUERTO esa parte de la orilla son acantilados   // hora del día: EL PUERTO por la mañana, el resto a mediodía
 const setHideControls = v => { hud.querySelectorAll('.pad').forEach(e => e.style.display = v ? 'none' : ''); };
 // dorsal y logo pegados a los dos lados de la moto
 const decals = [];
