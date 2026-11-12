@@ -716,7 +716,9 @@ export async function createGame(ctx) {
     // rivales
     if (R.rivals.length) {
       for (const r of R.rivals) {
-        const ahead = r.s - R.s, rub = ahead > 25 ? -.08 : ahead < -25 ? .07 : 0, vt = r.fin ? 8 : r.vmax * (1 + rub);
+        // IA como el 2D: usa turbo (más cuanto más difícil y si va por detrás) y se ajusta a tu ritmo
+        r.tb = (r.tb || 0) - dt; r.tcd = (r.tcd ?? 3 + Math.random() * 4) - dt; if (r.tcd <= 0 && !r.fin) { r.tcd = [9, 8, 6, 5, 4][S.set.dif] + Math.random() * 4 - (r.s < R.s ? 2 : 0); r.tb = 2; }
+        const ahead = r.s - R.s, rub = ahead > 25 ? -.08 : ahead < -25 ? .07 : 0, vt = r.fin ? 8 : r.vmax * (1 + rub) * (r.tb > 0 ? 1.22 : 1);
         r.v += (vt - r.v) * .55 * dt; r.s += r.v * dt;
         r.tl -= dt; if (r.tl <= 0) { r.tl = 2 + Math.random() * 3; r.laneT = (Math.random() * 2 - 1) * 9; }
         // choque con el jugador: los dos se empujan y pierden algo de velocidad
