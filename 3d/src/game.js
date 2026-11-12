@@ -176,7 +176,7 @@ export async function createGame(ctx) {
   // ---------- taller ----------
   mk('taller', `<h2>TALLER</h2><div class="cash"></div><div class="tabs cat"></div><div class="grid it"></div><div class="row"><button class="btn" data-a="menu">VOLVER</button></div>`);
   // ---------- briefing ----------
-  mk('brief', `<h2 class="zn"></h2><div class="sub zg"></div><div class="sub zb" style="color:#ffe14d"></div><div class="row"><button class="btn main" data-a="go">¡A CORRER!</button><button class="btn" data-a="map">VOLVER</button></div>`);
+  mk('brief', `<img class="bimg" alt="" style="width:min(640px,90vw);aspect-ratio:2.05;object-fit:cover;border-radius:16px;border:3px solid rgba(255,255,255,.6);box-shadow:0 10px 30px rgba(0,0,0,.5)"><h2 class="zn"></h2><div class="sub zg"></div><div class="sub zb" style="color:#ffe14d"></div><div class="row"><button class="btn main" data-a="go">¡A CORRER!</button><button class="btn" data-a="map">VOLVER</button></div>`);
   // ---------- resultados ----------
   mk('result', `<div class="md" style="display:none;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em"></div><h2 class="rt"></h2><div class="sub rs" style="font-size:24px"></div><div class="sub rp" style="color:#ffe14d;font-size:30px;font-weight:900"></div>
     <div class="nm" style="display:none;text-align:center"><div class="sub" style="font-weight:800">¡TOP 10! TU NOMBRE:</div><input maxlength="12"><div class="row" style="margin-top:8px"><button class="btn" data-a="savename">GUARDAR</button></div></div>
@@ -303,6 +303,7 @@ export async function createGame(ctx) {
   function openBrief(i) { zone = i; const Z = ZONES[i];
     scr.brief.querySelector('.zn').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; scr.brief.querySelector('.zg').textContent = Z.goal;
     scr.brief.querySelector('.zb').textContent = 'Premio: ' + (Array.isArray(Z.prize) ? Z.prize.map((p, k) => (k + 1) + 'º ' + p.toLocaleString('es-ES')).join(' · ') : Z.prize.toLocaleString('es-ES')) + ' PTA';
+    scr.brief.querySelector('.bimg').src = 'assets/brief_' + Z.id + '.jpg';
     state = 'brief'; show('brief'); }
 
   // ---------- recorrido ----------
@@ -478,7 +479,7 @@ export async function createGame(ctx) {
       const ar = new THREE.Group(), am = new THREE.MeshStandardMaterial({ color: 0x2bd94f, emissive: 0x2bd94f, emissiveIntensity: .6, roughness: .4 });
       const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 2, 4), am); cone.rotation.x = Math.PI; ar.add(cone);
       const st = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, .7), am); st.position.y = 1.7; ar.add(st); ar.traverse(o => o.castShadow = true); add(ar); R.gArrow = ar; }
-    if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
+    if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
     if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
