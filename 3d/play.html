@@ -133,6 +133,7 @@ const flock = []; for (let i = 0; i < 14; i++) { const cx = -280 + i * 43 + Math
 window.__flock = flock;
 
 import { Snd, updateSound, updateAmbient } from './src/sound.js?v=2';
+import { Music2D } from './src/music2d.js';
 const MUDO = new URLSearchParams(location.search).has('mudo');
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw3d.js', { scope: './' }).catch(() => {});   // sin conexión e instalable if (MUDO) Snd.on = false;   // pruebas sin sonido
 // ---------- pantalla de carga ----------
@@ -199,7 +200,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=80';
+import { createGame } from './src/game.js?v=81';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -362,7 +363,8 @@ function step(dt) {
 }
 function frame() { const dt = Math.min(0.05, clock.getDelta());
   { const open = GAME.uiOpen(), st = GAME.state(); hud.style.visibility = open ? 'hidden' : 'visible'; hint.style.visibility = open ? 'hidden' : 'visible';   // nada del juego detrás de los menús
-    window.__quiet = !(st === 'race' || st === 'count'); music.volume = (st === 'pause' ? 0.18 : window.__quiet ? 0.45 : 0.3) * (window.__musVol ?? 0.8); } if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
+    window.__quiet = !(st === 'race' || st === 'count'); music.volume = (st === 'pause' ? 0.18 : window.__quiet ? 0.45 : 0.3) * (window.__musVol ?? 0.8); }
+  if (window.__musType === '2d') { if (!music.paused) music.pause(); const st2 = GAME.state(), z2 = GAME.dbg.R(); if (Snd.ctx && !MUDO && window.__musOnS) Music2D.play(st2 === 'race' || st2 === 'count' ? (z2 && z2.Z.id === 'mago' ? 'final' : 'race') : 'menu'); else Music2D.stop(); } else if (Music2D.pat) Music2D.stop(); if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn && window.__musType !== '2d') { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame(); LOAD.style.opacity = '0'; setTimeout(() => LOAD.remove(), 700);
 
 </script></body></html>

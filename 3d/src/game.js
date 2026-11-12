@@ -64,7 +64,7 @@ S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 
 S.medal = S.medal || {}; S.best = S.best || {};
 S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
-S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 2, hide: 0, q: 'alta' }, S.set || {});
+S.set = Object.assign({ snd: 1, mus: 1, mt: 'suno', vol: 0.8, vib: 1, dif: 2, hide: 0, q: 'alta' }, S.set || {});
 if (!S.set.dif5) { S.set.dif = [1, 2, 3][S.set.dif] ?? 2; S.set.dif5 = 1; }   // 5 niveles de dificultad como en el 2D
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 const gearById = id => { for (const k in GEAR) { const g = GEAR[k].find(x => x.id === id); if (g) return g; } return null; };
@@ -314,7 +314,7 @@ export async function createGame(ctx) {
     Snd.on = !!s.snd && !ctx.MUDO; if (Snd.out) Snd.out.gain.value = Snd.on ? .8 * s.vol : 0;
     if (ctx.music) { ctx.music.muted = !s.mus || !!ctx.MUDO; }
     try { localStorage.setItem('ct3d_mus', s.mus ? '1' : '0'); } catch (e) {}
-    window.__musVol = s.vol; window.__vibrate = ms => { if (!S.set.vib) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {}
+    window.__musVol = s.vol; window.__musType = s.mt; window.__musOnS = !!s.mus; window.__vibrate = ms => { if (!S.set.vib) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {}
       try { const gp = [...navigator.getGamepads()].find(x => x && x.connected); gp && gp.vibrationActuator && gp.vibrationActuator.playEffect('dual-rumble', { duration: ms, strongMagnitude: .8, weakMagnitude: .5 }); } catch (e) {} };
     ctx.setQuality && ctx.setQuality(s.q); ctx.setHideControls && ctx.setHideControls(!!s.hide);
     const ps = scr.pause.querySelector('[data-a=tsnd]'), pm = scr.pause.querySelector('[data-a=tmus]');
@@ -324,6 +324,7 @@ export async function createGame(ctx) {
     const opt = (k, vals) => vals.map(([v, n]) => `<button class="btn${s[k] === v ? ' sel' : ''}" data-set="${k}" data-v="${v}">${n}</button>`).join('');
     box.innerHTML = `<div class="setrow"><span><i class="ti ti-volume"></i> SONIDO</span><div class="row">${opt('snd', [[1, 'SÍ'], [0, 'NO']])}</div></div>
       <div class="setrow"><span><i class="ti ti-music"></i> MÚSICA</span><div class="row">${opt('mus', [[1, 'SÍ'], [0, 'NO']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-playlist"></i> TIPO DE MÚSICA</span><div class="row">${opt('mt', [['suno', 'JET-SKI PARADISE'], ['2d', 'LA DEL JUEGO 2D']])}</div></div>
       <div class="setrow"><span><i class="ti ti-adjustments"></i> VOLUMEN</span><input type="range" min="0" max="1" step="0.05" value="${s.vol}" data-range="vol"></div>
       <div class="setrow"><span><i class="ti ti-device-mobile-vibration"></i> VIBRACIÓN</span><div class="row">${opt('vib', [[1, 'SÍ'], [0, 'NO']])}</div></div>
       <div class="setrow"><span><i class="ti ti-gauge"></i> DIFICULTAD</span><div class="row">${opt('dif', [[0, 'MUY FÁCIL'], [1, 'FÁCIL'], [2, 'NORMAL'], [3, 'DIFÍCIL'], [4, 'EXPERTO']])}</div></div>
