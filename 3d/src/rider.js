@@ -89,14 +89,14 @@ export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = n
   const S = { hip: bn('hip_'), s1: bn('spine_01'), s2: bn('spine_02'), s3: bn('spine_03'), neck: bn('neck_'), head: bn('head_0') };
   // pose viva: st = { steer -1..1 (+ = izquierda), k velocidad 0..1, drift 0/1, t tiempo }
   function pose(st = {}) {
-    const steer = st.steer || 0, k = st.k || 0, dr = st.drift ? 1 : 0, t = st.t || 0;
+    const cel = st.cel || 0, hit = st.hit || 0, steer = (st.steer || 0) * (1 - cel) + Math.sin((st.t || 0) * 23) * .5 * hit, k = (st.k || 0) * (1 - cel), dr = st.drift ? 1 : 0, t = st.t || 0;
     root.updateWorldMatrix(true, true);
     const D = v => v.clone().normalize().transformDirection(root.matrixWorld), P3 = v => root.localToWorld(v.clone());   // del sistema del piloto al mundo
-    const lean = 0.30 + 0.26 * k + 0.10 * dr + Math.sin(t * 2.1) * 0.015;               // se echa hacia delante con la velocidad
+    const lean = (0.30 + 0.26 * k + 0.10 * dr + Math.sin(t * 2.1) * 0.015) * (1 - .75 * cel) + hit * .45;   // al celebrar se pone recto; al chocar se va hacia delante               // se echa hacia delante con la velocidad
     const sd = V(steer * (0.30 + 0.12 * dr), Math.cos(lean), Math.sin(lean)).normalize();   // y se inclina hacia dentro de la curva
     aim(S.hip, S.s1, D(sd.clone().multiplyScalar(0.8).add(V(0, 0, -0.05))));
     aim(S.s1, S.s2, D(sd)); aim(S.s2, S.s3, D(sd)); aim(S.s3, S.neck, D(sd));
-    aim(S.neck, S.head, D(V(steer * 0.32, 0.95, 0.20 - 0.12 * k)));                             // mira hacia donde gira
+    aim(S.neck, S.head, D(V(steer * 0.32, 0.95 + cel * .2, 0.20 - 0.12 * k - cel * .1)));                             // mira hacia donde gira
     const shake = Math.sin(t * 17) * 0.012 * k;                                              // vibración del manillar a velocidad
     for (const s of [1, -1]) {
       const side = s > 0 ? '_l' : '_r';
@@ -104,7 +104,8 @@ export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = n
       // manillar: gira con el volante y las manos van agarradas
       const a = -steer * 0.38, c = Math.cos(a), si = Math.sin(a), px = 0, pz = 0.52, dx = 0.27 * s - px, dz = 0.64 - pz;
       const hx = px + dx * c + dz * si, hz = pz - dx * si + dz * c;
-      ik2(bn('upperarm' + side), bn('lowerarm' + side), bn('hand' + side), P3(V(hx, (st.barY ?? 0.13) + shake + (s * steer > 0 ? 0.015 : 0), hz)), D(V(1.0 * s, -0.25, -0.25)));
+      if (cel > .5 && s < 0) ik2(bn('upperarm' + side), bn('lowerarm' + side), bn('hand' + side), P3(V(-0.32, 0.95 + Math.sin(t * 9) * .05, 0.18)), D(V(-1, 0, -.3)));   // brazo derecho arriba saludando
+      else ik2(bn('upperarm' + side), bn('lowerarm' + side), bn('hand' + side), P3(V(hx, (st.barY ?? 0.13) + shake + (s * steer > 0 ? 0.015 : 0), hz)), D(V(1.0 * s, -0.25, -0.25)));
     }
     root.updateMatrixWorld(true);
     // casco sobre la cabeza, girado hacia la curva

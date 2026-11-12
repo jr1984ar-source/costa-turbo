@@ -294,7 +294,7 @@ export async function createGame(ctx) {
         for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); solid(b.position.x, b.position.z, .75); } } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
     // jugador a la salida
-    const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
+    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count';
   }
@@ -304,7 +304,7 @@ export async function createGame(ctx) {
     if (Z.obj === 'time') { line = ok ? 'Tiempo: ' + fmtT(R.t) : 'Te has quedado a ' + Math.max(0, Math.round(R.path.L - R.s)) + ' m de la meta'; if (ok) prize = Z.prize; }
     if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; line = 'Tiempo ' + fmtT(R.t) + ' + ' + miss + ' s de boyas = ' + fmtT(t); if (ok) prize = Math.max(300, Z.prize - miss * 100); }
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
-    if (ok) { S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
+    if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
     save();
     scr.result.querySelector('.rt').textContent = title; scr.result.querySelector('.rs').textContent = line;
     scr.result.querySelector('.rp').textContent = ok ? '+' + prize.toLocaleString('es-ES') + ' PTA' : '';
