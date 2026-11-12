@@ -138,6 +138,7 @@ const CSS = `
 #rh .fu{display:flex;align-items:center;gap:8px;font-size:22px;margin-top:4px;text-shadow:0 2px 0 #0b1630}
 #rh .fu span{display:block;width:120px;height:10px;border-radius:10px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.7);overflow:hidden}#rh .fu b{display:block;height:100%;background:linear-gradient(90deg,#ff6a1a,#ffd21a)}
 #rh .fu.low b{background:#ff3b4e}
+#rh .tu{font-size:22px;color:#33d6ff;text-shadow:0 2px 0 #0b1630;letter-spacing:1px}#rh .tu .off{color:rgba(255,255,255,.22)}
 #rh .co{font-size:22px;color:#ffd21a;text-shadow:0 2px 0 #0b1630;margin-top:2px}#rh .co span{color:#fff;margin-left:6px}
 #msg3{position:fixed;left:0;right:0;top:34%;z-index:16;text-align:center;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;font-weight:900;font-style:italic;
   font-size:clamp(60px,12vw,150px);color:#ffe14d;text-shadow:0 6px 0 #0b1630,0 0 30px rgba(0,0,0,.5);display:none}
@@ -159,7 +160,7 @@ export async function createGame(ctx) {
   const { scene, P, env, heightAt, coastZ, makeBuoy, Wake, Snd } = ctx;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
-  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><canvas class="mini" width="380" height="240"></canvas><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div></div>'; document.body.appendChild(rh);
+  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><canvas class="mini" width="380" height="240"></canvas><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div><div class="co"><i class="ti ti-coin-filled"></i><span>0</span></div><div class="tu"></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
   const rot = document.createElement('div'); rot.id = 'rot'; rot.innerHTML = '<i class="ti ti-device-mobile-rotated"></i>GIRA EL MÓVIL<br>PARA JUGAR EN HORIZONTAL'; document.body.appendChild(rot);   // aviso en vertical
   const sem = document.createElement('div'); sem.id = 'sem'; sem.innerHTML = '<i></i><i></i><i></i>'; document.body.appendChild(sem);   // semáforo de salida
@@ -229,17 +230,19 @@ export async function createGame(ctx) {
   // ---------- JJ'S SPORTS LOUNGE (bar del muelle en EL PUERTO) ----------
   mk('jj', `<h2>JJ'S SPORTS LOUNGE</h2><div class="cash"></div><div class="sub">Cada parada cuesta 3 s</div><div class="grid jjl" style="width:min(720px,94vw)"></div>
     <div class="row"><button class="btn main" data-a="jjout"><i class="ti ti-player-play-filled"></i>SEGUIR CORRIENDO</button></div>`);
-  const JJ_ITEMS = [{ id: 'fuel', n: 'Llenar el depósito', ef: 'Gasolina al 100 %', p: 300, ic: 'gas-station' }, { id: 'life', n: 'Vida extra', ef: '+1 corazón', p: 1500, ic: 'heart' }, { id: 'turbo', n: 'Refresco turbo', ef: 'Turbo al 100 %', p: 500, ic: 'bottle' }];
+  const JJ_ITEMS = [{ id: 'fuel', n: 'Llenar el depósito', ef: 'Gasolina al 100 %', p: 300, ic: 'gas-station' }, { id: 'life', n: 'Vida extra', ef: '+1 corazón', p: 1500, ic: 'heart' }, { id: 'turbo', n: 'Refresco turbo', ef: '+1 turbo', p: 500, ic: 'bottle' }];
   function renderJJ() { const L0 = scr.jj.querySelector('.jjl'); L0.innerHTML = '';
-    for (const it of JJ_ITEMS) { const full = it.id === 'fuel' ? S.fuel >= 99 : it.id === 'life' ? S.lives >= 6 : P.energy >= .99, b = document.createElement('button');
-      const now = it.id === 'fuel' ? 'Ahora: ' + Math.ceil(S.fuel) + ' %' : it.id === 'life' ? 'Tienes ' + S.lives + ' corazones' : 'Turbo: ' + Math.round(P.energy * 100) + ' %';
+    for (const it of JJ_ITEMS) { const full = it.id === 'fuel' ? S.fuel >= 99 : it.id === 'life' ? S.lives >= 6 : (P.turboU ?? 3) >= 5, b = document.createElement('button');
+      const now = it.id === 'fuel' ? 'Ahora: ' + Math.ceil(S.fuel) + ' %' : it.id === 'life' ? 'Tienes ' + S.lives + ' corazones' : 'Tienes ' + (P.turboU ?? 3) + ' turbos';
       b.className = 'card' + (full ? ' sel' : ''); b.innerHTML = `<div class="img" style="display:grid;place-items:center;aspect-ratio:1.4;background:radial-gradient(circle at 50% 45%,#3a1220,#05070b 70%)"><i class="ti ti-${it.ic}" style="font-size:56px;color:#ffe14d"></i></div><b>${it.n}</b><i>${it.ef}</i><i>${now}</i><em>${full ? 'LLENO' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
       b.onclick = () => { if (full) return; if (S.cash < it.p) return noCash(it.p);
-        S.cash -= it.p; toast('COMPRADO: ' + it.n.toUpperCase(), true); if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives++; else P.energy = 1; save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
+        S.cash -= it.p; toast('COMPRADO: ' + it.n.toUpperCase(), true); if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives++; else P.turboU = Math.min(5, (P.turboU ?? 3) + 1); save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
       L0.appendChild(b); } refreshCash(); }
   function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
+    rh.querySelector('.tu').innerHTML = Array.from({ length: 5 }, (_, k) => `<i class="ti ti-bolt-filled${k < (P.turboU ?? 3) ? '' : ' off'}"></i>`).join('');
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
   window.__onDrift = q => { if (state === 'race' && R) { const p = Math.round(q * 40) * 5; R.pts = (R.pts || 0) + p; R.drifts = (R.drifts || 0) + 1; pop('DERRAPE +' + p, '#ff8c1e'); } };
+  window.__onTurboUnit = () => { if (state === 'race') pop('+1 TURBO', '#33d6ff'); };
   window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
@@ -525,7 +528,7 @@ export async function createGame(ctx) {
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
     if (S.fuel < 60) S.fuel = 60;   // cada salida con al menos 60 % de gasolina; en el JJ'S se llena al 100 % window.__noFuel = S.fuel <= 0; hud();
-    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.y = 0; P.vy = 0; P.air = false; P.dc = 0; ctx.resetFx && ctx.resetFx();
+    window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.turboU = 3; P.boostT = 0; P._bovT = 0; P.y = 0; P.vy = 0; P.air = false; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count'; keepAwake(true);
   }
