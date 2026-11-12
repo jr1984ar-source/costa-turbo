@@ -31,7 +31,7 @@ export const GEAR = {
     { id: 's3', n: 'Neopreno rojo racing', b: 'Neopreno', p: 1300, c: '#e3202b' }, { id: 's4', n: 'Neopreno flúor', b: 'Neopreno', p: 1800, c: '#b6f01e' },
     { id: 's5', n: 'Neopreno camuflaje marino', b: 'Neopreno', p: 2400, c: '#2f6f8f' }, { id: 's6', n: 'Neopreno carbono y oro', b: 'Neopreno', p: 3200, c: '#2a2d33' }]};
 const CAT = [['helm', 'CASCO'], ['gog', 'GAFAS'], ['glove', 'GUANTES'], ['vest', 'CHALECO'], ['suit', 'NEOPRENO']];
-const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310'], ['yamahafx', 'YAMAHA FX (BLENDER)'], ['yamahafxia', 'YAMAHA FX NEGRA']];
+const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 // pantallas: recorridos comprobados en agua profunda
 export const ZONES = [
   { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 0 },

@@ -31,7 +31,7 @@ import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { makeGrass, makePalms, makeGull, makeYacht, makeBuoy, makeUmbrella } from './src/props.js';
 import { Wake, Spray } from './src/fx.js?v=8';
 
-const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = Q.get('paint') || (() => { try { return localStorage.getItem('ct3d_moto'); } catch (e) { return null; } })() || 'kawasaki';
+const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = 'kawasaki';
 const W = innerWidth, H = innerHeight;
 const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); renderer.setSize(W, H);
@@ -80,7 +80,7 @@ const path = []; { let x = x0, z = z0; for (let s = 0; s < 150; s += 0.5) { cons
 const fwd = fwdOf(th0);
 const gl = new GLTFLoader();
 async function loadSki(k) {
-  const REAL = { kawasaki: ['kawasaki_ultra310', -Math.PI / 2, -0.14], yamahafx: ['yamaha_fx', 0, 0.0], yamahafxia: ['yamaha_fx_ia', 0, -0.14], seadoo: ['seadoo_gti', 0, -0.14], negra_turquesa: ['jetski_negra_turquesa', 0, -0.14] };   // motos reales (Sketchfab): [archivo, giro para que la proa mire a +z, altura]
+  const REAL = { kawasaki: ['kawasaki_ultra310', -Math.PI / 2, -0.14] };   // moto real (Sketchfab): [archivo, giro para que la proa mire a +z, altura]
   const [file, oriY, offY] = REAL[k] || ['jetski_' + k, 0, 0];
   const g = await gl.loadAsync('models/' + file + '.glb');
   const root = new THREE.Group(), body = new THREE.Group(), rider = new THREE.Group(); root.add(body); const pivot = new THREE.Group(); pivot.rotation.y = oriY; pivot.position.y = offY; pivot.add(g.scene); body.add(pivot);
@@ -92,7 +92,6 @@ ski.root.position.set(x0, 0, z0); ski.root.rotation.y = th0;
 ski.body.position.y = -0.06; ski.body.rotation.set(-0.07, 0, 0.30);   // proa arriba, inclinada hacia dentro de la curva
 ski.rider.rotation.z = 0.12;
 const xd = 30, zd = coastZ(30) - 7;
-if (SHOT === 'D') { for (const [k, dx, r] of [['kawasaki', -3.6, 0.5], ['seadoo', 0, 0.25], ['negra_turquesa', 3.6, 0.0]]) { const m = await loadSki(k); m.root.position.set(xd + dx, 0, zd); m.root.rotation.y = Math.PI + 0.5 + r; m.body.position.y = -0.24; m.body.rotation.set(0.03, 0, 0); scene.add(m.root); } }
 
 // vegetación y ambiente
 scene.add(makeGrass({ x0: -160, x1: 160, z0: 40, z1: 220 }, 8000));
@@ -126,7 +125,7 @@ const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
 const wake = new Wake(env); scene.add(wake.mesh); window.__wake = wake;
 const spray = new Spray(env, 7000); scene.add(spray.points);
 import { makeRider } from './src/rider.js?v=9';
-let rider = await makeRider({ vest: '#ff7a1a' }); const RP = { kawasaki: [0, 0.74, -0.75, 0.13], yamahafx: [0, 0.70, -0.20, 0.29], yamahafxia: [0, 0.63, -0.27, 0.40] }[PAINT] || [0, 0.74, -0.75, 0.13]; rider.position.set(RP[0], RP[1], RP[2]); rider.userData.barY = RP[3]; ski.body.add(rider); window.__rider = rider;
+let rider = await makeRider({ vest: '#ff7a1a' }); const RP = [0, 0.74, -0.75, 0.13]; rider.position.set(RP[0], RP[1], RP[2]); rider.userData.barY = RP[3]; ski.body.add(rider); window.__rider = rider;
 scene.add(ski.root);
 const PR = renderer.getPixelRatio();
 const rt = new THREE.WebGLRenderTarget(W * PR, H * PR, { type: THREE.HalfFloatType, samples: 4 });
@@ -229,7 +228,7 @@ function step(dt) {
   rider.position.y = RP[1] + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14);
   // moto
   ski.root.position.set(P.x, 0, P.z); ski.root.rotation.y = P.th;
-  ski.body.position.y = -0.02 + Math.sin(P.t * 3.1) * 0.02 * (0.3 + k) - k * 0.03;
+  ski.body.position.y = -0.02 + (window.__quiet ? 0 : Math.sin(P.t * 3.1) * 0.02 * (0.3 + k)) - k * 0.03;   // quieta mientras eliges
   ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01) - ski.body.rotation.z) * Math.min(1, dt * 5);
   ski.body.rotation.y += ((drifting ? P.steer * 0.32 : 0) - ski.body.rotation.y) * Math.min(1, dt * 6);   // la moto cruzada respecto a la trayectoria
   ski.body.rotation.x += ((-0.02 - k * 0.07 - (I.acc ? 0.02 : 0)) - ski.body.rotation.x) * Math.min(1, dt * 4);
@@ -255,7 +254,7 @@ function step(dt) {
   }
   spray.update(dt);
   if (wall && P.v > 6 && Snd.ok() && !(P._bumpT > P.t)) { Snd.bump(); P._bumpT = P.t + 0.6; }
-  updateSound(P.v, 33, I.acc, turboOn, I.drift && P.v > 8, 3, false);
+  updateSound(P.v, 33, I.acc, turboOn, I.drift && P.v > 8, 3, !!window.__quiet);   // sin motor fuera de la carrera
   // cámara: modo 'dron' (cenital, como un reel) u 'onboard' (pegada a la moto)
   const look = new THREE.Vector3();
   if (camMode === 'dron') {
@@ -280,7 +279,9 @@ function step(dt) {
   sun.position.set(cx, 0, cz).addScaledVector(env.sunDir, 150); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
   spd.firstChild.nodeValue = Math.round(P.v * 3.6);
 }
-function frame() { const dt = Math.min(0.05, clock.getDelta()); if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
+function frame() { const dt = Math.min(0.05, clock.getDelta());
+  { const open = GAME.uiOpen(), st = GAME.state(); hud.style.visibility = open ? 'hidden' : 'visible'; hint.style.visibility = open ? 'hidden' : 'visible';   // nada del juego detrás de los menús
+    window.__quiet = !(st === 'race' || st === 'count'); } if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); GAME.update(paused ? 0 : dt); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame();
 
 </script></body></html>
