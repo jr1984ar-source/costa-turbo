@@ -18,7 +18,7 @@ export const AVATARS = [
   { id: 'lucia', name: 'Lucía', vest: '#ff3f8e', bio: 'Reina del slalom: no falla una boya.', body: 'piloto_claudia', skin: 1 }, { id: 'sara', name: 'Sara', vest: '#1e5eff', bio: 'La más rápida en recta.', body: 'piloto_carla', skin: 1 },
   { id: 'nerea', name: 'Nerea', vest: '#ffd21a', bio: 'Derrapes perfectos.', body: 'piloto_claudia', skin: 0.9 }, { id: 'vega', name: 'Vega', vest: '#7b3fe4', bio: 'Arriesga en cada curva.', body: 'piloto_carla', skin: 1 }];
 export const GEAR = {
-  helm: [{ id: 'h0', n: 'Casco de serie', b: 'De serie', p: 0, c: '#f4f6f9' },
+  helm: [{ id: 'h0', n: 'Casco de serie', b: 'De serie', p: 0, c: '#f4f6f9' }, { id: 'hgold', n: 'Casco Dorado', b: 'Premio escondido', p: 0, c: '#d9b55a', hidden: true },
     { id: 'h1', n: 'S-M3 Morado', b: 'Alpinestars', p: 3000, c: '#7b5cff' }, { id: 'h2', n: 'S-M5 Rojo', b: 'Alpinestars', p: 4500, c: '#d0151f' },
     { id: 'h3', n: 'S-M5 Azul', b: 'Alpinestars', p: 6000, c: '#1e4fd8' }, { id: 'h4', n: 'S-M7 Negro', b: 'Alpinestars', p: 9000, c: '#24262c' },
     { id: 'h5', n: 'S-M8 Amarillo', b: 'Alpinestars', p: 12000, c: '#ffd21a' }, { id: 'h6', n: 'Supertech Flúor', b: 'Alpinestars', p: 16000, c: '#ff6a1a' }],
@@ -334,6 +334,7 @@ export async function createGame(ctx) {
     GEAR[tCat].forEach(it => { const own = S.own.includes(it.id), eq = S.eq[tCat] === it.id; const b = document.createElement('button'); b.className = 'card' + (eq ? ' sel' : '');
       const col = it.c || AVATARS[S.pilot].vest;
       b.innerHTML = `<div class="img" style="background-image:url('assets/taller/${it.id}.jpg'),radial-gradient(circle at 50% 45%,${col} 0 30%,#0b0d12 31%,#05070b 70%)"></div><b>${it.n}</b><i>${it.b}</i><em>${eq ? 'EQUIPADO' : own ? 'EQUIPAR' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
+      if (it.hidden && !own) { b.innerHTML = `<div class="img" style="display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#3a2c10,#05070b 70%)"><i class="ti ti-lock" style="font-size:56px;color:#d9b55a"></i></div><b>${it.n}</b><i>Escondido en EL MAGO</i><em>¿DÓNDE ESTARÁ?</em>`; b.onclick = () => { if (Snd.ok()) Snd.miss(); }; g.appendChild(b); return; }
       b.onclick = async () => {
         if (!own) { if (S.cash < it.p) return noCash(it.p); S.cash -= it.p; S.own.push(it.id); if (Snd.ok()) Snd.cash(); toast('COMPRADO Y EQUIPADO: ' + it.n.toUpperCase(), true); }
         else { click(); toast(eq ? 'YA LO LLEVAS PUESTO' : 'EQUIPADO: ' + it.n.toUpperCase(), true); }
@@ -530,6 +531,9 @@ export async function createGame(ctx) {
     { const p0 = at(path, path.L * .3), x = p0.x - p0.tz * -22, z = p0.z + p0.tx * -22, b = riva.clone(); b.position.set(x, -.32, z); b.rotation.y = Math.atan2(p0.tx, p0.tz); b.userData.bob = { y: -.32, ph: 1, k: 1 }; add(b); boats.push(b);
       const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex(['PIRI-PIRI'], 512, 128, '#ff3f8e', '#ffffff'), transparent: true, depthWrite: false, sizeAttenuation: false })); tag.scale.set(.12, .03, 1); tag.position.set(0, 3.2, 0); b.add(tag);
       R.piri = { x, z, got: false }; for (let k = -1; k <= 1; k++) solid(x + p0.tx * k * 3.4, z + p0.tz * k * 3.4, 1.6); }
+    // Casco Dorado escondido: detrás de la isla, por el lado de mar abierto
+    { const q = at(path, path.L * .5), lt = -30 * (Math.sign(q.tx) || 1), x = q.x - q.tz * lt, z = q.z + q.tx * lt; const h = new THREE.Mesh(new THREE.SphereGeometry(.7, 20, 14, 0, Math.PI * 2, 0, Math.PI / 1.7), new THREE.MeshStandardMaterial({ color: 0xd9b55a, metalness: .9, roughness: .2, emissive: 0x5a4200, emissiveIntensity: .5 }));
+      h.position.set(x, 1.3, z); add(h); R.gold = { o: h, got: S.own.includes('hgold') }; h.visible = !R.gold.got; }
     // letrero EL MAGO en la meta
     { const e = at(path, path.L - 4), m = new THREE.Mesh(new THREE.PlaneGeometry(10, 2.4), new THREE.MeshStandardMaterial({ map: textTex(['EL MAGO'], 1024, 256, '#0b1630', '#ffe14d'), roughness: .5, side: THREE.DoubleSide }));
       m.position.set(e.x - e.tz * 22, 5.2, e.z + e.tx * 22); m.rotation.y = Math.atan2(e.tx, e.tz) + Math.PI; add(m);
@@ -758,12 +762,13 @@ export async function createGame(ctx) {
     if (state === 'race' && !window.__autoQ && S.set.q === 'alta') { R.fpsT = (R.fpsT || 0) + dt; R.fpsN = (R.fpsN || 0) + 1;   // calidad automática: si va lento, baja los gráficos
       if (R.fpsT > 5) { window.__autoQ = 1; if (R.fpsN / R.fpsT < 38) { S.set.q = 'baja'; save(); applySettings(); toast('GRÁFICOS EN BAJA PARA IR MÁS FLUIDO', true); } } }
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
+    if (R.gold && !R.gold.got) { R.gold.o.rotation.y += dt * 2; if (state === 'race' && Math.hypot(R.gold.o.position.x - P.x, R.gold.o.position.z - P.z) < 2.6) { R.gold.got = true; R.gold.o.visible = false; S.own.push('hgold'); save(); flash('¡HAS ENCONTRADO EL CASCO DORADO!', 2, true, '#d9b55a'); if (Snd.ok()) Snd.win(); } }
     if (R.picks) for (const pk of R.picks) { if (pk.got) continue; pk.o.rotation.y += dt * 2; pk.o.position.y = 1.2 + Math.sin(P.t * 2.5 + pk.o.position.x) * .2;
       if (state === 'race' && Math.hypot(pk.o.position.x - P.x, pk.o.position.z - P.z) < 2.6) { pk.got = true; pk.o.visible = false; if (Snd.ok()) Snd.pickup();
         if (pk.k === 'heart') { S.lives = Math.min(6, S.lives + 1); pop('+1 ♥', '#ff3b4e'); }
         if (pk.k === 'fuel') { S.fuel = Math.min(100, S.fuel + 40); pop('+40 % GASOLINA', '#ffb02e'); }
         if (pk.k === 'drink') { P.turboU = Math.min(5, (P.turboU ?? 3) + 1); pop('+1 TURBO', '#33d6ff'); }
-        if (pk.k === 'box') { const all = Object.values(GEAR).flat().filter(it => !S.own.includes(it.id)); if (all.length) { const it = all[Math.floor(Math.random() * all.length)]; S.own.push(it.id); flash('¡CAJA SORPRESA! ' + it.n.toUpperCase(), 1.6, true, '#ffe14d'); } else { S.cash += 500; pop('+500 PTA', '#ffe14d'); } }
+        if (pk.k === 'box') { const all = Object.values(GEAR).flat().filter(it => !it.hidden && !S.own.includes(it.id)); if (all.length) { const it = all[Math.floor(Math.random() * all.length)]; S.own.push(it.id); flash('¡CAJA SORPRESA! ' + it.n.toUpperCase(), 1.6, true, '#ffe14d'); } else { S.cash += 500; pop('+500 PTA', '#ffe14d'); } }
         save(); hud(); } }
     if (R.haz && state === 'race') for (const h of R.haz) { const d = Math.hypot(h.o.position.x - P.x, h.o.position.z - P.z);
       if (d < h.r && !(h.t > R.t)) { h.t = R.t + 2.5;
