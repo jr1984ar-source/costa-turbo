@@ -9,7 +9,7 @@ import fs from 'fs';
 
 const [name, mode = 'largo', size = '3.3', texMax = '1024', ratio = '0.3'] = process.argv.slice(2);
 const io = new NodeIO().registerExtensions(ALL_EXTENSIONS);
-const doc = await io.read(`assets/sketchfab/${name}/scene.gltf`);
+const doc = await io.read(process.env.SRC || `assets/sketchfab/${name}/scene.gltf`);
 await MeshoptSimplifier.ready;
 if (process.env.UNSKIN) { // modelos con esqueleto: se quita el skin y se anula la rotacion del Armature
   for (const n of doc.getRoot().listNodes()) { if (n.getSkin()) n.setSkin(null); if (n.getName() === 'Armature') n.setRotation([0, 0, 0, 1]); }

@@ -6,7 +6,8 @@ from mathutils import Vector
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 OUT = argv[0] if argv else 'yamaha_fx.glb'
-PNG = argv[1] if len(argv) > 1 else None
+PNG = argv[1] if len(argv) > 1 and argv[1] != '-' else None
+COLOR = argv[2] if len(argv) > 2 else 'azul'
 bpy.ops.wm.read_factory_settings(use_empty=True)
 
 def srgb(h):
@@ -18,8 +19,8 @@ def mat(name, hexc, rough=0.3, metal=0.0, coat=0.0, emit=None):
     b.inputs['Metallic'].default_value = metal; b.inputs['Clearcoat'].default_value = coat
     if emit: b.inputs['Emission'].default_value = (*srgb(emit), 1); b.inputs['Emission Strength'].default_value = 1.2
     m.diffuse_color = (*srgb(hexc), 1); return m
-M_TEAL = mat('azul', '#0a8db3', 0.18, 0.0, 1.0)
-M_NAVY = mat('azul_oscuro', '#0b4468', 0.30, 0.0, 0.6)
+M_TEAL = mat('azul', '#0a8db3' if COLOR == 'azul' else '#0c0d10', 0.18, 0.0, 1.0)
+M_NAVY = mat('azul_oscuro', '#0b4468' if COLOR == 'azul' else '#08090b', 0.30, 0.0, 0.6)
 M_BLK = mat('negro_brillo', '#0d0e11', 0.22, 0.0, 0.8)
 M_MAT = mat('negro_mate', '#16171a', 0.8)
 M_SILV = mat('plata', '#b7bcc4', 0.25, 0.9)
@@ -38,9 +39,9 @@ L = 3.5                      # eslora (m): del popa (t=0) a proa (t=1)
 Y0 = -1.55                   # posición hacia delante de la popa
 def yb(t): return -(Y0 + L * t)                                  # Y de Blender (proa = -Y)
 W = lambda t: interp([(0, .56), (.1, .59), (.35, .61), (.6, .60), (.78, .50), (.92, .28), (.985, .10), (1, .03)], t)       # media manga
-ZG = lambda t: interp([(0, .30), (.15, .35), (.4, .42), (.65, .50), (.85, .60), (1, .72)], t)                      # borde de cubierta
+ZG = lambda t: interp([(0, .27), (.2, .31), (.5, .35), (.8, .38), (1, .40)], t)                      # borde de cubierta
 ZD = lambda t: ZG(t) + interp([(0, .01), (.3, .05), (.6, .07), (.9, .03), (1, .0)], t)                                       # centro de cubierta
-ZK = lambda t: interp([(0, -.12), (.35, -.16), (.7, -.10), (.9, .08), (1, .50)], t)                                          # quilla
+ZK = lambda t: interp([(0, -.12), (.4, -.16), (.75, -.10), (.93, .05), (1, .22)], t)                                          # quilla
 
 def obj_from(name, verts, faces, mats, matidx=None, smooth=True):
     me = bpy.data.meshes.new(name); me.from_pydata(verts, [], faces); me.update()
@@ -65,6 +66,7 @@ for i in range(N):
 faces.append(tuple(range(ring_n - 1, -1, -1)) if False else tuple(range(ring_n))); midx.append(0)
 faces.append(tuple(range(N * ring_n + ring_n - 1, N * ring_n - 1, -1))); midx.append(0)
 hull = obj_from('casco', verts, faces, [M_TEAL, M_NAVY], midx)
+sm = hull.modifiers.new('sub', 'SUBSURF'); sm.levels = 1; sm.render_levels = 1
 
 # ---------- capó oscuro con parabrisas ----------
 def dome(name, t0, t1, wfun, hfun, mats, n=26, m=14, base=ZD):
@@ -79,9 +81,8 @@ def dome(name, t0, t1, wfun, hfun, mats, n=26, m=14, base=ZD):
     fs.append(tuple(range(m, -1, -1)))
     fs.append(tuple(range(n * (m + 1), n * (m + 1) + m + 1)))
     return obj_from(name, vs, fs, mats)
-hood = dome('capo', .52, .975, lambda u: .33 * (1 - u) ** .6 * (1 - .2 * u) + .03, lambda u: .27 * math.sin(math.pi * min(1, u * 1.05) ** .85) ** .85 * (1 - .35 * u) + .02 * (1 - u), [M_BLK])
-screen = dome('parabrisas', .55, .72, lambda u: .17 * (1 - .4 * u) + .02, lambda u: .16 * math.sin(math.pi * (u * .85 + .08)) + .14, [M_GLASS], base=lambda t: ZD(t) + .10)
-
+hood = dome('capo', .64, .99, lambda u: .27 * (1 - u) ** .5 * (1 - .15 * u) + .03, lambda u: (.27 * (1 - u) ** 1.25 + .02 * (1 - u)) * min(1, u * 5 + .25), [M_BLK])
+screen = dome('parabrisas', .70, .80, lambda u: .13 * (1 - .45 * u) + .02, lambda u: .12 * math.sin(math.pi * (u * .8 + .1)) + .20, [M_GLASS], base=lambda t: ZD(t) + .08)
 # ---------- raíles/defensas negras laterales y de proa ----------
 def tube(name, pts, rad=.035, mat_=M_BLK, closed=False, flat=1.0):
     cu = bpy.data.curves.new(name, 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = rad; cu.bevel_resolution = 3; cu.resolution_u = 12
@@ -121,13 +122,22 @@ def box(name, cx, cy, cz, sx, sy, sz, mat_=M_BLK, bev=.045, rot=0):
     o.data.materials.append(mat_)
     for p in o.data.polygons: p.use_smooth = True
     return o
-sz_ = ZD(.45)
-box('asiento_piloto', 0, yb(.38), sz_ + .06, .30, .62, .12, bev=.06)
-box('asiento_pasajero1', 0, yb(.255), sz_ + .10, .31, .50, .16, bev=.07)
-box('asiento_pasajero2', 0, yb(.17), sz_ + .13, .30, .30, .20, bev=.07)
-box('respaldo', 0, yb(.115), sz_ + .22, .29, .05, .12, bev=.045)
+def seat(name, t, ln, top, wd, hh, bev):
+    box(name, 0, yb(t), top - hh / 2, wd, ln, hh, bev=bev)
+# pedestal del asiento (carrocería del color del casco) para que no floten
+base = box('base_asiento', 0, yb(.31), .37, .34, 1.42, .40, M_TEAL, .09)
+box('base_asiento_proa', 0, yb(.46), .40, .38, .70, .26, M_TEAL, .08)
+seat('asiento_piloto', .43, .58, .56, .30, .22, .07)
+seat('asiento_pasajero1', .31, .42, .66, .31, .30, .08)
+seat('asiento_pasajero2', .21, .30, .75, .30, .36, .08)
+box('respaldo', 0, yb(.155), .84, .30, .09, .26, bev=.05)
 # asa de pasajero (arco trasero)
-tube('asa', [(.28, yb(.12), ZD(.12) + .02), (.29, yb(.095), ZD(.1) + .22), (.18, yb(.07), ZD(.1) + .27), (-.18, yb(.07), ZD(.1) + .27), (-.29, yb(.095), ZD(.1) + .22), (-.28, yb(.12), ZD(.12) + .02)], .026)
+tube('asa', [(.28, yb(.12), ZD(.12) + .02), (.29, yb(.095), ZD(.1) + .30), (.18, yb(.07), ZD(.1) + .38), (-.18, yb(.07), ZD(.1) + .38), (-.29, yb(.095), ZD(.1) + .30), (-.28, yb(.12), ZD(.12) + .02)], .026)
+
+# carenados laterales junto al cuadro (pods angulares) y retrovisores
+for s_ in (1, -1):
+    box('pod_%d' % s_, s_ * .30, yb(.70), ZD(.70) + .09, .11, .16, .12, M_BLK, .035, 0)
+    box('espejo_%d' % s_, s_ * .35, yb(.65), ZD(.65) + .21, .07, .08, .05, M_BLK, .02, 0)
 
 # ---------- altavoces / cajones laterales junto al asiento ----------
 for s in (1, -1):
@@ -145,12 +155,14 @@ box('cuadro', 0, yb(.60), ZD(.60) + .29, .20, .10, .10, M_BLK, .03, math.radians
 box('pantalla', 0, yb(.576), ZD(.60) + .30, .16, .01, .065, M_SCR, .004, math.radians(-25))
 box('tapa_direccion', 0, yb(.54), ZD(.55) + .05, .34, .18, .09, M_BLK, .05)
 
+box('parachoques_popa', 0, yb(-.005), ZD(0) + .02, W(0) * 2 * .96, .08, .07, M_BLK, .03)
+bpy.ops.mesh.primitive_cylinder_add(radius=.07, depth=.22, location=(0, yb(-.02) + .08, -.03), rotation=(math.pi / 2, 0, 0)); nz = bpy.context.active_object; nz.data.materials.append(M_SILV)
 # ---------- logos: FX en la plataforma, YAMAHA a los lados ----------
 def text(name, body, size, loc, rot, mat_, ext=.004):
     cu = bpy.data.curves.new(name, 'FONT'); cu.body = body; cu.size = size; cu.extrude = ext; cu.align_x = 'CENTER'; cu.align_y = 'CENTER'
     o = bpy.data.objects.new(name, cu); o.location = loc; o.rotation_euler = rot; o.data.materials.append(mat_); bpy.context.collection.objects.link(o); return o
 text('fx', 'FX', .22, (0, yb(.10), ZD(.10) + .03), (0, 0, math.pi), M_SILV)
-text('yamaha_d', 'YAMAHA', .075, (W(.18) + .02, yb(.18), ZG(.18) - .09), (math.pi / 2, 0, math.pi / 2), M_BLK, .003)
+text('yamaha_d', 'YAMAHA', .075, (W(.18) + .02, yb(.18), ZG(.18) - .09), (math.pi / 2, 0, math.pi / 2), M_BLK if COLOR == 'azul' else mat('rojo', '#c3162a', .4), .003)
 text('yamaha_i', 'YAMAHA', .075, (-W(.18) - .02, yb(.18), ZG(.18) - .09), (math.pi / 2, 0, -math.pi / 2), M_BLK, .003)
 text('wr_d', 'WAVERUNNER', .045, (W(.36) + .02, yb(.36), ZG(.36) - .01), (math.pi / 2, 0, math.pi / 2), M_SILV, .002)
 text('wr_i', 'WAVERUNNER', .045, (-W(.36) - .02, yb(.36), ZG(.36) - .01), (math.pi / 2, 0, -math.pi / 2), M_SILV, .002)
@@ -172,7 +184,9 @@ if PNG:
     w = bpy.data.worlds.new('w'); w.use_nodes = True; w.node_tree.nodes['Background'].inputs[0].default_value = (.35, .38, .42, 1); sc.world = w
     bpy.ops.mesh.primitive_plane_add(size=40, location=(0, 0, -.02)); pl = bpy.context.active_object; pl.data.materials.append(mat('suelo', '#33363b', .9))
     sun = bpy.data.lights.new('s', 'SUN'); sun.energy = 4; so = bpy.data.objects.new('s', sun); so.rotation_euler = (math.radians(50), 0, math.radians(35)); bpy.context.collection.objects.link(so)
-    for k, (loc, tgt) in enumerate([((3.6, -3.6, 2.2), (0, 0, .35)), ((-3.2, 4.0, 2.3), (0, 0, .35)), ((0, 0.01, 6.5), (0, 0, .3))]):
-        cam = bpy.data.cameras.new('c%d' % k); cam.lens = 38; co = bpy.data.objects.new('c%d' % k, cam); co.location = loc; bpy.context.collection.objects.link(co)
+    for k, (loc, tgt) in enumerate([((3.6, -3.6, 2.2), (0, 0, .35)), ((-3.2, 4.0, 2.3), (0, 0, .35)), ((0, 0.01, 6.5), (0, 0, .3)), ((9, 0.0, .45), (0, 0, .45)), ((0, -8.0, .8), (0, 0, .55))]):
+        cam = bpy.data.cameras.new('c%d' % k); cam.lens = 38
+        if k == 3: cam.type = 'ORTHO'; cam.ortho_scale = 4.6
+        co = bpy.data.objects.new('c%d' % k, cam); co.location = loc; bpy.context.collection.objects.link(co)
         d = Vector(tgt) - Vector(loc); co.rotation_euler = d.to_track_quat('-Z', 'Y').to_euler(); sc.camera = co
         sc.render.filepath = PNG.replace('.png', '_%d.png' % k); bpy.ops.render.render(write_still=True)
