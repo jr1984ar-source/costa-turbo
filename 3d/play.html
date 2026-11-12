@@ -199,7 +199,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=70';
+import { createGame } from './src/game.js?v=72';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -226,7 +226,7 @@ function step(dt) {
   if (I.brake) P.v -= 16 * dt; P.v = Math.max(0, P.v);
   P.steer += (I.steer - P.steer) * Math.min(1, dt * 6);
   const k = Math.min(1, P.v / 9), rate = (I.drift ? 2.3 : 1.25) * [1, 1.12, 1.22, 1.3][L('aletas')] * (0.25 + 0.75 * k) * (P.v > 38 ? 0.85 : 1);
-  P.th += P.steer * rate * dt;
+  P.th += P.steer * rate * dt * (P.air ? 0 : 1);   // en el aire el giro es para el truco
   const drifting = I.drift && P.v > 9 && Math.abs(P.steer) > 0.2;
   if (drifting) { P.dc = Math.min(1.6, (P.dc || 0) + dt); P.v -= P.v * 0.05 * dt; } else if ((P.dc || 0) > 0) {       // al soltar el derrape: mini-turbo si se cargó
     if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(44, P.v + 4 + P.dc * 4); P.kick = 1; if (Snd.ok()) Snd.boost(); window.__onDrift && window.__onDrift(P.dc); } P.dc = 0; }
@@ -263,7 +263,15 @@ function step(dt) {
       const tg = Math.atan2(f.x + nx * 0.8, f.z + nz * 0.8); P.th += Math.atan2(Math.sin(tg - P.th), Math.cos(tg - P.th)) * Math.min(1, dt * 3); } }
   // rampas: la moto sube por la cuña y sale volando
   P.y = P.y || 0; P.vy = P.vy || 0;
-  if (P.y > 0 && P.air) { P.vy -= 19 * dt; P.y += P.vy * dt; if (P.y <= 0) { P.y = 0; P.air = false; P.vy = 0; P.land = 1; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(90); } }
+  if (P.y > 0 && P.air) { P.vy -= 19 * dt; P.y += P.vy * dt; P._airT = (P._airT || 0) + dt; const big = P.vy * P.vy / 38 + P.y > 1.2;   // solo hay trucos en saltos de verdad, no en las olas
+    // trucos: girar en el aire = 360, derrape en el aire = mortal (los dos a la vez = combo)
+    if (!big && !P.spin && !P.flip) {} else if (Math.abs(I.steer) > .3) { P.spin = (P.spin || 0) + Math.sign(I.steer) * dt * 9; P._sd = Math.sign(I.steer); }
+    else if (P.spin) { const t = Math.ceil(Math.abs(P.spin) / 6.283 - .02) * 6.283, nx = Math.abs(P.spin) + dt * 9; P.spin = Math.sign(P.spin) * Math.min(t, nx); }   // al soltar, termina la vuelta empezada
+    if (!big && !P.flip) {} else if (I.drift) P.flip = (P.flip || 0) + dt * 8; else if (P.flip) P.flip = Math.min(Math.ceil(P.flip / 6.283 - .02) * 6.283, P.flip + dt * 8);
+    if (P.y <= 0) { P.y = 0; P.air = false; P.vy = 0; P.land = 1; if (Snd.ok()) Snd.bump(); window.__vibrate && window.__vibrate(90);
+      const sp = Math.abs(P.spin || 0), fl = P.flip || 0, ns = Math.round(sp / 6.283), nf = Math.round(fl / 6.283), bad = Math.abs(sp - ns * 6.283) > .7 || Math.abs(fl - nf * 6.283) > .7;
+      if (bad) { P.v *= .25; P._hitT = P.t + .6; window.__onTrick && window.__onTrick(-1, 0); } else if (ns || nf) window.__onTrick && window.__onTrick(ns, nf);
+      P.spin = 0; P.flip = 0; P._airT = 0; } }
   else { let onR = null; for (const r of (window.__RAMPS || [])) { const dx = P.x - r.x, dz = P.z - r.z, u = (dx * Math.sin(r.th) + dz * Math.cos(r.th)) / r.len, lt = dx * Math.cos(r.th) - dz * Math.sin(r.th);
       if (u >= 0 && u <= 1.02 && Math.abs(lt) < r.w / 2 && Math.cos(P.th - r.th) > .5) onR = [r, u]; }
     if (onR && onR[1] < 1) P.y = onR[0].h * onR[1];
@@ -290,12 +298,12 @@ function step(dt) {
   { const vs = (SWL[1] * f.x + SWL[2] * f.z) * P.v;   // la ola sube bajo la moto: al pasar la cresta rápido, sale volando
     if (!P.air && !(P.y > .05) && P.v > 22 && (P._vs || 0) > 1.4 && vs < (P._vs || 0) - .6) { P.air = true; P.y = .05; P.vy = P._vs * .95; }
     P._vs = vs; }
-  ski.root.position.set(P.x, (P.y || 0) + SWL[0], P.z); ski.root.rotation.y = P.th;
+  ski.root.position.set(P.x, (P.y || 0) + SWL[0], P.z); ski.root.rotation.y = P.th + (P.spin || 0);
   if (P.land) { P.land = 0; for (let i = 0; i < 90; i++) { const a = Math.random() * 6.28, sp0 = 2 + Math.random() * 5; spray.emit(P.x + Math.cos(a) * .8, .1, P.z + Math.sin(a) * .8, Math.cos(a) * sp0, 2 + Math.random() * 4, Math.sin(a) * sp0, .08 + Math.random() * .1, .8 + Math.random() * .6, .45); } }   // chapuzón al caer
   ski.body.position.y = -0.02 + (window.__quiet ? 0 : Math.sin(P.t * 3.1) * 0.02 * (0.3 + k)) - k * 0.03;   // quieta mientras eliges
   ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01 + (P.y > .05 ? 0 : (SWL[1] * side.x + SWL[2] * side.z) * .8)) - ski.body.rotation.z) * Math.min(1, dt * 5);
   ski.body.rotation.y += ((drifting ? P.steer * 0.32 : 0) - ski.body.rotation.y) * Math.min(1, dt * 6);   // la moto cruzada respecto a la trayectoria
-  ski.body.rotation.x += ((P.y > .05 ? -Math.atan2(P.air ? P.vy : 3, Math.max(8, P.v)) * .7 : -0.02 - k * 0.07 - (I.acc ? 0.02 : 0) - Math.atan(SWL[1] * f.x + SWL[2] * f.z) * .9) - ski.body.rotation.x) * Math.min(1, dt * (P.y > .05 ? 6 : 4));   // en el aire la proa sigue la trayectoria
+  if (P.flip) ski.body.rotation.x = -(P.flip || 0); else ski.body.rotation.x += ((P.y > .05 ? -Math.atan2(P.air ? P.vy : 3, Math.max(8, P.v)) * .7 : -0.02 - k * 0.07 - (I.acc ? 0.02 : 0) - Math.atan(SWL[1] * f.x + SWL[2] * f.z) * .9) - ski.body.rotation.x) * Math.min(1, dt * (P.y > .05 ? 6 : 4));   // en el aire la proa sigue la trayectoria
   // estela y salpicaduras
   const sx = P.x - f.x * 1.5, sz = P.z - f.z * 1.5; wake.update(dt, sx, sz, P.y > .3 ? 0 : Math.min(1, P.v / 10), P.v);
   if (P.v > 4 && !(P.y > .3)) {

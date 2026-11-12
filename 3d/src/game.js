@@ -210,7 +210,7 @@ export async function createGame(ctx) {
     <div><b><i class="ti ti-keyboard"></i> TECLADO</b>Flechas o WASD: acelerar, frenar y girar<br>Shift o X: turbo<br>Espacio o Z: derrape<br>C: cámara dron / onboard<br>P o Esc: pausa</div>
     <div><b><i class="ti ti-device-gamepad-2"></i> MANDO</b>Stick izquierdo: girar<br>RT o B: acelerar · LT: frenar<br>X: turbo · A: derrape<br>START: pausa<br>Menús: cruceta, A elegir, B volver</div>
     <div><b><i class="ti ti-hand-finger"></i> TÁCTIL</b>Flechas abajo a la izquierda: girar<br>ACELERAR: el botón grande<br>TURBO y DERRAPE encima<br>CÁMARA: botón de la izquierda<br>Se pueden ocultar en Ajustes</div></div>
-    <div class="sub" style="font-size:15px">Derrape: mantén DERRAPE en la curva y suéltalo para un mini-turbo.</div>
+    <div class="sub" style="font-size:15px">Derrape: mantén DERRAPE en la curva y suéltalo para un mini-turbo. En las rampas, en el aire: girar = 360, DERRAPE = mortal (los dos = combo). Suelta a tiempo para caer bien.</div>
     <div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   // ---------- créditos ----------
   mk('cred', `<h2>CRÉDITOS</h2><div class="cred">
@@ -245,6 +245,11 @@ export async function createGame(ctx) {
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
   window.__onDrift = q => { if (state === 'race' && R) { const p = Math.round(q * 40) * 5; R.pts = (R.pts || 0) + p; R.drifts = (R.drifts || 0) + 1; pop('DERRAPE +' + p, '#ff8c1e'); } };
   window.__onTurboUnit = () => { if (state === 'race') pop('+1 TURBO', '#33d6ff'); };
+  window.__onTrick = (spins, flips) => { if (state !== 'race' || !R) return;
+    if (spins < 0) { flash('¡MAL ATERRIZAJE!', 1, true, '#ff3b4e'); if (Snd.ok()) Snd.miss(); return; }
+    const names = []; if (flips) names.push(flips > 1 ? flips + ' MORTALES' : 'MORTAL'); if (spins) names.push(spins > 1 ? spins * 360 + '' : '360');
+    let p = flips * 300 + spins * 200; if (flips && spins) { p = Math.round(p * 1.5); names.push('COMBO ×1,5'); }
+    R.pts = (R.pts || 0) + p; R.tricks = (R.tricks || 0) + 1; flash(names.join(' + '), 1.1, true, '#ffb02e'); pop('+' + p + ' PUNTOS', '#ffb02e'); if (Snd.ok()) Snd.cash(); };
   window.__onJump = () => { if (state === 'race') { R.jumps = (R.jumps || 0) + 1; R.pts = (R.pts || 0) + 100; flash('¡SALTO!', .8, true, '#9fe6ff'); pop('+100 PUNTOS', '#9fe6ff'); } };
   // choque fuerte contra barco, roca o boya: se pierde un corazón
   window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
@@ -476,12 +481,13 @@ export async function createGame(ctx) {
   }
 
   // ---------- rampas de salto (la física del salto está en play.html) ----------
-  function ramp(path, s, lat, len = 7, h = 1.6, w = 4.2) {
+  const RAMPC = { amarilla: ['#ffb21a', 7, 1.4], naranja: ['#ff7a1a', 8, 2], roja: ['#e3202b', 9, 2.7], mega: ['#9b30ff', 12, 4] };
+  function ramp(path, s, lat, kind = 'amarilla', w = 4.2) { const [rc, len, h] = RAMPC[kind];
     const q = at(path, s), x = q.x - q.tz * lat, z = q.z + q.tx * lat, th = Math.atan2(q.tx, q.tz), g = new THREE.Group();
     const geo = new THREE.BufferGeometry(), hw = w / 2;   // cuña: sube de 0 a h a lo largo de len
     const v = [-hw, 0, 0, hw, 0, 0, hw, h, len, -hw, h, len, -hw, 0, len, hw, 0, len];
     geo.setAttribute('position', new THREE.Float32BufferAttribute(v, 3)); geo.setIndex([0, 2, 1, 0, 3, 2, 0, 4, 3, 1, 2, 5, 3, 4, 5, 3, 5, 2]); geo.computeVertexNormals();
-    const top = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: textTex([''], 256, 256, '#ffb21a', '#ffb21a'), color: 0xffffff, roughness: .35, side: THREE.DoubleSide })); top.castShadow = top.receiveShadow = true; g.add(top);
+    const top = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ map: textTex([''], 256, 256, rc, rc), color: 0xffffff, roughness: .35, side: THREE.DoubleSide })); top.castShadow = top.receiveShadow = true; g.add(top);
     for (let k = 0; k < 4; k++) { const st = new THREE.Mesh(new THREE.BoxGeometry(w + .02, .05, .35), new THREE.MeshStandardMaterial({ color: 0x14161b })); const u = (k + .5) / 4; st.position.set(0, h * u + .03, len * u); st.rotation.x = -Math.atan2(h, len); g.add(st); }   // franjas negras
     for (const sx of [-1, 1]) { const fl = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, len + 1, 14), new THREE.MeshStandardMaterial({ color: 0xe3202b, roughness: .4 })); fl.rotation.x = Math.PI / 2; fl.position.set(sx * (hw + .35), .1, len / 2); g.add(fl); }   // flotadores
     g.position.set(x, -.05, z); g.rotation.y = th; add(g);
@@ -525,7 +531,7 @@ export async function createGame(ctx) {
       const cone = new THREE.Mesh(new THREE.ConeGeometry(1.1, 2, 4), am); cone.rotation.x = Math.PI; ar.add(cone);
       const st = new THREE.Mesh(new THREE.BoxGeometry(.7, 1.6, .7), am); st.position.y = 1.7; ar.add(st); ar.traverse(o => o.castShadow = true); add(ar); R.gArrow = ar; }
     // rampas en cada pantalla, fuera de las puertas de boyas
-    for (const [f, lat] of { puerto: [[.42, 7], [.78, -6]], cala: [[.93, 0]], mago: [[.3, -8], [.72, 8]] }[Z.id] || []) { let s = path.L * f; while (R.gates.some(q => Math.abs(q.s - s) < 16)) s += 6; ramp(path, s, lat); }
+    for (const [f, lat, k] of { puerto: [[.42, 7, 'amarilla'], [.78, -6, 'roja']], cala: [[.93, 0, 'naranja']], mago: [[.3, -8, 'naranja'], [.72, 8, 'mega']] }[Z.id] || []) { let s = path.L * f; while (R.gates.some(q => Math.abs(q.s - s) < 16)) s += 6; ramp(path, s, lat, k); }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; r.wk.lx = null; r.wk.geo.setDrawRange(0, 0); }); }
     // jugador a la salida
     rh.querySelector('.co span').textContent = '0';
@@ -556,7 +562,7 @@ export async function createGame(ctx) {
       if (Z.obj === 'race3') rows.push(['Puesto', R.pos + 'º', null]); else rows.push(['Tiempo', fmtT(R.t), null]);
       if (Z.obj === 'time') rows.push(['Tiempo sobrante', ok ? fmtT(R.time) : '—', tBonus]);
       if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; rows.push(['Boyas', (R.gates.length - miss) + ' de ' + R.gates.length, null], ['Bonus de tiempo', '', tBonus]); }
-      rows.push(['Saltos', String(R.jumps || 0), null], ['Derrapes', String(R.drifts || 0), null], ['Premio', '', base]);
+      rows.push(['Saltos', String(R.jumps || 0), null], ['Trucos', String(R.tricks || 0), null], ['Derrapes', String(R.drifts || 0), null], ['Premio', '', base]);
       const pts = R.coinN * 25 + prize + (R.pts || 0); rows.push(['PUNTOS', String(pts), null]); if (unl) rows.push(['Desbloqueado', unl, null]);
       scr.result.querySelector('.desg').innerHTML = rows.map(([a, b, c]) => `<tr><td style="text-align:left">${a}</td><td>${b}</td><td style="text-align:right;color:#ffe14d">${c == null ? '' : '+' + c.toLocaleString('es-ES') + ' PTA'}</td></tr>`).join(''); }
     // podio de EL MAGO: los que han llegado por tiempo y el resto por lo que les falta
