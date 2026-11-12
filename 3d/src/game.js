@@ -444,6 +444,7 @@ export async function createGame(ctx) {
   async function makeRivals(n) {
     if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i], body: ['piloto_eric', 'piloto_carla', 'piloto_eric', 'piloto_claudia', 'piloto_eric'][i], skin: [1, 1, .7, .92, 1][i] });
         rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); const pp = PAINTS[[1, 3, 2, 9, 6][i]]; ctx.paintSki && ctx.paintSki(sk.root, pp.main, pp.acc); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
+        const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex([RIVN[i].toUpperCase()], 512, 128, RIVC[i], '#ffffff'), transparent: true, depthWrite: false })); tag.scale.set(5.2, 1.3, 1); tag.position.set(0, 3.3, 0); tag.renderOrder = 5; sk.root.add(tag);   // nombre encima
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
     return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [0.9, 1, 1.07][S.set.dif], fin: null, tl: 0, steer: 0 }));
   }
