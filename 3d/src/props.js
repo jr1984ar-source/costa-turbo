@@ -142,7 +142,7 @@ export function makeGull(flap = 0.2) {
   };
   const wm = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.8, side: THREE.DoubleSide });
   const wl = new THREE.Mesh(wingGeo(1), wm), wr = new THREE.Mesh(wingGeo(-1), wm);
-  wl.rotation.z = flap; wr.rotation.z = -flap; g.add(wl, wr);
+  wl.rotation.z = flap; wr.rotation.z = -flap; g.add(wl, wr); g.userData.w = [wl, wr];
   g.traverse(o => { if (o.isMesh) o.castShadow = true; });
   g.scale.setScalar(1.3);
   return g;
