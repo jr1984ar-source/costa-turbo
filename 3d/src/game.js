@@ -48,6 +48,7 @@ export const PARTS = [
 const PART_NEED = [0, 1, 3];   // pantallas ganadas para STAGE 1, 2 y 3
 const MOTOS = [['kawasaki', 'KAWASAKI ULTRA 310']];
 // pantallas: recorridos comprobados en agua profunda
+const MEDAL_T = { puerto: [21, 23.5, 99], cala: [36, 42, 50] }, MEDAL_C = ['#ffd21a', '#d9dde3', '#d08a4a'], MEDAL_N = ['ORO', 'PLATA', 'BRONCE'];
 export const ZONES = [
   { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 0 },
   { id: 'cala', name: 'LA CALA', obj: 'slalom', goal: 'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.', xa: -290, xb: 270, off: 42, amp: 0, per: 1, prize: 1200, riv: 0 },
@@ -58,6 +59,7 @@ const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
+S.medal = S.medal || {}; S.best = S.best || {};
 S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 1, hide: 0, q: 'alta' }, S.set || {});
@@ -172,7 +174,7 @@ export async function createGame(ctx) {
   // ---------- briefing ----------
   mk('brief', `<h2 class="zn"></h2><div class="sub zg"></div><div class="sub zb" style="color:#ffe14d"></div><div class="row"><button class="btn main" data-a="go">¡A CORRER!</button><button class="btn" data-a="map">VOLVER</button></div>`);
   // ---------- resultados ----------
-  mk('result', `<h2 class="rt"></h2><div class="sub rs" style="font-size:24px"></div><div class="sub rp" style="color:#ffe14d;font-size:30px;font-weight:900"></div>
+  mk('result', `<div class="md" style="display:none;text-align:center;font-weight:900;font-size:22px;letter-spacing:.1em"></div><h2 class="rt"></h2><div class="sub rs" style="font-size:24px"></div><div class="sub rp" style="color:#ffe14d;font-size:30px;font-weight:900"></div>
     <div class="nm" style="display:none;text-align:center"><div class="sub" style="font-weight:800">¡TOP 10! TU NOMBRE:</div><input maxlength="12"><div class="row" style="margin-top:8px"><button class="btn" data-a="savename">GUARDAR</button></div></div>
     <div><div class="sub" style="font-weight:900;letter-spacing:.1em">TOP 10</div><table class="tt"></table></div>
     <div class="row"><button class="btn main" data-a="retry">REPETIR</button><button class="btn nx" data-a="next">SIGUIENTE PANTALLA</button><button class="btn" data-a="map">MAPA</button></div>`);
@@ -221,7 +223,7 @@ export async function createGame(ctx) {
     const z = scr.map.querySelector('.zone'); z.innerHTML = '';
     ZONES.forEach((Z, i) => { const lock = i >= S.unlocked; const b = document.createElement('button'); b.className = 'card' + (lock ? ' lock' : '');
       const best = S.top[Z.id] && S.top[Z.id][0] ? 'Récord: ' + fmtT(S.top[Z.id][0].t) + ' · ' + S.top[Z.id][0].n : 'Sin récord';
-      b.innerHTML = `<i>ZONA ${i + 1}</i><b>${Z.name}</b><i style="margin-top:6px">${lock ? 'Bloqueada: supera la anterior' : Z.goal}</i><em>${lock ? '' : best}</em>`;
+      const mg = S.medal[Z.id]; b.innerHTML = (mg != null ? `<i class="ti ti-medal" style="float:right;font-size:38px;opacity:1;color:${MEDAL_C[mg]}"></i>` : '') + `<i>ZONA ${i + 1}</i><b>${Z.name}</b><i style="margin-top:6px">${lock ? 'Bloqueada: supera la anterior' : Z.goal}</i><em>${lock ? '' : best}</em>`;
       if (!lock) b.onclick = () => { click(); openBrief(i); }; z.appendChild(b); });
     refreshCash();
   }
@@ -468,6 +470,12 @@ export async function createGame(ctx) {
     if (Z.obj === 'slalom') { const miss = R.gates.filter(g => g.miss).length; line = 'Tiempo ' + fmtT(R.t) + ' + ' + miss + ' s de boyas = ' + fmtT(t); if (ok) prize = Math.max(300, Z.prize - miss * 100); }
     if (Z.obj === 'race3') { const pos = R.pos; line = 'Has quedado ' + pos + 'º de ' + (R.rivals.length + 1) + ' · ' + fmtT(R.t); ok = ok && pos <= 3; if (ok) prize = Z.prize[pos - 1]; title = ok ? (pos === 1 ? '¡HAS GANADO!' : '¡PODIO!') : 'FUERA DEL PODIO'; }
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
+    // medalla y récord
+    let md = -1; if (ok) { if (Z.obj === 'race3') md = R.pos - 1; else { const k = [1.12, 1, .92][S.set.dif]; md = MEDAL_T[Z.id].findIndex(v => t <= v * k); } }
+    const rec = ok && (S.best[Z.id] == null || t < S.best[Z.id]) && Z.obj !== 'race3'; if (rec) S.best[Z.id] = t;
+    if (md >= 0 && (S.medal[Z.id] == null || md < S.medal[Z.id])) S.medal[Z.id] = md;
+    const mdE = scr.result.querySelector('.md'); mdE.style.display = md >= 0 || rec ? 'block' : 'none';
+    mdE.innerHTML = (md >= 0 ? `<i class="ti ti-medal" style="font-size:64px;color:${MEDAL_C[md]};filter:drop-shadow(0 4px 0 #0b1630)"></i><div style="color:${MEDAL_C[md]}">MEDALLA DE ${MEDAL_N[md]}</div>` : '') + (rec ? '<div style="color:#5be37a">¡NUEVO RÉCORD!</div>' : '');
     save();
     scr.result.querySelector('.rt').textContent = title; scr.result.querySelector('.rs').textContent = line + coinTxt;
     scr.result.querySelector('.rp').textContent = ok ? '+' + prize.toLocaleString('es-ES') + ' PTA' : '';
