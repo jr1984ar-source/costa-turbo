@@ -13,20 +13,38 @@ export function wakeMaterial(env) {
   return new THREE.ShaderMaterial({
     ...premult, side: THREE.DoubleSide,
     uniforms: { uTime: env.time, uSunCol: { value: env.sunCol } },
-    vertexShader: `attribute float aSide; attribute float aAge; attribute float aK; varying float vSide; varying float vAge; varying float vK; varying vec3 vW;
-      void main(){ vSide = aSide; vAge = aAge; vK = aK; vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
-    fragmentShader: `uniform float uTime; uniform vec3 uSunCol; varying float vSide; varying float vAge; varying float vK; varying vec3 vW;
+    vertexShader: `attribute float aSide; attribute float aAge; attribute float aK; attribute float aU; attribute float aW; varying float vSide; varying float vAge; varying float vK; varying float vU; varying float vWid; varying vec3 vW;
+      void main(){ vSide = aSide; vAge = aAge; vK = aK; vU = aU; vWid = aW; vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+    fragmentShader: `uniform float uTime; uniform vec3 uSunCol; varying float vSide; varying float vAge; varying float vK; varying float vU; varying float vWid; varying vec3 vW;
       ${GLSL_NOISE}
+      float fbm2(vec2 p){ return ct_n(p) * 0.5 + ct_n(p * 2.03 + 7.1) * 0.3 + ct_n(p * 4.1 - 3.3) * 0.2; }
       void main(){
-        float s = abs(vSide);
-        float n1 = ct_n(vW.xz * 1.6 + vec2(uTime * 0.3, 0.0)), n2 = ct_n(vW.xz * 5.0 - uTime * 0.5), n3 = ct_n(vW.xz * 0.5);
-        float fade = exp(-vAge / 5.5) * smoothstep(0.0, 0.08, vAge) * vK;
-        float arms = smoothstep(0.62, 0.9, s) * (1.0 - smoothstep(0.9, 1.0, s));
-        float core = pow(1.0 - s, 1.6) * exp(-vAge / 2.2);
-        float lace = smoothstep(0.42, 0.75, n1 * 0.6 + n2 * 0.4);
-        float foam = clamp(arms * (0.45 + 0.55 * lace) * 0.85 + core * (0.55 + 0.45 * lace) + (1.0 - s) * 0.25 * lace * smoothstep(0.3, 0.7, n3), 0.0, 1.0) * fade;
-        vec3 c = vec3(0.92, 0.97, 1.0) * (uSunCol.g * 0.42 + 0.35);
-        gl_FragColor = vec4(c * foam, foam);
+        float s = abs(vSide), age = vAge, d = s * vWid;           // d = metros desde el eje de la estela
+        vec2 pw = vW.xz;
+        vec2 warp = vec2(ct_n(pw * 0.7 + uTime * 0.2), ct_n(pw * 0.7 + 17.0 - uTime * 0.2)) - 0.5;
+        float st  = fbm2(vec2(vU * 0.55, d * 0.9) + warp * 1.6);          // vetas largas
+        float st2 = fbm2(vec2(vU * 1.6 + 11.0, d * 2.6) + warp * 2.4);
+        float bub = ct_n(pw * 8.0 + uTime * 0.6) * 0.6 + ct_n(pw * 21.0 - uTime) * 0.4;
+        float lace  = smoothstep(0.42, 0.62, st * 0.55 + st2 * 0.45);
+        float lace2 = smoothstep(0.48, 0.66, st2 * 0.55 + bub * 0.45);
+        // 1) chorro de la turbina: franja blanca estrecha y larga, muy blanca junto a la popa
+        float jet   = (1.0 - smoothstep(0.25, 1.25, d)) * exp(-age / 5.0) * (0.30 + 0.70 * lace);
+        float churn = (1.0 - smoothstep(0.3, 1.9, d)) * exp(-age / 0.8) * (0.60 + 0.40 * lace2);
+        // 2) brazos de la V: dos líneas de espuma que se abren hacia atrás
+        float dd = (d - vWid * 0.88) / (0.30 + vWid * 0.035);
+        float arm = exp(-dd * dd) * exp(-age / 7.0) * smoothstep(0.25, 0.9, age) * (0.45 + 0.55 * lace) * 1.15;
+        float shoulder = smoothstep(vWid * 0.55, vWid * 0.9, d) * (1.0 - smoothstep(vWid * 0.9, vWid * 1.0, d)) * exp(-age / 6.0) * 0.22 * lace2;
+        // 3) espuma suelta entre medias y estelas sueltas que quedan
+        float loose = (1.0 - smoothstep(0.0, 1.0, s)) * exp(-age / 6.0) * 0.30 * lace2 * smoothstep(0.6, 2.0, age);
+        float foam = jet + churn + arm + shoulder + loose;
+        float on = vK * smoothstep(0.0, 0.05, age);
+        foam = clamp(foam, 0.0, 1.0) * on * (1.0 - smoothstep(0.92, 1.0, s));
+        // 4) agua removida: turquesa claro entre los brazos
+        float tint = (1.0 - smoothstep(0.1, 1.0, s)) * exp(-age / 9.0) * 0.24 * on;
+        vec3 foamC = vec3(0.97, 0.99, 1.0) * (uSunCol.g * 0.42 + 0.42);
+        vec3 tintC = vec3(0.30, 0.84, 0.90) * (uSunCol.g * 0.30 + 0.30);
+        float a = clamp(foam + tint, 0.0, 1.0);
+        gl_FragColor = vec4(foamC * foam + tintC * tint, a);
       }`,
   });
 }
@@ -44,25 +62,25 @@ export function sprayMaterial(env) {
   });
 }
 function wakeGeometry(path) {
-  const n = path.length, pos = new Float32Array(n * 6), side = new Float32Array(n * 2), age = new Float32Array(n * 2), k = new Float32Array(n * 2), idx = [];
+  const n = path.length, pos = new Float32Array(n * 6), side = new Float32Array(n * 2), age = new Float32Array(n * 2), k = new Float32Array(n * 2), uu = new Float32Array(n * 2), ww = new Float32Array(n * 2), idx = [];
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('aSide', new THREE.BufferAttribute(side, 1));
-  g.setAttribute('aAge', new THREE.BufferAttribute(age, 1)); g.setAttribute('aK', new THREE.BufferAttribute(k, 1));
+  g.setAttribute('aAge', new THREE.BufferAttribute(age, 1)); g.setAttribute('aK', new THREE.BufferAttribute(k, 1)); g.setAttribute('aU', new THREE.BufferAttribute(uu, 1)); g.setAttribute('aW', new THREE.BufferAttribute(ww, 1));
   for (let i = 0; i < n - 1; i++) { const a = i * 2; idx.push(a, a + 2, a + 1, a + 1, a + 2, a + 3); }
   g.setIndex(idx);
   return g;
 }
 function fillWake(g, path, n) {
-  const pos = g.attributes.position.array, side = g.attributes.aSide.array, age = g.attributes.aAge.array, kk = g.attributes.aK.array;
+  const pos = g.attributes.position.array, side = g.attributes.aSide.array, age = g.attributes.aAge.array, kk = g.attributes.aK.array, uu = g.attributes.aU.array, ww = g.attributes.aW.array;
   for (let i = 0; i < n; i++) {
     const p = path[i], q = path[Math.min(n - 1, i + 1)], o = path[Math.max(0, i - 1)];
     let tx = q.x - o.x, tz = q.z - o.z; const L = Math.hypot(tx, tz) || 1; tx /= L; tz /= L;
-    const w = 0.55 + p.age * 1.9 * (p.k ?? 1);
+    const w = Math.min(34, 0.9 + 0.30 * (p.sp ?? 12) * Math.min(p.age, 5.5));   // la V se abre con la velocidad (ángulo casi fijo)
     pos[i * 6] = p.x - tz * w; pos[i * 6 + 1] = 0.03; pos[i * 6 + 2] = p.z + tx * w;
     pos[i * 6 + 3] = p.x + tz * w; pos[i * 6 + 4] = 0.03; pos[i * 6 + 5] = p.z - tx * w;
-    side[i * 2] = -1; side[i * 2 + 1] = 1; age[i * 2] = age[i * 2 + 1] = p.age; kk[i * 2] = kk[i * 2 + 1] = p.k ?? 1;
+    side[i * 2] = -1; side[i * 2 + 1] = 1; age[i * 2] = age[i * 2 + 1] = p.age; kk[i * 2] = kk[i * 2 + 1] = p.k ?? 1; uu[i * 2] = uu[i * 2 + 1] = p.u ?? i * 0.6; ww[i * 2] = ww[i * 2 + 1] = w;
   }
-  for (const a of ['position', 'aSide', 'aAge', 'aK']) g.attributes[a].needsUpdate = true;
+  for (const a of ['position', 'aSide', 'aAge', 'aK', 'aU', 'aW']) g.attributes[a].needsUpdate = true;
   g.setDrawRange(0, Math.max(0, (n - 1) * 6));
 }
 // path: [{x,z,age}] desde la popa hacia atrás (imagen fija)
@@ -72,14 +90,16 @@ export function makeWake(env, path) {
 }
 // Estela en vivo: guarda puntos de la popa y los envejece
 export class Wake {
-  constructor(env, max = 360) { this.max = max; this.pts = []; this.geo = wakeGeometry(new Array(max).fill(0)); this.mesh = new THREE.Mesh(this.geo, wakeMaterial(env)); this.mesh.renderOrder = 3; this.mesh.frustumCulled = false; this.mesh.userData.noAO = true; }
-  update(dt, x, z, k) {
+  constructor(env, max = 560) { this.max = max; this.pts = []; this.dist = 0; this.lx = null; this.lz = null; this.geo = wakeGeometry(new Array(max).fill(0)); this.mesh = new THREE.Mesh(this.geo, wakeMaterial(env)); this.mesh.renderOrder = 3; this.mesh.frustumCulled = false; this.mesh.userData.noAO = true; }
+  update(dt, x, z, k, sp = 12) {
     for (const p of this.pts) p.age += dt;
-    while (this.pts.length && this.pts[this.pts.length - 1].age > 14) this.pts.pop();
-    const h = this.pts[0];
-    if (k > 0.05 && (!h || Math.hypot(h.x - x, h.z - z) > 0.6)) { this.pts.unshift({ x, z, age: 0, k }); if (this.pts.length > this.max) this.pts.pop(); }
-    else if (h) { h.x = x; h.z = z; }
-    fillWake(this.geo, this.pts, this.pts.length);
+    if (this.lx !== null) this.dist += Math.hypot(x - this.lx, z - this.lz); this.lx = x; this.lz = z;
+    while (this.pts.length && this.pts[this.pts.length - 1].age > 16) this.pts.pop();
+    const h = this.pts[0];   // los puntos ya puestos no se mueven; solo se añade uno nuevo cada 0,45 m
+    if (k > 0.05 && (!h || Math.hypot(h.x - x, h.z - z) > 0.45)) { this.pts.unshift({ x, z, age: 0, k, u: this.dist, sp }); if (this.pts.length > this.max - 1) this.pts.pop(); }
+    // la cinta se pega a la popa con un punto vivo en la posición actual
+    const live = k > 0.05 ? [{ x, z, age: 0, k, u: this.dist, sp }, ...this.pts] : this.pts;
+    fillWake(this.geo, live, live.length);
   }
 }
 // Partículas de agua: lista de {p:Vector3, size, alpha}

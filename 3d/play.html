@@ -29,7 +29,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { makeGrass, makePalms, makeGull, makeYacht, makeBuoy, makeUmbrella } from './src/props.js';
-import { Wake, Spray } from './src/fx.js';
+import { Wake, Spray } from './src/fx.js?v=6';
 
 const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = Q.get('paint') || 'kawasaki';
 const W = innerWidth, H = innerHeight;
@@ -118,8 +118,8 @@ import { Snd, updateSound } from './src/sound.js'; window.__Snd = Snd;
 // --- JUEGO: cámara detrás, controles (teclado, táctil, mando) y bucle
 const hud = document.getElementById('hud'); hud.style.display = 'block';
 const cam = new THREE.PerspectiveCamera(42, W / H, 0.1, 4000);
-const wake = new Wake(env); scene.add(wake.mesh);
-const spray = new Spray(env); scene.add(spray.points);
+const wake = new Wake(env); scene.add(wake.mesh); window.__wake = wake;
+const spray = new Spray(env, 7000); scene.add(spray.points);
 scene.add(ski.root);
 const PR = renderer.getPixelRatio();
 const rt = new THREE.WebGLRenderTarget(W * PR, H * PR, { type: THREE.HalfFloatType, samples: 4 });
@@ -191,14 +191,24 @@ function step(dt) {
   ski.body.rotation.z += ((-P.steer * 0.32 * k - P.slip * 0.01) - ski.body.rotation.z) * Math.min(1, dt * 5);
   ski.body.rotation.x += ((-0.02 - k * 0.07 - (I.acc ? 0.02 : 0)) - ski.body.rotation.x) * Math.min(1, dt * 4);
   // estela y salpicaduras
-  const sx = P.x - f.x * 1.5, sz = P.z - f.z * 1.5; wake.update(dt, sx, sz, Math.min(1, P.v / 14));
-  if (P.v > 5) {
-    const n = Math.floor(P.v * dt * 28);
-    for (let i = 0; i < n; i++) { const r = Math.random() - 0.5, up = 2.2 + Math.random() * 2.4 + (turboOn ? 1.2 : 0);
-      spray.emit(sx + side.x * r * 0.5, 0.25, sz + side.z * r * 0.5, -f.x * P.v * (0.2 + Math.random() * 0.2) + side.x * r * 1.6, up, -f.z * P.v * (0.2 + Math.random() * 0.2) + side.z * r * 1.6, 0.05 + Math.random() * 0.06, 0.7 + Math.random() * 0.5, 0.35 + Math.random() * 0.3); }
-    const m = Math.floor(P.v * dt * 10);
-    for (let i = 0; i < m; i++) { const sg = Math.random() < 0.5 ? -1 : 1;
-      spray.emit(P.x + f.x * 0.6 + side.x * sg * 0.6, 0.15, P.z + f.z * 0.6 + side.z * sg * 0.6, side.x * sg * (1.5 + Math.random() * 1.5) + f.x * P.v * 0.3, 1.2 + Math.random() * 1.2, side.z * sg * (1.5 + Math.random() * 1.5) + f.z * P.v * 0.3, 0.04 + Math.random() * 0.04, 0.5 + Math.random() * 0.3, 0.25); }
+  const sx = P.x - f.x * 1.5, sz = P.z - f.z * 1.5; wake.update(dt, sx, sz, Math.min(1, P.v / 10), P.v);
+  if (P.v > 4) {
+    const R = Math.random, k2 = Math.min(1, P.v / 24);
+    // cola de gallo: chorro alto detrás de la popa, más fuerte con turbo
+    const n = Math.floor(P.v * dt * (60 + (turboOn ? 40 : 0)));
+    for (let i = 0; i < n; i++) { const r = R() - 0.5, up = 3 + R() * 3.6 * (0.6 + k2) + (turboOn ? 1.6 : 0);
+      spray.emit(sx + side.x * r * 0.45, 0.22, sz + side.z * r * 0.45, -f.x * P.v * (0.18 + R() * 0.22) + side.x * r * 2.2, up, -f.z * P.v * (0.18 + R() * 0.22) + side.z * r * 2.2, 0.07 + R() * 0.1, 0.8 + R() * 0.8, 0.30 + R() * 0.3); }
+    // bruma fina detrás
+    const mn = Math.floor(P.v * dt * 40);
+    for (let i = 0; i < mn; i++) { const r = R() - 0.5;
+      spray.emit(sx + side.x * r * 0.7, 0.15, sz + side.z * r * 0.7, -f.x * P.v * (0.1 + R() * 0.2) + side.x * r * 3, 1.2 + R() * 2.2, -f.z * P.v * (0.1 + R() * 0.2) + side.z * r * 3, 0.03 + R() * 0.04, 0.7 + R() * 0.7, 0.18 + R() * 0.2); }
+    // proa: cortina de agua a los dos lados
+    const m = Math.floor(P.v * dt * 26);
+    for (let i = 0; i < m; i++) { const sg = R() < 0.5 ? -1 : 1;
+      spray.emit(P.x + f.x * 1.25 + side.x * sg * 0.35, 0.12, P.z + f.z * 1.25 + side.z * sg * 0.35, side.x * sg * (2 + R() * 3.2) + f.x * P.v * 0.35, 1.5 + R() * 2.2 * (0.5 + k2), side.z * sg * (2 + R() * 3.2) + f.z * P.v * 0.35, 0.05 + R() * 0.07, 0.55 + R() * 0.5, 0.30 + R() * 0.25); }
+    // al girar: abanico por el lado de fuera
+    if (Math.abs(P.steer) > 0.25 && P.v > 8) { const out = -Math.sign(P.steer), q = Math.floor(P.v * dt * 30 * Math.abs(P.steer));
+      for (let i = 0; i < q; i++) spray.emit(P.x + side.x * out * 0.6 - f.x * R() * 1.2, 0.15, P.z + side.z * out * 0.6 - f.z * R() * 1.2, side.x * out * (3 + R() * 4) + f.x * P.v * 0.2, 1.5 + R() * 3, side.z * out * (3 + R() * 4) + f.z * P.v * 0.2, 0.06 + R() * 0.08, 0.7 + R() * 0.6, 0.35 + R() * 0.3); }
   }
   spray.update(dt);
   if (wall && P.v > 6 && Snd.ok() && !(P._bumpT > P.t)) { Snd.bump(); P._bumpT = P.t + 0.6; }
