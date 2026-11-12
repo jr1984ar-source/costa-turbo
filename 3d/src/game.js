@@ -305,7 +305,10 @@ export async function createGame(ctx) {
       <div class="setrow"><span><i class="ti ti-hand-off"></i> BOTONES TÁCTILES</span><div class="row">${opt('hide', [[0, 'VER'], [1, 'OCULTAR']])}</div></div>
       <div class="setrow"><span><i class="ti ti-photo"></i> GRÁFICOS</span><div class="row">${opt('q', [['alta', 'ALTA'], ['baja', 'BAJA (MÓVIL)']])}</div></div>
       <div class="setrow"><span><i class="ti ti-id-badge"></i> TU NOMBRE</span><input maxlength="12" data-name="1" value="${S.name || 'JUGADOR'}"></div>
+      <div class="setrow"><span><i class="ti ti-transfer"></i> PASAR PARTIDA</span><div class="row"><button class="btn" data-a="exp"><i class="ti ti-copy"></i>COPIAR CÓDIGO</button><input data-imp="1" placeholder="PEGA AQUÍ EL CÓDIGO" style="width:220px;font-size:16px"></div></div>
       <div class="setrow"><span><i class="ti ti-trash"></i> PARTIDA</span><div class="row"><button class="btn" data-a="wipe">BORRAR PARTIDA</button></div></div>`;
+    const im = box.querySelector('[data-imp]'); im.addEventListener('keydown', e => e.stopPropagation());
+    im.onchange = () => { try { const o = JSON.parse(decodeURIComponent(escape(atob(im.value.trim())))); if (!o || o.v !== 1) throw 0; localStorage.setItem(SAVE_KEY, JSON.stringify(o)); toast('PARTIDA CARGADA', true); setTimeout(() => location.reload(), 900); } catch (e) { toast('ESE CÓDIGO NO VALE', false); } };
     box.querySelectorAll('[data-set]').forEach(b => b.onclick = () => { click(); const k = b.dataset.set, v = b.dataset.v; s[k] = isNaN(+v) ? v : +v; save(); applySettings(); renderSet(); });
     const r = box.querySelector('[data-range]'); r.oninput = () => { s.vol = +r.value; save(); applySettings(); };
     const nm = box.querySelector('[data-name]'); nm.addEventListener('keydown', e => e.stopPropagation()); nm.onchange = () => { S.name = (nm.value || 'JUGADOR').toUpperCase().slice(0, 12); save(); }; }
@@ -565,6 +568,7 @@ export async function createGame(ctx) {
     if (a === 'next') { if (zone + 1 < S.unlocked) openBrief(zone + 1); }
     if (a === 'resume') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); }
     if (a === 'jjout') { ctx.setPaused(false); state = 'race'; show(null); flash('-3 s', 1, true); }
+    if (a === 'exp') { const code = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); try { await navigator.clipboard.writeText(code); toast('CÓDIGO COPIADO: PÉGALO EN EL OTRO APARATO', true); } catch (e) { const im = scr.set.querySelector('[data-imp]'); im.value = code; im.select(); toast('CÓDIGO LISTO: CÓPIALO', true); } }
     if (a === 'savename') saveName(); });
   scr.result.querySelector('input').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') saveName(); });
 
