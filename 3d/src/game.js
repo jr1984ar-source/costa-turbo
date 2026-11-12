@@ -60,6 +60,7 @@ const ACH = [['win1', 'Primera victoria', 'Gana una pantalla', 300, 'flag'], ['o
   ['clean', 'Sin un rasguño', 'Acaba una carrera sin chocar', 500, 'shield-check'], ['stage3', 'Motor a tope', 'Sube una pieza a STAGE 3', 700, 'engine'], ['gear', 'Equipado', 'Lleva casco, gafas, guantes, chaleco y neopreno comprados', 400, 'shirt-sport'],
   ['turbo5', 'Turbo a reventar', 'Ten 5 turbos a la vez', 300, 'bolt']];
 const TROF = [[3, 'BRONCE', '#d08a4a'], [6, 'PLATA', '#d9dde3'], [9, 'ORO', '#ffd21a'], [11, 'PLATINO', '#a8f0e8'], [13, 'DIAMANTE', '#9fe6ff']];
+const CUPS = ['COPA BRONCE', 'COPA PLATA', 'COPA ORO', 'COPA PLATINO', 'COPA DIAMANTE'];   // una copa por dificultad; EL MAGO es La Final
 export const ZONES = [
   { id: 'puerto', name: 'EL PUERTO', obj: 'time', goal: 'Llega a la meta antes de que se acabe el tiempo. Cada punto de control te da más tiempo.', xa: 300, xb: -300, off: 32, amp: 5, per: 85, prize: 1500, riv: 5, posPrize: [1500, 1000, 500] },
   { id: 'cala', name: 'LA CALA', obj: 'slalom', goal: 'Pasa por dentro de las boyas. Cada una que falles te quita 1 segundo.', xa: -290, xb: 270, off: 42, amp: 0, per: 1, prize: 1200, riv: 0 },
@@ -70,7 +71,7 @@ const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 1500, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
-S.medal = S.medal || {}; S.best = S.best || {}; S.ach = S.ach || {}; S.coinsTot = S.coinsTot || 0;
+S.medal = S.medal || {}; S.best = S.best || {}; S.cups = S.cups || {}; S.ach = S.ach || {}; S.coinsTot = S.coinsTot || 0;
 S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, mt: 'suno', vol: 0.8, vib: 1, dif: 2, hide: 0, q: 'alta' }, S.set || {});
@@ -190,7 +191,7 @@ export async function createGame(ctx) {
 
   // ---------- portada ----------
   mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
-    <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button></div>
+    <div class="row" style="margin-top:14px"><button class="btn main" data-a="map"><i class="ti ti-player-play-filled"></i>JUGAR</button><button class="btn main" data-a="champ"><i class="ti ti-trophy"></i>CAMPEONATO</button></div>
     <div class="row"><button class="btn" data-a="pilot"><i class="ti ti-user"></i>PILOTO Y MOTO</button><button class="btn" data-a="taller"><i class="ti ti-tools"></i>TALLER</button></div>
     <div class="row"><button class="btn" data-a="ach"><i class="ti ti-trophy"></i>MEDALLAS</button><button class="btn" data-a="set"><i class="ti ti-settings"></i>AJUSTES</button><button class="btn" data-a="ctrl"><i class="ti ti-device-gamepad-2"></i>CONTROLES</button><button class="btn" data-a="cred"><i class="ti ti-info-circle"></i>CRÉDITOS</button><button class="btn" data-a="fs"><i class="ti ti-maximize"></i>PANTALLA COMPLETA</button></div>
     <div style="position:absolute;bottom:10px;right:16px;font-weight:800;font-size:14px;opacity:.6">v${VERSION}</div>`);
@@ -216,7 +217,7 @@ export async function createGame(ctx) {
   // ---------- medallas y trofeos ----------
   mk('ach', `<h2>MEDALLAS Y TROFEOS</h2><div class="cash"></div><div class="tro row"></div><div class="grid ach" style="grid-template-columns:repeat(auto-fill,minmax(190px,1fr))"></div><div class="row"><button class="btn main" data-a="menu"><i class="ti ti-arrow-left"></i>VOLVER</button></div>`);
   function renderAch() { const n = Object.keys(S.ach).length;
-    scr.ach.querySelector('.tro').innerHTML = TROF.map(([k, nm, c]) => `<div class="card" style="min-width:110px;${n >= k ? '' : 'opacity:.35'}"><i class="ti ti-trophy" style="font-size:40px;color:${c};opacity:1"></i><b>${nm}</b><i>${k} medallas</i></div>`).join('');
+    scr.ach.querySelector('.tro').innerHTML = CUPS.map((c, k) => `<div class="card" style="min-width:110px;${S.cups[k] ? '' : 'opacity:.35'}"><i class="ti ti-cup" style="font-size:40px;color:#ffe14d;opacity:1"></i><b>${c}</b><i>${S.cups[k] ? S.cups[k].toLocaleString('es-ES') + ' pts' : 'Sin ganar'}</i></div>`).join('') + TROF.map(([k, nm, c]) => `<div class="card" style="min-width:110px;${n >= k ? '' : 'opacity:.35'}"><i class="ti ti-trophy" style="font-size:40px;color:${c};opacity:1"></i><b>${nm}</b><i>${k} medallas</i></div>`).join('');
     scr.ach.querySelector('.ach').innerHTML = ACH.map(([id, nm, d, p, ic]) => `<div class="card" style="${S.ach[id] ? 'border-color:#ffe14d' : 'opacity:.45'}"><i class="ti ti-${ic}" style="font-size:38px;color:${S.ach[id] ? '#ffe14d' : '#fff'};opacity:1"></i><b>${nm}</b><i>${d}</i><em>${S.ach[id] ? 'CONSEGUIDA' : '+' + p + ' PTA'}</em></div>`).join(''); refreshCash(); }
   const award = id => { if (S.ach[id]) return; const a = ACH.find(x => x[0] === id); if (!a) return; S.ach[id] = 1; S.cash += a[3]; save(); toast('MEDALLA: ' + a[1].toUpperCase() + ' +' + a[3] + ' PTA', true); if (Snd.ok()) Snd.win();
     const n = Object.keys(S.ach).length, t = TROF.find(x => x[0] === n); if (t) setTimeout(() => toast('¡TROFEO DE ' + t[1] + '!', true), 1900); };
@@ -535,7 +536,7 @@ export async function createGame(ctx) {
   }
 
   // ---------- carrera ----------
-  let freeMode = false, ghostSki = null;
+  let freeMode = false, ghostSki = null, champ = null;
   async function startRace(i) {
     state = 'loading'; show(null); flash('CARGANDO…', 99, true);
     clearZone(); const Z = ZONES[i]; const path = buildPath(Z);
@@ -651,6 +652,14 @@ export async function createGame(ctx) {
     scr.result.querySelector('.rt').textContent = title; scr.result.querySelector('.rs').textContent = line + coinTxt;
     scr.result.querySelector('.rp').textContent = ok ? '+' + prize.toLocaleString('es-ES') + ' PTA' : '';
     const nx = scr.result.querySelector('.nx'); nx.disabled = !(zone + 1 < ZONES.length && zone + 1 < S.unlocked);
+    // campeonato: suma puntos; si fallas una carrera se acaba; tras La Final, copa de la dificultad elegida
+    if (champ) {
+      if (!ok) { scr.result.querySelector('.rs').textContent = line + ' · CAMPEONATO TERMINADO'; champ = null; nx.innerHTML = 'SIGUIENTE PANTALLA'; }
+      else { champ.pts += R.points || 0;
+        if (zone + 1 < ZONES.length) { nx.disabled = false; nx.innerHTML = '<i class="ti ti-player-play-filled"></i>SIGUIENTE CARRERA'; }
+        else { const cup = CUPS[S.set.dif], first = !S.cups[S.set.dif]; S.cups[S.set.dif] = Math.max(S.cups[S.set.dif] || 0, champ.pts); if (first) S.cash += 2000; save();
+          scr.result.querySelector('.rt').textContent = '¡' + cup + ' GANADA!'; title = '¡' + cup + ' GANADA!'; scr.result.querySelector('.rp').textContent = 'TOTAL CAMPEONATO: ' + champ.pts.toLocaleString('es-ES') + ' PUNTOS' + (first ? ' · +2000 PTA' : '');
+          champ = null; nx.innerHTML = 'SIGUIENTE PANTALLA'; } } }
     const list = S.top[Z.id] || []; const qual = ok && (list.length < 10 || t < list[list.length - 1].t);
     R.final = t; R.qual = qual; scr.result.querySelector('.nm').style.display = qual ? 'block' : 'none';
     const inp = scr.result.querySelector('input'); inp.value = S.name || 'JUGADOR';
@@ -674,10 +683,11 @@ export async function createGame(ctx) {
     if (a === 'tsnd') { S.set.snd = S.set.snd ? 0 : 1; save(); applySettings(); }
     if (a === 'tmus') { S.set.mus = S.set.mus ? 0 : 1; save(); applySettings(); }
     if (a === 'wipe') { if (b.dataset.sure) { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} location.reload(); } else { b.dataset.sure = 1; b.textContent = '¿SEGURO? PULSA OTRA VEZ'; } }
-    if (a === 'go') { freeMode = false; await startRace(zone); }
-    if (a === 'free') { freeMode = true; await startRace(zone); }
+    if (a === 'go') { freeMode = false; champ = null; await startRace(zone); }
+    if (a === 'champ') { freeMode = false; champ = { pts: 0 }; zone = 0; toast(CUPS[S.set.dif] + ': EL PUERTO, LA CALA Y LA FINAL EN EL MAGO', true); await startRace(0); }
+    if (a === 'free') { freeMode = true; champ = null; await startRace(zone); }
     if (a === 'retry') await startRace(zone);
-    if (a === 'next') { if (zone + 1 < S.unlocked) openBrief(zone + 1); }
+    if (a === 'next') { if (champ && zone + 1 < ZONES.length) { zone++; await startRace(zone); } else if (zone + 1 < S.unlocked) openBrief(zone + 1); }
     if (a === 'resume') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); }
     if (a === 'jjout') { ctx.setPaused(false); state = 'race'; show(null); flash('-3 s', 1, true); }
     if (a === 'exp') { const code = btoa(unescape(encodeURIComponent(JSON.stringify(S)))); try { await navigator.clipboard.writeText(code); toast('CÓDIGO COPIADO: PÉGALO EN EL OTRO APARATO', true); } catch (e) { const im = scr.set.querySelector('[data-imp]'); im.value = code; im.select(); toast('CÓDIGO LISTO: CÓPIALO', true); } }
