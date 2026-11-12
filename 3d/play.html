@@ -23,7 +23,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { addUnderwater, WORLD, coastZ, heightAt, makeEnv, makeHeightTexture, makeWaveTexture, makeTerrain, makeWater, makeSkyDome, makeEnvMap } from './src/world.js?v=2';
+import { addUnderwater, WORLD, coastZ, heightAt, makeEnv, makeHeightTexture, makeWaveTexture, makeTerrain, makeWater, makeSkyDome, makeEnvMap } from './src/world.js?v=3';
 import { makeJetSki } from './src/jetski.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
@@ -110,6 +110,11 @@ rock.position.set(-100, -0.7, coastZ(-100) - 2); rock.rotation.y = 2.4; scene.ad
 for (let i = 0; i < 7; i++) { const x = -40 + i * 7, u = makeUmbrella(i % 2 ? '#ff5a0a' : '#1e63d6'); u.position.set(x, heightAt(x, coastZ(x) + 12), coastZ(x) + 12); u.rotation.y = i; scene.add(u); }
 const yacht = makeYacht(); yacht.position.set(-60, -0.45, coastZ(-60) - 70); yacht.rotation.y = 0.9; scene.add(yacht);
 const yacht2 = makeYacht(); yacht2.position.set(45, -0.45, coastZ(45) - 105); yacht2.rotation.y = -0.5; scene.add(yacht2);
+// cosas sólidas del escenario (círculos x,z,r): la moto choca con ellas
+window.__COL = [];
+for (const y of [yacht, yacht2]) for (const o of [-4.6, 0, 4.6]) window.__COL.push({ x: y.position.x + Math.sin(y.rotation.y) * o, z: y.position.z + Math.cos(y.rotation.y) * o, r: 2.5 });
+{ const bb = new THREE.Box3().setFromObject(rock), sz = bb.getSize(new THREE.Vector3()), c = bb.getCenter(new THREE.Vector3()); window.__COL.push({ x: c.x, z: c.z, r: Math.max(sz.x, sz.z) * 0.42 }); }
+window.__COLZ = [];
 for (let i = 0; i < 6; i++) { const b = makeBuoy(i % 2 ? '#ffe14d' : '#ff7a1a'); b.position.set(-35 - i * 14, 0.05, coastZ(-35 - i * 14) - 32 - (i % 2) * 10); scene.add(b); }
 const gulls = [[6, 9, -6, 0.5], [-3, 12, 4, -0.2], [12, 14, 2, 0.1], [-8, 10, -12, 0.35]];
 for (const [dx, y, dz, fl] of gulls) { const gl = makeGull(fl); gl.position.set(x0 + dx, y, z0 + dz); gl.rotation.y = th0 + 0.4 + dx * 0.05; scene.add(gl); }
@@ -173,7 +178,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 document.body.appendChild(hint);
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=3';
+import { createGame } from './src/game.js?v=5';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
   ski.body.remove(rider); ski.body.add(nr); rider = nr; window.__rider = nr; }
@@ -183,16 +188,16 @@ window.__GAME = GAME;
 function step(dt) {
   const I = input(), f = fwdOf(P.th), side = new THREE.Vector3(-f.z, 0, f.x);
   const turboOn = I.turbo && P.energy > 0.02 && I.acc;
-  const vmax = turboOn ? 31 : 21;
+  const vmax = turboOn ? 41.7 : 33.3;   // 120 km/h sin turbo, 150 km/h con turbo
   P.energy = Math.min(1, Math.max(0, P.energy + (turboOn ? -0.45 : 0.12) * dt));
   if (I.acc) P.v += (vmax - P.v) * (turboOn ? 1.3 : 0.55) * dt; else P.v -= P.v * 0.22 * dt + 1.2 * dt;
   if (I.brake) P.v -= 16 * dt; P.v = Math.max(0, P.v);
   P.steer += (I.steer - P.steer) * Math.min(1, dt * 6);
-  const k = Math.min(1, P.v / 9), rate = (I.drift ? 2.3 : 1.25) * (0.25 + 0.75 * k) * (P.v > 26 ? 0.85 : 1);
+  const k = Math.min(1, P.v / 9), rate = (I.drift ? 2.3 : 1.25) * (0.25 + 0.75 * k) * (P.v > 38 ? 0.85 : 1);
   P.th += P.steer * rate * dt;
   const drifting = I.drift && P.v > 9 && Math.abs(P.steer) > 0.2;
   if (drifting) { P.dc = Math.min(1.6, (P.dc || 0) + dt); P.v -= P.v * 0.05 * dt; } else if ((P.dc || 0) > 0) {       // al soltar el derrape: mini-turbo si se cargó
-    if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(34, P.v + 3 + P.dc * 3); P.kick = 1; if (Snd.ok()) Snd.boost(); } P.dc = 0; }
+    if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(44, P.v + 4 + P.dc * 4); P.kick = 1; if (Snd.ok()) Snd.boost(); } P.dc = 0; }
   P.kick = Math.max(0, (P.kick || 0) - dt * 1.6);
   const targetSlip = drifting ? -P.steer * P.v * 0.42 : 0; P.slip += (targetSlip - P.slip) * Math.min(1, dt * (drifting ? 5 : 3));
   const nx = P.x + (f.x * P.v + side.x * P.slip) * dt, nz = P.z + (f.z * P.v + side.z * P.slip) * dt;
@@ -213,9 +218,14 @@ function step(dt) {
       P.v = Math.max(P.v * (1 - dt * 1.4), 5); }
     else { P.x = nx; P.z = nz; }
   } else { P.x = nx; P.z = nz; }
+  // choques con barcos, rocas, boyas y arcos: se empuja fuera y se pierde velocidad
+  for (const c of window.__COL.concat(window.__COLZ)) { const dx = P.x - c.x, dz = P.z - c.z, d = Math.hypot(dx, dz), mn = c.r + 1.25;
+    if (d < mn && d > 1e-4) { const nx = dx / d, nz = dz / d; P.x = c.x + nx * mn; P.z = c.z + nz * mn;
+      const into = -(f.x * nx + f.z * nz); if (into > 0.2 && P.v > 4) { if (!(P._hitT > P.t)) { P.v *= 0.5; P._hitT = P.t + 0.4; if (Snd.ok()) Snd.bump(); } }
+      const tg = Math.atan2(f.x + nx * 0.8, f.z + nz * 0.8); P.th += Math.atan2(Math.sin(tg - P.th), Math.cos(tg - P.th)) * Math.min(1, dt * 3); } }
   P.t += dt; env.time.value += dt;
   // piloto vivo: se echa hacia delante, se inclina en las curvas, mira hacia donde gira y vibra con el manillar
-  rider.userData.pose({ barY: rider.userData.barY, steer: P.steer, k: Math.min(1, P.v / 24), drift: drifting ? 1 : 0, t: P.t });
+  rider.userData.pose({ barY: rider.userData.barY, steer: P.steer, k: Math.min(1, P.v / 33), drift: drifting ? 1 : 0, t: P.t });
   rider.position.y = RP[1] + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14);
   // moto
   ski.root.position.set(P.x, 0, P.z); ski.root.rotation.y = P.th;
@@ -245,7 +255,7 @@ function step(dt) {
   }
   spray.update(dt);
   if (wall && P.v > 6 && Snd.ok() && !(P._bumpT > P.t)) { Snd.bump(); P._bumpT = P.t + 0.6; }
-  updateSound(P.v, 24, I.acc, turboOn, I.drift && P.v > 8, 3, false);
+  updateSound(P.v, 33, I.acc, turboOn, I.drift && P.v > 8, 3, false);
   // cámara: modo 'dron' (cenital, como un reel) u 'onboard' (pegada a la moto)
   const look = new THREE.Vector3();
   if (camMode === 'dron') {

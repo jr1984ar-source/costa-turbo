@@ -183,9 +183,9 @@ float ct_caustic(vec2 p, float t){
     outgoingLight = outgoingLight * T + uScatter * (1.0 - T);
   } else {
     // orilla: el agua sube por la arena rápido y baja despacio, cada tramo con su ritmo
-    float ph = fract(uTime * 0.10 + ct_n(vWPos.xz * 0.025) * 0.7);
-    float up = smoothstep(0.0, 0.30, ph), down = 1.0 - smoothstep(0.30, 1.0, ph);
-    float sw = 0.015 + 0.20 * min(up, down) * (0.7 + 0.6 * ct_n(vWPos.xz * 0.07));
+    float ph = fract(uTime / 7.0 + ct_n(vWPos.xz * 0.02) * 0.6);                       // mismo ritmo que las olas del agua
+    float up = smoothstep(0.0, 0.16, ph), down = 1.0 - smoothstep(0.16, 0.85, ph);
+    float sw = 0.015 + 0.24 * min(up, down) * (0.7 + 0.6 * ct_n(vWPos.xz * 0.07));
     float wet = 1.0 - smoothstep(0.0, 0.24, hh);                                       // arena mojada
     outgoingLight *= 1.0 - 0.26 * wet;
     float film = 1.0 - smoothstep(sw - 0.035, sw, hh);                                 // lámina de agua sobre la arena
@@ -251,12 +251,22 @@ export function makeWater(env, hdTex, waveTex) {
         float a = clamp(F + dot(spec, vec3(0.05)), 0.0, 1.0);
         // espuma de la orilla
         float fn = ct_n(wp * 0.55 + vec2(uTime * 0.15, 0.0)) * 0.55 + ct_n(wp * 1.9 - uTime * 0.2) * 0.45;
-        float shore = 1.0 - smoothstep(0.0, 7.0, -sd);
-        float wv = sin(sd * 0.55 + uTime * 1.2 + ct_n(wp * 0.05) * 6.0);
-        float band = smoothstep(0.82, 1.0, wv) * shore * smoothstep(0.38, 0.72, fn);       // crestas rotas cerca de la orilla, no rayas
-        float edge = 1.0 - smoothstep(0.0, 0.10, dep);
+        // oleaje de orilla: crestas que avanzan hacia la playa cada ~7 s, rompen en espuma y dejan un rastro que se deshace
+        float n0 = ct_n(wp * 0.02) * 0.6;
+        float d0 = max(-sd, 0.0);                                                           // metros mar adentro
+        float cyc = fract(uTime / 7.0 + n0);
+        float dc = 22.0 * (1.0 - cyc);                                                      // posición de la cresta
+        float cw = 0.8 + 0.06 * d0;
+        float crest = exp(-pow((d0 - dc) / cw, 2.0)) * (1.0 - smoothstep(14.0, 22.0, d0));
+        float brk = smoothstep(10.0, 2.5, d0);                                              // rompe al acercarse
+        float trough = exp(-pow((d0 - dc + cw * 1.7) / cw, 2.0)) * (1.0 - smoothstep(14.0, 22.0, d0));
+        col *= 1.0 + crest * 0.30 - trough * 0.14;                                          // volumen: cresta clara y seno oscuro delante
         float fe = ct_n(wp * 2.6 + uTime * 0.3) * 0.5 + ct_n(wp * 7.0 - uTime * 0.4) * 0.3 + ct_n(wp * 0.6) * 0.2;
-        float foam = clamp(band * 0.38 + edge * smoothstep(0.38, 0.66, fe) * 0.75, 0.0, 1.0);
+        float lace = smoothstep(0.34, 0.70, fn * 0.5 + fe * 0.5);
+        float band = crest * brk * (0.35 + 0.65 * lace);                                   // espuma de la ola rompiendo
+        float trail = exp(-max(d0 - dc, 0.0) / 3.5) * step(dc, d0) * brk * lace * (1.0 - cyc * 0.6);   // espuma que queda detrás
+        float edge = (1.0 - smoothstep(0.0, 0.10, dep)) * smoothstep(0.38, 0.66, fe);
+        float foam = clamp(band * 0.95 + trail * 0.45 + edge * 0.7, 0.0, 1.0);
         vec3 foamCol = vec3(0.95, 0.97, 1.0) * (uSunCol.g * 0.42 + 0.35);
         col = col * (1.0 - foam) + foamCol * foam;
         a = a * (1.0 - foam) + foam;

@@ -40,8 +40,8 @@ export const ZONES = [
 
 // ---------- guardado ----------
 const SAVE_KEY = 'ct3d_save';
-function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 1, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
-const S = load();
+function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
+const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 const gearById = id => { for (const k in GEAR) { const g = GEAR[k].find(x => x.id === id); if (g) return g; } return null; };
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m * 60; return (m ? m + ':' + (s < 10 ? '0' : '') : '') + s.toFixed(2); };
@@ -172,8 +172,9 @@ export async function createGame(ctx) {
 
   // ---------- recorrido ----------
   const added = [];   // objetos de la pantalla actual
-  function clearZone() { for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
+  function clearZone() { window.__COLZ.length = 0; for (const o of added) { scene.remove(o); o.traverse && o.traverse(m => { if (m.geometry) m.geometry.dispose(); }); } added.length = 0; }
   const add = o => { scene.add(o); added.push(o); return o; };
+  const solid = (x, z, r) => window.__COLZ.push({ x, z, r });
   function buildPath(Z) { const pts = []; const n = 700; let s = 0;
     for (let i = 0; i <= n; i++) { const x = Z.xa + (Z.xb - Z.xa) * i / n, z = coastZ(x) - Z.off + Z.amp * Math.sin(x / Z.per);
       if (i) s += Math.hypot(x - pts[i - 1].x, z - pts[i - 1].z); pts.push({ x, z, s }); }
@@ -201,7 +202,7 @@ export async function createGame(ctx) {
       const fl = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.4, .9, 16), new THREE.MeshPhysicalMaterial({ color: 0xff7a1a, roughness: .35, clearcoat: .6 })); fl.position.set(sg * half, .1, 0); g.add(fl); }
     const bm = new THREE.MeshStandardMaterial({ map: textTex([label], 1024, 128, '#0b1630', '#ffe14d', check), roughness: .6 });
     for (const ry of [0, Math.PI]) { const ban = new THREE.Mesh(new THREE.PlaneGeometry(half * 2 + .6, 2.6), bm); ban.position.y = 6.2; ban.rotation.y = ry; ban.castShadow = true; g.add(ban); }   // dos caras: el texto se lee desde los dos lados
-    place(g, path, s, 0); return add(g); }
+    place(g, path, s, 0); add(g); g.updateMatrixWorld(true); for (const sg of [-1, 1]) { const v = new THREE.Vector3(sg * half, 0, 0).applyMatrix4(g.matrixWorld); solid(v.x, v.z, 1.5); } return g; }
   function jjBar() {   // JJ'S SPORTS LOUNGE, en la costa de la izquierda al salir del puerto
     const g = new THREE.Group(), x = 262, z = coastZ(262) + 15, y = heightAt(x, z);
     const wall = new THREE.MeshStandardMaterial({ color: 0xf2efe6, roughness: .8 }), wood = new THREE.MeshStandardMaterial({ color: 0x8a5a33, roughness: .7 });
@@ -221,7 +222,7 @@ export async function createGame(ctx) {
     if (!rivPool) { rivPool = []; for (let i = 0; i < 5; i++) { const sk = await ctx.loadSki('kawasaki'); const rd = await ctx.makeRider({ vest: RIVC[i] });
         rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
-    return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: 19.2 + i * .55 + Math.random() * .8, fin: null, tl: 0, steer: 0 }));
+    return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: 30.2 + i * .85 + Math.random() * 1.2, fin: null, tl: 0, steer: 0 }));
   }
 
   // ---------- carrera ----------
@@ -231,11 +232,11 @@ export async function createGame(ctx) {
     R = { Z, path, t: 0, pen: 0, time: 0, cps: [], gates: [], rivals: [], hint: 0, s: 0, lat: 0, done: false, count: 3.6, lastCount: 4, maxS: 0, finished: [] };
     // salida y meta
     arch('META', path, path.L - 4, 16, true);
-    if (Z.obj === 'time') { jjBar(); R.time = 21; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 16 }));
+    if (Z.obj === 'time') { jjBar(); R.time = 14; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: 11 }));
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
-      for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); } }
+      for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
     if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5; R.gates.push({ s, c, done: false });
-        for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); } } }
+        for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); solid(b.position.x, b.position.z, .75); } } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
     // jugador a la salida
     const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
@@ -320,16 +321,26 @@ export async function createGame(ctx) {
         const ahead = r.s - R.s, rub = ahead > 25 ? -.08 : ahead < -25 ? .07 : 0, vt = r.fin ? 8 : r.vmax * (1 + rub);
         r.v += (vt - r.v) * .55 * dt; r.s += r.v * dt;
         r.tl -= dt; if (r.tl <= 0) { r.tl = 2 + Math.random() * 3; r.laneT = (Math.random() * 2 - 1) * 9; }
-        // apartarse del jugador y de los demás
-        const q0 = at(path, r.s), px = q0.x - q0.tz * r.lane, pz = q0.z + q0.tx * r.lane, dpl = Math.hypot(px - P.x, pz - P.z);
-        if (dpl < 4.5) { r.laneT = r.lane + (r.lane >= R.lat ? 3 : -3); if (dpl < 2.4) { r.v *= .985; P.v *= .99; } }
+        // choque con el jugador: los dos se empujan y pierden algo de velocidad
+        const q0 = at(path, r.s), px = q0.x - q0.tz * r.lane, pz = q0.z + q0.tx * r.lane, dxp = P.x - px, dzp = P.z - pz, dpl = Math.hypot(dxp, dzp);
+        if (dpl < 6 && Math.abs(r.lane - R.lat) < 5) r.laneT = r.lane + (r.lane >= R.lat ? 4 : -4);
+        if (dpl < 2.6 && dpl > 1e-3) { const ov = 2.6 - dpl, nx = dxp / dpl, nz = dzp / dpl; P.x += nx * ov * .6; P.z += nz * ov * .6;
+          r.lane += (r.lane >= R.lat ? 1 : -1) * ov * .4; P.v *= .93; r.v *= .93; if (Snd.ok() && !(R.bumpT > R.t)) { Snd.bump(); R.bumpT = R.t + .5; } }
+        // evitar barcos, rocas y boyas que tenga delante
+        for (const c of window.__COL.concat(window.__COLZ)) { const qa = at(path, r.s + 18), ax = qa.x - qa.tz * r.lane, az = qa.z + qa.tx * r.lane;
+          if (Math.hypot(ax - c.x, az - c.z) < c.r + 3.5) { const cl = (c.x - qa.x) * -qa.tz + (c.z - qa.z) * qa.tx; r.laneT = cl + (r.lane >= cl ? 1 : -1) * (c.r + 4.5); }
+          const dc = Math.hypot(px - c.x, pz - c.z); if (dc < c.r + 1.3) { const cl = (c.x - q0.x) * -q0.tz + (c.z - q0.z) * q0.tx; r.lane = cl + (r.lane >= cl ? 1 : -1) * (c.r + 1.3); r.v *= .7; } }
         const dl = (r.laneT - r.lane) * Math.min(1, dt * .9); r.lane += dl; r.steer += ((dl / Math.max(dt, 1e-3)) * .25 - r.steer) * Math.min(1, dt * 4);
         const q = place(r.sk.root, path, r.s, r.lane); r.sk.root.rotation.y -= r.steer * .15;
         r.sk.body.rotation.z = -r.steer * .25; r.sk.body.position.y = -.05 + Math.sin(P.t * 3 + r.vmax) * .02;
-        r.rd.userData.pose({ barY: .13, steer: Math.max(-1, Math.min(1, r.steer)), k: Math.min(1, r.v / 24), t: P.t });
+        r.rd.userData.pose({ barY: .13, steer: Math.max(-1, Math.min(1, r.steer)), k: Math.min(1, r.v / 33), t: P.t });
         const f = { x: q.tx, z: q.tz }; r.wk.update(dt, r.sk.root.position.x - f.x * 1.5, r.sk.root.position.z - f.z * 1.5, Math.min(1, r.v / 10), r.v);
         if (!r.fin && r.s >= path.L - 4) { r.fin = R.t; R.finished.push(r.name); }
       }
+      // rivales entre sí: no se atraviesan
+      for (let a = 0; a < R.rivals.length; a++) for (let b = a + 1; b < R.rivals.length; b++) { const A = R.rivals[a], B = R.rivals[b];
+        if (Math.abs(A.s - B.s) < 3.4 && Math.abs(A.lane - B.lane) < 2.6) { const ov = (2.6 - Math.abs(A.lane - B.lane)) * .5, sg = A.lane >= B.lane ? 1 : -1; A.lane += sg * ov; B.lane -= sg * ov;
+          const back = A.s < B.s ? A : B; back.v *= .985; back.laneT = back.lane + sg * (back === A ? 3 : -3); } }
       const ahead = R.rivals.filter(r => (r.fin && (!R.pfin || r.fin < R.pfin)) || (!r.fin && r.s > R.s)).length; R.pos = ahead + 1;
       rh.querySelector('.pos').innerHTML = R.pos + '<small>º/' + (R.rivals.length + 1) + '</small>';
     } else rh.querySelector('.pos').innerHTML = '';
