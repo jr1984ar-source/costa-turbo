@@ -53,6 +53,7 @@ const SAVE_KEY = 'ct3d_save';
 function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); if (s && s.v === 1) return s; } catch (e) {} return { v: 1, cash: 2000, unlocked: 3, pilot: 0, name: 'JUGADOR', own: ['h0', 'g0', 'gl0', 'v0', 's0'], eq: { helm: 'h0', gog: 'g0', glove: 'gl0', vest: 'v0', suit: 's0' }, top: {}, done: {} }; }
 const S = load(); S.unlocked = Math.max(S.unlocked || 1, 3);
 S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 0, aletas: 0 }, S.parts || {}); window.__parts = S.parts;
+S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
 S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 1, hide: 0, q: 'alta' }, S.set || {});
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -118,6 +119,11 @@ const CSS = `
 #rh .z{font-weight:800;font-size:16px;letter-spacing:.2em;opacity:.9}
 #rh .pos{position:fixed;right:20px;top:12px;font-weight:900;font-size:44px;text-shadow:0 3px 0 #0b1630}
 #rh .pos small{font-size:22px;opacity:.8}
+#rh .lf{position:fixed;left:20px;top:14px;text-align:left;font-weight:900}
+#rh .hp{font-size:26px;color:#ff3b4e;text-shadow:0 2px 0 #0b1630;letter-spacing:2px}#rh .hp .off{color:rgba(255,255,255,.25)}
+#rh .fu{display:flex;align-items:center;gap:8px;font-size:22px;margin-top:4px;text-shadow:0 2px 0 #0b1630}
+#rh .fu span{display:block;width:120px;height:10px;border-radius:10px;background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.7);overflow:hidden}#rh .fu b{display:block;height:100%;background:linear-gradient(90deg,#ff6a1a,#ffd21a)}
+#rh .fu.low b{background:#ff3b4e}
 #msg3{position:fixed;left:0;right:0;top:34%;z-index:16;text-align:center;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;font-weight:900;font-style:italic;
   font-size:clamp(60px,12vw,150px);color:#ffe14d;text-shadow:0 6px 0 #0b1630,0 0 30px rgba(0,0,0,.5);display:none}
 #msg3.small{font-size:clamp(28px,5vw,52px);top:22%}
@@ -127,7 +133,7 @@ export async function createGame(ctx) {
   const { scene, P, env, heightAt, coastZ, makeBuoy, Wake, Snd } = ctx;
   const st = document.createElement('style'); st.textContent = CSS; document.head.appendChild(st);
   const ui = document.createElement('div'); ui.id = 'ui'; ui.innerHTML = '<div class="bg"></div>'; document.body.appendChild(ui);
-  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div>'; document.body.appendChild(rh);
+  const rh = document.createElement('div'); rh.id = 'rh'; rh.innerHTML = '<div class="z"></div><div class="t">0.00</div><div class="pos"></div><div class="lf"><div class="hp"></div><div class="fu"><i class="ti ti-gas-station"></i><span><b></b></span></div></div>'; document.body.appendChild(rh);
   const msg = document.createElement('div'); msg.id = 'msg3'; document.body.appendChild(msg);
   const scr = {}; const mk = (id, html) => { const d = document.createElement('div'); d.className = 'scr'; d.innerHTML = html; ui.appendChild(d); scr[id] = d; return d; };
   let state = 'menu', zone = null, R = null, msgT = 0;
@@ -177,6 +183,23 @@ export async function createGame(ctx) {
   // ---------- pausa ----------
   mk('pause', `<h2>PAUSA</h2><div class="row"><button class="btn main" data-a="resume"><i class="ti ti-player-play-filled"></i>CONTINUAR</button></div><div class="row"><button class="btn" data-a="retry"><i class="ti ti-reload"></i>REPETIR</button><button class="btn" data-a="map"><i class="ti ti-map"></i>MAPA</button><button class="btn" data-a="menu"><i class="ti ti-home"></i>MENÚ</button></div>
     <div class="row"><button class="btn" data-a="tsnd"></button><button class="btn" data-a="tmus"></button></div>`);
+
+  // ---------- JJ'S SPORTS LOUNGE (bar del muelle en EL PUERTO) ----------
+  mk('jj', `<h2>JJ'S SPORTS LOUNGE</h2><div class="cash"></div><div class="sub">Cada parada cuesta 3 s</div><div class="grid jjl" style="width:min(720px,94vw)"></div>
+    <div class="row"><button class="btn main" data-a="jjout"><i class="ti ti-player-play-filled"></i>SEGUIR CORRIENDO</button></div>`);
+  const JJ_ITEMS = [{ id: 'fuel', n: 'Llenar el depósito', ef: 'Gasolina al 100 %', p: 300, ic: 'gas-station' }, { id: 'life', n: 'Vida extra', ef: '+1 corazón', p: 1500, ic: 'heart' }, { id: 'turbo', n: 'Refresco turbo', ef: 'Turbo al 100 %', p: 500, ic: 'bottle' }];
+  function renderJJ() { const L0 = scr.jj.querySelector('.jjl'); L0.innerHTML = '';
+    for (const it of JJ_ITEMS) { const full = it.id === 'fuel' ? S.fuel >= 99 : it.id === 'life' ? S.lives >= 6 : P.energy >= .99, b = document.createElement('button');
+      const now = it.id === 'fuel' ? 'Ahora: ' + Math.ceil(S.fuel) + ' %' : it.id === 'life' ? 'Tienes ' + S.lives + ' corazones' : 'Turbo: ' + Math.round(P.energy * 100) + ' %';
+      b.className = 'card' + (full ? ' sel' : ''); b.innerHTML = `<div class="img" style="display:grid;place-items:center;aspect-ratio:1.4;background:radial-gradient(circle at 50% 45%,#3a1220,#05070b 70%)"><i class="ti ti-${it.ic}" style="font-size:56px;color:#ffe14d"></i></div><b>${it.n}</b><i>${it.ef}</i><i>${now}</i><em>${full ? 'LLENO' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
+      b.onclick = () => { if (full) return; if (S.cash < it.p) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; }
+        S.cash -= it.p; if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives++; else P.energy = 1; save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
+      L0.appendChild(b); } refreshCash(); }
+  function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
+    const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
+  // choque fuerte contra barco, roca o boya: se pierde un corazón
+  window.__onCrash = () => { if (state !== 'race' || !R || R.done || R.invT > R.t) return; R.invT = R.t + 1.5; S.lives--; save(); hud();
+    if (S.lives <= 0) { S.lives = 3; save(); return finishRace(false, '¡SIN VIDAS!'); } flash('-1 VIDA', 1, true); };
 
   const refreshCash = () => ui.querySelectorAll('.cash').forEach(e => e.textContent = S.cash.toLocaleString('es-ES') + ' PTA');
   function renderMap() {
@@ -293,18 +316,37 @@ export async function createGame(ctx) {
     const bm = new THREE.MeshStandardMaterial({ map: textTex([label], 1024, 128, '#0b1630', '#ffe14d', check), roughness: .6 });
     for (const ry of [0, Math.PI]) { const ban = new THREE.Mesh(new THREE.PlaneGeometry(half * 2 + .6, 2.6), bm); ban.position.y = 6.2; ban.rotation.y = ry; ban.castShadow = true; g.add(ban); }   // dos caras: el texto se lee desde los dos lados
     place(g, path, s, 0); add(g); g.updateMatrixWorld(true); for (const sg of [-1, 1]) { const v = new THREE.Vector3(sg * half, 0, 0).applyMatrix4(g.matrixWorld); solid(v.x, v.z, 1.5); } return g; }
-  function jjBar() {   // JJ'S SPORTS LOUNGE, en la costa de la izquierda al salir del puerto
-    const g = new THREE.Group(), x = 262, z = coastZ(262) + 15, y = heightAt(x, z);
-    const wall = new THREE.MeshStandardMaterial({ color: 0xf2efe6, roughness: .8 }), wood = new THREE.MeshStandardMaterial({ color: 0x8a5a33, roughness: .7 });
-    const base = new THREE.Mesh(new THREE.BoxGeometry(14, 4, 8), wall); base.position.y = 2; base.castShadow = base.receiveShadow = true; g.add(base);
-    const roof = new THREE.Mesh(new THREE.BoxGeometry(16, .5, 10), wood); roof.position.y = 4.3; roof.castShadow = true; g.add(roof);
-    const deck = new THREE.Mesh(new THREE.BoxGeometry(16, .3, 5), wood); deck.position.set(0, .2, -6.4); deck.receiveShadow = true; g.add(deck);
-    const sign = new THREE.Mesh(new THREE.PlaneGeometry(12, 2.4), new THREE.MeshStandardMaterial({ map: textTex(["JJ'S SPORTS LOUNGE", 'EL BAR DEL PUERTO'], 1024, 210, '#0b1630', '#ffe14d'), emissive: 0x332200, roughness: .5 }));
-    sign.position.set(0, 5.9, -5.05); sign.rotation.y = Math.PI; g.add(sign);
-    const pole = new THREE.Mesh(new THREE.BoxGeometry(.3, 2.2, .3), wood); for (const sx of [-5.5, 5.5]) { const p = pole.clone(); p.position.set(sx, 5, -5); g.add(p); }
-    for (let i = 0; i < 4; i++) { const u = ctx.makeUmbrella ? ctx.makeUmbrella(i % 2 ? '#ffd21a' : '#1e5eff') : null; if (u) { u.position.set(-6 + i * 4, .3, -9); g.add(u); } }
-    g.position.set(x, y, z); return add(g); }
-
+  function jjBar() {   // JJ'S SPORTS LOUNGE como en el 2D: edificio blanco de tejado gris, letrero en tres colores, terraza con velas y mesas, barandilla de madera
+    const g = new THREE.Group(), x = 262, z = coastZ(262) + 16, y = heightAt(x, z);
+    const M = c => new THREE.MeshStandardMaterial({ color: c, roughness: .75 }), box = (w, h, d, c, px, py, pz) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), M(c)); m.position.set(px, py, pz); m.castShadow = m.receiveShadow = true; g.add(m); return m; };
+    box(18, 4.4, 9, 0xf3f0ea, 0, 2.2, 0);                     // fachada blanca
+    box(18.6, .45, 9.6, 0xd6dbe1, 0, 4.62, 0);                // tejado gris claro
+    for (const [ax, az] of [[-5, 1], [-2, 1]]) { box(1.6, .9, 1.2, 0xc4cad2, ax, 5.3, az); }   // máquinas del aire en el tejado
+    box(3.2, .5, 1.6, 0xa9bccc, 4.5, 5.05, -1.5);
+    box(17.4, 1.3, .2, 0x141416, 0, 1.6, -4.55);             // franja de cristal oscuro
+    // letrero en tres colores: JJ's (granate) · SPORTS (azul) · LOUNGE (negro)
+    const sign = [["JJ'S", '#8e1f2c', 5.8, 5.2], ['SPORTS', '#1f3fb0', 0, 6.6], ['LOUNGE', '#1c1c1f', -6, 5.4]];
+    for (const [t, col, sx, sw] of sign) { const m = new THREE.Mesh(new THREE.PlaneGeometry(sw, 1.3), new THREE.MeshStandardMaterial({ map: textTex([t], 512, 128, col, '#ffffff'), roughness: .5, emissive: 0x111111 }));
+      m.position.set(sx, 3.55, -4.62); m.rotation.y = Math.PI; g.add(m); }
+    // terraza de piedra con mesas y sillas de madera
+    box(18.6, .25, 7, 0x6d665e, 0, .12, -8.1);
+    for (const [tx, tz] of [[-6, -6.4], [-2, -6.4], [2, -6.4], [-6, -9.4], [-2, -9.4], [2, -9.4], [6, -7.9]]) {
+      box(1.1, .08, 1.1, 0xf2efe6, tx, .95, tz); box(.12, .7, .12, 0x2a2522, tx, .6, tz);
+      for (const s of [-1, 1]) { box(.5, .45, .5, 0x8a5530, tx + s * .95, .48, tz); box(.5, .55, .08, 0x4a2e18, tx + s * 1.18, .95, tz); } }
+    // velas de sombra triangulares
+    const sailM = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .6, side: THREE.DoubleSide });
+    for (const [p1, p2, p3] of [[[-9, 3.4, -4.8], [-3, 2.9, -5.2], [-7, 2.6, -11.4]], [[-4, 3.2, -4.8], [5, 3.3, -4.8], [0, 2.5, -11.5]], [[2, 2.6, -11.2], [9, 3.5, -7.5], [8.6, 2.6, -11.6]]]) {
+      const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute([...p1, ...p2, ...p3], 3)); gg.computeVertexNormals();
+      const s = new THREE.Mesh(gg, sailM); s.castShadow = true; g.add(s);
+      for (const pp of [p1, p2, p3]) if (pp[2] < -6) box(.1, pp[1], .1, 0xb7bfc8, pp[0], pp[1] / 2, pp[2]); }
+    // barandilla de madera y jardineras
+    box(18.6, .12, .12, 0xb5652e, 0, 1.05, -11.6); for (let px = -9.2; px <= 9.2; px += 1.15) box(.07, 1, .07, 0x8a4a20, px, .55, -11.6);
+    for (const px of [-6, -1, 4]) { box(1.6, .7, .8, 0xffffff, px, .45, -12.6); const pl = new THREE.Mesh(new THREE.IcosahedronGeometry(.75, 1), M(0x3f8f4a)); pl.position.set(px, 1.2, -12.6); pl.scale.y = .7; pl.castShadow = true; g.add(pl); }
+    // muelle de madera hacia el agua (aquí se para a repostar)
+    for (let k = 0; k < 9; k++) box(3, .22, 2.2, 0xa57a4c, 0, -.05 + Math.max(0, .4 - k * .12), -14.6 - k * 2.2);
+    for (let k = 0; k < 9; k += 2) for (const s of [-1, 1]) box(.25, 2.4, .25, 0x6b4a2c, s * 1.5, -.7, -14.6 - k * 2.2);
+    for (let k = 0; k < 9; k++) solid(x, z - 14.6 - k * 2.2, 1.7);
+    g.position.set(x, y, z); R.jjPos = { x: x + 4.5, z: z - 27 }; return add(g); }
   // ---------- rivales ----------
   const RIVC = ['#e3202b', '#1e5eff', '#7be35a', '#ffd21a', '#ff3f8e'], RIVN = ['Toni Marín', 'Carla Ruiz', 'El Tito', 'Sandra Vidal', 'Javi Rubio'];
   let rivPool = null;
@@ -329,6 +371,7 @@ export async function createGame(ctx) {
         for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffd21a'); b.scale.setScalar(1.6); place(b, path, s, c + sg * 4.5, .2); add(b); solid(b.position.x, b.position.z, .75); } } }
     if (Z.riv) { R.rivals = await makeRivals(Z.riv); R.rivals.forEach((r, k) => { r.s = 12 - Math.floor((k + 1) / 2) * 7 - ((k + 1) % 2) * 3.5; r.lane = r.laneT = (k % 2 ? 1 : -1) * (4 + Math.floor(k / 2) * 4); scene.add(r.sk.root); scene.add(r.wk.mesh); added.push(r.sk.root, r.wk.mesh); r.wk.pts.length = 0; }); }
     // jugador a la salida
+    if (Z.obj !== 'time' && S.fuel < 25) S.fuel = 25; window.__noFuel = S.fuel <= 0; hud();
     window.__celebT = null; const q = at(path, 14); P.x = q.x; P.z = q.z; P.th = Math.atan2(q.tx, q.tz); P.v = 0; P.slip = 0; P.steer = 0; P.energy = 1; P.dc = 0; ctx.resetFx && ctx.resetFx();
     rh.querySelector('.z').textContent = 'ZONA ' + (i + 1) + ' · ' + Z.name; rh.style.display = 'block';
     msg.style.display = 'none'; ctx.setPaused(false); state = 'count';
@@ -370,6 +413,7 @@ export async function createGame(ctx) {
     if (a === 'retry') await startRace(zone);
     if (a === 'next') { if (zone + 1 < S.unlocked) openBrief(zone + 1); }
     if (a === 'resume') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); }
+    if (a === 'jjout') { ctx.setPaused(false); state = 'race'; show(null); flash('-3 s', 1, true); }
     if (a === 'savename') saveName(); });
   scr.result.querySelector('input').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') saveName(); });
 
@@ -377,6 +421,7 @@ export async function createGame(ctx) {
   const focusables = () => [...ui.querySelectorAll('.scr.on .btn:not([disabled]), .scr.on .card:not(.lock), .scr.on input')].filter(e => e.offsetParent !== null);
   function nav(d) { const f = focusables(); if (!f.length) return; let i = f.indexOf(document.activeElement); i = i < 0 ? 0 : (i + d + f.length) % f.length; f[i].focus(); }
   function back() { if (state === 'pause') { ctx.setPaused(false); state = R && R.started ? 'race' : 'count'; show(null); return; }
+    if (state === 'jj') { scr.jj.querySelector('[data-a=jjout]').click(); return; }
     if (['map', 'pilot', 'taller', 'set', 'ctrl', 'cred'].includes(state)) { state = 'menu'; show('menu'); } else if (state === 'brief') { state = 'map'; renderMap(); show('map'); } }
   addEventListener('keydown', e => { if (!ui.classList.contains('on') || document.activeElement && document.activeElement.tagName === 'INPUT') return;
     if (['ArrowDown', 'ArrowRight'].includes(e.code)) { nav(1); e.preventDefault(); } if (['ArrowUp', 'ArrowLeft'].includes(e.code)) { nav(-1); e.preventDefault(); }
@@ -403,6 +448,14 @@ export async function createGame(ctx) {
     if (state === 'count') { R.count -= dt; const c = Math.ceil(R.count - .6);
       if (c !== R.lastCount && c >= 0) { R.lastCount = c; if (c > 0) { flash(String(c), .9); if (Snd.ok()) Snd.beep(false); } else { flash('¡YA!', .8); if (Snd.ok()) Snd.beep(true); state = 'race'; R.started = true; } }
       rh.querySelector('.t').textContent = Z.obj === 'time' ? fmtT(R.time) : fmtT(0); P.v = 0; return; }
+    // gasolina: se gasta al correr; sin gasolina la moto va muy lenta
+    if (S.fuel > 0) { S.fuel = Math.max(0, S.fuel - (.12 + 1.13 * Math.min(1, P.v / 33)) * (P.v > 35 ? 2.2 : 1) * dt);
+      if (S.fuel <= 0) { flash(R.jjPos ? '¡SIN GASOLINA! PARA EN EL JJ\'S' : '¡SIN GASOLINA!', 2.2, true); save(); } }
+    window.__noFuel = S.fuel <= 0; R.lowT = (R.lowT || 0) - dt; if (S.fuel > 0 && S.fuel < 18 && R.lowT <= 0) { R.lowT = 4; if (Snd.ok()) Snd.warn(); }
+    if ((R.hudT = (R.hudT || 0) - dt) <= 0) { R.hudT = .25; hud(); }
+    if (R.jjPos) { const dj = Math.hypot(P.x - R.jjPos.x, P.z - R.jjPos.z);
+      if (dj > 16) R.jjIn = false;
+      else if (!R.jjIn && dj < 9 && P.v < 4) { R.jjIn = true; R.time = Math.max(.5, R.time - 3); ctx.setPaused(true); state = 'jj'; save(); renderJJ(); show('jj'); return; } }
     // jugador en el recorrido
     const L = locate(path, P.x, P.z, R.hint); R.hint = L.i; const prevS = R.s; R.s = L.s; R.lat = L.lat; R.maxS = Math.max(R.maxS, R.s);
     if (Z.obj === 'time') { R.time -= dt; R.t += dt;
