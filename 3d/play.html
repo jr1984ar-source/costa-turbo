@@ -23,13 +23,13 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { addUnderwater, WORLD, coastZ, heightAt, makeEnv, makeHeightTexture, makeWaveTexture, makeTerrain, makeWater, makeSkyDome, makeEnvMap } from './src/world.js?v=3';
+import { swell, addUnderwater, WORLD, coastZ, heightAt, makeEnv, makeHeightTexture, makeWaveTexture, makeTerrain, makeWater, makeSkyDome, makeEnvMap } from './src/world.js?v=4';
 import { makeJetSki } from './src/jetski.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { GTAOPass } from 'three/addons/postprocessing/GTAOPass.js';
 import { makeGrass, makePalms, makeGull, makeYacht, makeBuoy, makeUmbrella, BUOYS } from './src/props.js?v=3';
-import { Wake, Spray } from './src/fx.js?v=9';
+import { Wake, Spray } from './src/fx.js?v=10';
 
 const Q = new URLSearchParams(location.search), SHOT = Q.get('shot') || 'A', PAINT = 'kawasaki';
 const W = innerWidth, H = innerHeight;
@@ -197,7 +197,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=56';
+import { createGame } from './src/game.js?v=57';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -264,11 +264,11 @@ function step(dt) {
   P.t += dt; env.time.value += dt;
   for (let i = BUOYS.length - 1; i >= 0; i--) { const b = BUOYS[i]; if (!b.parent) { if (b.userData.y0 != null) BUOYS.splice(i, 1); continue; }   // boyas meciéndose
     if (b.userData.y0 == null) { b.userData.y0 = b.position.y; b.userData.ph = b.position.x * .37 + b.position.z * .23; }
-    const ph = P.t * 1.6 + b.userData.ph; b.position.y = b.userData.y0 + Math.sin(ph) * .12; b.rotation.x = Math.sin(ph + 1) * .12; b.rotation.z = Math.cos(ph * .8) * .1; }
-  yacht.position.y = -.55 + Math.sin(P.t * 1.1) * .06; yacht.rotation.z = Math.sin(P.t * .9) * .025; yacht2.position.y = -1.3 + Math.sin(P.t * .8 + 1) * .04; yacht2.rotation.z = Math.sin(P.t * .7) * .012;   // barcos fondeados meciéndose
+    const ph = P.t * 1.6 + b.userData.ph; b.position.y = b.userData.y0 + Math.sin(ph) * .12 + swell(b.position.x, b.position.z, env.time.value)[0]; b.rotation.x = Math.sin(ph + 1) * .12; b.rotation.z = Math.cos(ph * .8) * .1; }
+  yacht.position.y = -.55 + Math.sin(P.t * 1.1) * .06 + swell(yacht.position.x, yacht.position.z, env.time.value)[0] * .6; yacht.rotation.z = Math.sin(P.t * .9) * .025; yacht2.position.y = -1.3 + Math.sin(P.t * .8 + 1) * .04 + swell(yacht2.position.x, yacht2.position.z, env.time.value)[0] * .4; yacht2.rotation.z = Math.sin(P.t * .7) * .012;   // barcos fondeados meciéndose
   for (const q of people) { const m = q.m;   // gente viva: los que pasean van y vienen por la orilla, los bañistas flotan con las olas
     if (q.mode === 'walk') { const u = Math.sin(P.t * .045 + q.ph) * 14, x = q.x0 + u, dir = Math.cos(P.t * .045 + q.ph) * q.dir; m.position.x = x; m.position.z = coastZ(x) + 1.2; m.position.y = heightAt(x, m.position.z) - .02 + Math.abs(Math.sin(P.t * 4 + q.ph)) * .03; m.rotation.y = dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
-    else if (q.mode === 'swim') { m.position.y = -1.32 + Math.sin(P.t * 1.6 + q.ph) * .1; m.rotation.z = Math.sin(P.t * 1.2 + q.ph) * .06; }
+    else if (q.mode === 'swim') { m.position.y = -1.32 + Math.sin(P.t * 1.6 + q.ph) * .1 + swell(m.position.x, m.position.z, env.time.value)[0]; m.rotation.z = Math.sin(P.t * 1.2 + q.ph) * .06; }
     else m.rotation.z = Math.sin(P.t * .8 + q.ph) * .012; }
   for (const b of flock) { const a = b.ph + P.t * b.sp, fl = (P.t * .35 + b.ph) % 3 < 1.3;
     b.gl.position.set(b.cx + Math.cos(a) * b.r, b.h + Math.sin(P.t * .7 + b.ph) * 1.2, b.cz + Math.sin(a) * b.r);
@@ -279,12 +279,16 @@ function step(dt) {
     cel: window.__celebT != null && P.t - window.__celebT < 5 ? 1 : 0, hit: P._hitT > P.t ? 1 : 0 });   // celebrar al ganar, golpe al chocar
   rider.position.y = RP[1] + Math.sin(P.t * 5.3) * 0.012 * Math.min(1, P.v / 14);
   // moto
-  ski.root.position.set(P.x, P.y || 0, P.z); ski.root.rotation.y = P.th;
+  const SWL = swell(P.x, P.z, env.time.value); window.__swell = (x, z) => swell(x, z, env.time.value)[0];   // mar de fondo bajo la moto
+  { const vs = (SWL[1] * f.x + SWL[2] * f.z) * P.v;   // la ola sube bajo la moto: al pasar la cresta rápido, sale volando
+    if (!P.air && !(P.y > .05) && P.v > 22 && (P._vs || 0) > 1.4 && vs < (P._vs || 0) - .6) { P.air = true; P.y = .05; P.vy = P._vs * .95; }
+    P._vs = vs; }
+  ski.root.position.set(P.x, (P.y || 0) + SWL[0], P.z); ski.root.rotation.y = P.th;
   if (P.land) { P.land = 0; for (let i = 0; i < 90; i++) { const a = Math.random() * 6.28, sp0 = 2 + Math.random() * 5; spray.emit(P.x + Math.cos(a) * .8, .1, P.z + Math.sin(a) * .8, Math.cos(a) * sp0, 2 + Math.random() * 4, Math.sin(a) * sp0, .08 + Math.random() * .1, .8 + Math.random() * .6, .45); } }   // chapuzón al caer
   ski.body.position.y = -0.02 + (window.__quiet ? 0 : Math.sin(P.t * 3.1) * 0.02 * (0.3 + k)) - k * 0.03;   // quieta mientras eliges
-  ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01) - ski.body.rotation.z) * Math.min(1, dt * 5);
+  ski.body.rotation.z += ((-P.steer * (0.32 + (drifting ? 0.22 : 0)) * k - P.slip * 0.01 + (P.y > .05 ? 0 : (SWL[1] * side.x + SWL[2] * side.z) * .8)) - ski.body.rotation.z) * Math.min(1, dt * 5);
   ski.body.rotation.y += ((drifting ? P.steer * 0.32 : 0) - ski.body.rotation.y) * Math.min(1, dt * 6);   // la moto cruzada respecto a la trayectoria
-  ski.body.rotation.x += ((P.y > .05 ? -Math.atan2(P.air ? P.vy : 3, Math.max(8, P.v)) * .7 : -0.02 - k * 0.07 - (I.acc ? 0.02 : 0)) - ski.body.rotation.x) * Math.min(1, dt * (P.y > .05 ? 6 : 4));   // en el aire la proa sigue la trayectoria
+  ski.body.rotation.x += ((P.y > .05 ? -Math.atan2(P.air ? P.vy : 3, Math.max(8, P.v)) * .7 : -0.02 - k * 0.07 - (I.acc ? 0.02 : 0) - Math.atan(SWL[1] * f.x + SWL[2] * f.z) * .9) - ski.body.rotation.x) * Math.min(1, dt * (P.y > .05 ? 6 : 4));   // en el aire la proa sigue la trayectoria
   // estela y salpicaduras
   const sx = P.x - f.x * 1.5, sz = P.z - f.z * 1.5; wake.update(dt, sx, sz, P.y > .3 ? 0 : Math.min(1, P.v / 10), P.v);
   if (P.v > 4 && !(P.y > .3)) {

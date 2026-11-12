@@ -80,8 +80,9 @@ function fillWake(g, path, n) {
     let w = Math.min(34, 0.6 + 0.30 * (p.sp ?? 12) * Math.pow(Math.min(p.age, 5.5), 0.82) * 1.12);   // la V se abre con la velocidad (ángulo casi fijo)
     { const ax = p.x - o.x, az = p.z - o.z, bx = q.x - p.x, bz = q.z - p.z, la = Math.hypot(ax, az), lb = Math.hypot(bx, bz);   // en giros muy cerrados o marcha atrás contra la orilla la cinta se estrecha para no abrirse en abanico
       if (la > 1e-3 && lb > 1e-3) w *= Math.max(.1, Math.min(1, ((ax * bx + az * bz) / (la * lb) + .1) / 1.1)); }
-    pos[i * 6] = p.x - tz * w; pos[i * 6 + 1] = 0.03; pos[i * 6 + 2] = p.z + tx * w;
-    pos[i * 6 + 3] = p.x + tz * w; pos[i * 6 + 4] = 0.03; pos[i * 6 + 5] = p.z - tx * w;
+    const sw = window.__swell;   // la estela sigue el mar de fondo
+    pos[i * 6] = p.x - tz * w; pos[i * 6 + 2] = p.z + tx * w; pos[i * 6 + 1] = 0.03 + (sw ? sw(pos[i * 6], pos[i * 6 + 2]) : 0);
+    pos[i * 6 + 3] = p.x + tz * w; pos[i * 6 + 5] = p.z - tx * w; pos[i * 6 + 4] = 0.03 + (sw ? sw(pos[i * 6 + 3], pos[i * 6 + 5]) : 0);
     side[i * 2] = -1; side[i * 2 + 1] = 1; age[i * 2] = age[i * 2 + 1] = p.age; kk[i * 2] = kk[i * 2 + 1] = p.k ?? 1; uu[i * 2] = uu[i * 2 + 1] = p.u ?? i * 0.6; ww[i * 2] = ww[i * 2 + 1] = w;
   }
   for (const a of ['position', 'aSide', 'aAge', 'aK', 'aU', 'aW']) g.attributes[a].needsUpdate = true;

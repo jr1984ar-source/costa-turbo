@@ -589,7 +589,7 @@ export async function createGame(ctx) {
     pollPad();
     if (msgT > 0) { msgT -= dt; if (msgT <= 0) msg.style.display = 'none'; }
     if (!R || state === 'pause' || R.done) return;
-    if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k; b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
+    if (R.boats) for (const b of R.boats) { const u = b.userData.bob, t = P.t + u.ph; b.position.y = u.y + Math.sin(t * 1.1) * .06 * u.k + (window.__swell ? window.__swell(b.position.x, b.position.z) * (u.k > .5 ? .8 : .4) : 0); b.rotation.z = Math.sin(t * .9) * .025 * u.k; b.rotation.x = Math.sin(t * .7 + 1) * .015 * u.k; }
     if (R.beam) R.beam.rotation.y += dt * 1.1;
     if (R.gArrow) { const ng = R.gates.find(q => !q.done); R.gArrow.visible = !!ng; if (ng) { const q = at(R.path, ng.s); R.gArrow.position.set(q.x - q.tz * ng.c, 4.6 + Math.sin(P.t * 4) * .35, q.z + q.tx * ng.c); R.gArrow.rotation.y += dt * 2; } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
@@ -598,7 +598,7 @@ export async function createGame(ctx) {
     if (R.movers) for (const m of R.movers) { const L = Math.abs(m.zb - m.za);
       if (m.wait > 0) { m.wait -= dt; m.ry += (m.dir > 0 ? Math.PI : 0) - m.ry > 0 ? Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)) : -Math.min(dt * 1.2, Math.abs((m.dir > 0 ? Math.PI : 0) - m.ry)); }
       else { m.u += m.dir * m.sp * dt / L; if (m.u >= 1 || m.u <= 0) { m.u = Math.max(0, Math.min(1, m.u)); m.dir *= -1; m.wait = 3; } else m.ry = m.dir > 0 ? Math.PI : 0; }
-      const z = m.za + (m.zb - m.za) * m.u, mv = m.wait > 0 ? 0 : m.sp; m.o.position.set(m.x, m.y + Math.sin(P.t * 1.3 + m.x) * .05, z); m.o.rotation.set(Math.sin(P.t + m.x) * .015, m.ry, Math.sin(P.t * .9) * .02);
+      const z = m.za + (m.zb - m.za) * m.u, mv = m.wait > 0 ? 0 : m.sp; m.o.position.set(m.x, m.y + Math.sin(P.t * 1.3 + m.x) * .05 + (window.__swell ? window.__swell(m.x, z) * .7 : 0), z); m.o.rotation.set(Math.sin(P.t + m.x) * .015, m.ry, Math.sin(P.t * .9) * .02);
       const fx = Math.sin(m.ry), fz = Math.cos(m.ry); m.cols.forEach((c, k) => { c.x = m.x + fx * (k - 1) * m.r * 2.2; c.z = z + fz * (k - 1) * m.r * 2.2; });
       m.wk.update(dt, m.x - fx * m.r * 2.6, z - fz * m.r * 2.6, Math.min(1, mv / 8), mv); }
     const Z = R.Z, path = R.path;
@@ -653,7 +653,7 @@ export async function createGame(ctx) {
           const dc = Math.hypot(px - c.x, pz - c.z); if (dc < c.r + 1.3) { const cl = (c.x - q0.x) * -q0.tz + (c.z - q0.z) * q0.tx; r.lane = cl + (r.lane >= cl ? 1 : -1) * (c.r + 1.3); r.v *= .7; } }
         const dl = (r.laneT - r.lane) * Math.min(1, dt * .9); r.lane += dl; r.steer += ((dl / Math.max(dt, 1e-3)) * .25 - r.steer) * Math.min(1, dt * 4);
         const q = place(r.sk.root, path, r.s, r.lane); r.sk.root.rotation.y -= r.steer * .15;
-        r.sk.body.rotation.z = -r.steer * .25; r.sk.body.position.y = -.05 + Math.sin(P.t * 3 + r.vmax) * .02;
+        r.sk.body.rotation.z = -r.steer * .25; r.sk.body.position.y = -.05 + Math.sin(P.t * 3 + r.vmax) * .02 + (window.__swell ? window.__swell(r.sk.root.position.x, r.sk.root.position.z) : 0);
         r.rd.userData.pose({ barY: .13, steer: Math.max(-1, Math.min(1, r.steer)), k: Math.min(1, r.v / 33), t: P.t });
         const f = { x: q.tx, z: q.tz }; r.wk.update(dt, r.sk.root.position.x - f.x * 1.5, r.sk.root.position.z - f.z * 1.5, Math.min(1, r.v / 10), r.v);
         { const sp = window.__spray, rx = r.sk.root.position.x - f.x * 1.5, rz = r.sk.root.position.z - f.z * 1.5, Rn = Math.random;   // cola de gallo y cortina de proa de los rivales

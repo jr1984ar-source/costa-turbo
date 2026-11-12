@@ -202,6 +202,13 @@ float ct_caustic(vec2 p, float t){
   return m;
 }
 
+// ---------- Mar de fondo: olas largas que suben y bajan (misma fórmula en el shader y en la física) ----------
+const SW = [[.30, 34, .2, .98], [.17, 19, -.5, .87], [.07, 9, .8, .6]].map(([a, l, dx, dz]) => { const n = Math.hypot(dx, dz), k = 2 * Math.PI / l; return [a, k, dx / n, dz / n, Math.sqrt(9.8 * k)]; });
+export function swell(x, z, t) { const off = coastZ(x) - z, f = Math.min(1, Math.max(0, (off - 8) / 37)), ff = f * f * (3 - 2 * f); if (ff <= 0) return [0, 0, 0];
+  let h = 0, gx = 0, gz = 0; for (const [a, k, dx, dz, w] of SW) { const ph = k * (x * dx + z * dz) - w * t, c = Math.cos(ph); h += a * Math.sin(ph); gx += a * k * dx * c; gz += a * k * dz * c; }
+  return [h * ff, gx * ff, gz * ff]; }
+const SWGL = SW.map(([a, k, dx, dz, w]) => `{ float ph = ${k.toFixed(5)} * dot(p, vec2(${dx.toFixed(4)}, ${dz.toFixed(4)})) - ${w.toFixed(5)} * t; float c = cos(ph); h += ${a.toFixed(3)} * sin(ph); g += ${(a * k).toFixed(5)} * vec2(${dx.toFixed(4)}, ${dz.toFixed(4)}) * c; }`).join(' ');
+
 // ---------- Agua ----------
 export function makeWater(env, hdTex, waveTex) {
   const mat = new THREE.ShaderMaterial({
@@ -215,15 +222,22 @@ export function makeWater(env, hdTex, waveTex) {
       uZen: { value: env.zen }, uHor: { value: env.hor }, uScatter: { value: env.scatter },
       uFogNear: { value: env.fogNear }, uFogFar: { value: env.fogFar },
       uSky: { value: env.skyTex || null }, uSkyOn: { value: env.skyTex ? 1 : 0 }, uSkyRot: { value: env.skyRot || new THREE.Matrix3() }, uSkyK: { value: env.skyK ?? 1 },
+      uOuter: { value: 0 },
     },
     vertexShader: /* glsl */`
-      varying vec3 vWPos;
-      void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vWPos = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
+      uniform float uTime; uniform sampler2D uHD; uniform float uWorld; uniform float uOuter;
+      varying vec3 vWPos; varying vec2 vSg;
+      void main(){ vec4 w = modelMatrix * vec4(position, 1.0); vSg = vec2(0.0);
+        if (uOuter < 0.5) { vec2 p = w.xz, huv = p / uWorld + 0.5; float off = -texture2D(uHD, clamp(huv, 0.001, 0.999)).g; float f = smoothstep(8.0, 45.0, off);
+          float t = uTime, h = 0.0; vec2 g = vec2(0.0);
+          ${SWGL}
+          w.y += h * f; vSg = g * f; }
+        vWPos = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`,
     fragmentShader: /* glsl */`
       uniform float uTime; uniform sampler2D uHD; uniform sampler2D uNrm; uniform float uWorld;
       uniform vec3 uSunDir; uniform vec3 uSunCol; uniform vec3 uZen; uniform vec3 uHor; uniform vec3 uScatter;
-      uniform float uFogNear; uniform float uFogFar; uniform sampler2D uSky; uniform float uSkyOn; uniform mat3 uSkyRot; uniform float uSkyK;
-      varying vec3 vWPos;
+      uniform float uFogNear; uniform float uFogFar; uniform sampler2D uSky; uniform float uSkyOn; uniform mat3 uSkyRot; uniform float uSkyK; uniform float uOuter;
+      varying vec3 vWPos; varying vec2 vSg;
       ${GLSL_NOISE}
       vec3 skyCol(vec3 d){ float t = clamp(d.y, 0.0, 1.0); vec3 g = mix(uHor, uZen, pow(t, 0.45));
         if (uSkyOn < 0.5) return g; vec3 r = uSkyRot * d; r.y = max(r.y, 0.02); r = normalize(r);
@@ -231,6 +245,7 @@ export function makeWater(env, hdTex, waveTex) {
         return texture2D(uSky, uv).rgb * uSkyK; }
       void main(){
         vec2 wp = vWPos.xz;
+        if (uOuter > 0.5 && abs(wp.x) < uWorld * 0.5 - 1.0 && abs(wp.y) < uWorld * 0.5 - 1.0) discard;   // el centro lo pinta la malla con olas
         vec2 huv = wp / uWorld + 0.5;
         float inside = step(0.002, huv.x) * step(huv.x, 0.998) * step(0.002, huv.y) * step(huv.y, 0.998);
         vec2 hd = mix(vec2(-30.0, -400.0), texture2D(uHD, huv).rg, inside);
@@ -240,7 +255,7 @@ export function makeWater(env, hdTex, waveTex) {
         vec2 s2 = texture2D(uNrm, wp * 0.061 + vec2(-uTime * 0.017, uTime * 0.013)).rg * 2.0 - 1.0;
         vec2 s3 = texture2D(uNrm, wp * 0.21 + vec2(uTime * 0.035, -uTime * 0.030)).rg * 2.0 - 1.0;
         vec2 s4 = texture2D(uNrm, wp * 0.73 + vec2(-uTime * 0.06, -uTime * 0.05)).rg * 2.0 - 1.0;
-        vec2 sl = (s1 * 0.26 + s2 * 0.20 + s3 * 0.14 + s4 * 0.08) * calm;
+        vec2 sl = (s1 * 0.26 + s2 * 0.20 + s3 * 0.14 + s4 * 0.08) * calm + vSg;
         vec3 N = normalize(vec3(-sl.x, 1.0, -sl.y));
         vec3 V = normalize(cameraPosition - vWPos);
         float F = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
@@ -279,9 +294,10 @@ export function makeWater(env, hdTex, waveTex) {
         gl_FragColor = vec4(col, a);
       }`,
   });
-  const g = new THREE.PlaneGeometry(6000, 6000, 1, 1); g.rotateX(-Math.PI / 2);
-  const m = new THREE.Mesh(g, mat);
-  m.renderOrder = 2;
+  const g = new THREE.PlaneGeometry(WORLD, WORLD, 220, 220); g.rotateX(-Math.PI / 2);   // malla con olas en la zona de juego
+  const m = new THREE.Mesh(g, mat); m.renderOrder = 2; m.frustumCulled = false;
+  const mo = mat.clone(); mo.uniforms = Object.assign({}, mat.uniforms, { uOuter: { value: 1 } });
+  const go = new THREE.PlaneGeometry(6000, 6000, 1, 1); go.rotateX(-Math.PI / 2); const outer = new THREE.Mesh(go, mo); outer.renderOrder = 2; m.add(outer);   // mar lejano, plano
   return m;
 }
 
