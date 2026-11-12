@@ -64,7 +64,8 @@ S.parts = Object.assign({ turbo: 0, bov: 0, escape: 0, turbina: 0, intercooler: 
 S.medal = S.medal || {}; S.best = S.best || {};
 S.fuel = S.fuel ?? 100; S.lives = S.lives ?? 3;
 S.paint = S.paint || 'serie'; S.ownPaint = S.ownPaint || ['serie'];
-S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 1, hide: 0, q: 'alta' }, S.set || {});
+S.set = Object.assign({ snd: 1, mus: 1, vol: 0.8, vib: 1, dif: 2, hide: 0, q: 'alta' }, S.set || {});
+if (!S.set.dif5) { S.set.dif = [1, 2, 3][S.set.dif] ?? 2; S.set.dif5 = 1; }   // 5 niveles de dificultad como en el 2D
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 const gearById = id => { for (const k in GEAR) { const g = GEAR[k].find(x => x.id === id); if (g) return g; } return null; };
 const fmtT = t => { t = Math.max(0, t); const m = Math.floor(t / 60), s = t - m * 60; return (m ? m + ':' + (s < 10 ? '0' : '') : '') + s.toFixed(2); };
@@ -325,7 +326,7 @@ export async function createGame(ctx) {
       <div class="setrow"><span><i class="ti ti-music"></i> MÚSICA</span><div class="row">${opt('mus', [[1, 'SÍ'], [0, 'NO']])}</div></div>
       <div class="setrow"><span><i class="ti ti-adjustments"></i> VOLUMEN</span><input type="range" min="0" max="1" step="0.05" value="${s.vol}" data-range="vol"></div>
       <div class="setrow"><span><i class="ti ti-device-mobile-vibration"></i> VIBRACIÓN</span><div class="row">${opt('vib', [[1, 'SÍ'], [0, 'NO']])}</div></div>
-      <div class="setrow"><span><i class="ti ti-gauge"></i> DIFICULTAD</span><div class="row">${opt('dif', [[0, 'FÁCIL'], [1, 'NORMAL'], [2, 'DIFÍCIL']])}</div></div>
+      <div class="setrow"><span><i class="ti ti-gauge"></i> DIFICULTAD</span><div class="row">${opt('dif', [[0, 'MUY FÁCIL'], [1, 'FÁCIL'], [2, 'NORMAL'], [3, 'DIFÍCIL'], [4, 'EXPERTO']])}</div></div>
       <div class="setrow"><span><i class="ti ti-hand-off"></i> BOTONES TÁCTILES</span><div class="row">${opt('hide', [[0, 'VER'], [1, 'OCULTAR']])}</div></div>
       <div class="setrow"><span><i class="ti ti-photo"></i> GRÁFICOS</span><div class="row">${opt('q', [['alta', 'ALTA'], ['baja', 'BAJA (MÓVIL)']])}</div></div>
       <div class="setrow"><span><i class="ti ti-id-badge"></i> TU NOMBRE</span><input maxlength="12" data-name="1" value="${S.name || 'JUGADOR'}"></div>
@@ -513,7 +514,7 @@ export async function createGame(ctx) {
         rd.position.set(0, 0.74, -0.75); rd.userData.barY = 0.13; sk.body.add(rd); const pp = PAINTS[[1, 3, 2, 9, 6][i]]; ctx.paintSki && ctx.paintSki(sk.root, pp.main, pp.acc); rd.userData.pose({ barY: .13, k: .6 }); const wk = new Wake(env);
         const tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: textTex([RIVN[i].toUpperCase()], 512, 128, RIVC[i], '#ffffff'), transparent: true, depthWrite: false, sizeAttenuation: false })); tag.scale.set(.11, .0275, 1); tag.position.set(0, 3.3, 0); tag.renderOrder = 5; sk.root.add(tag);   // nombre encima
         rivPool.push({ sk, rd, wk, name: RIVN[i] }); } }
-    return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [0.9, 1, 1.07][S.set.dif], fin: null, tl: 0, steer: 0 }));
+    return rivPool.slice(0, n).map((o, i) => ({ ...o, s: 0, lane: 0, laneT: 0, v: 0, vmax: (30.2 + i * .85 + Math.random() * 1.2) * [.84, .9, 1, 1.07, 1.13][S.set.dif], fin: null, tl: 0, steer: 0 }));
   }
 
   // ---------- carrera ----------
@@ -528,7 +529,7 @@ export async function createGame(ctx) {
     if (Z.id === 'cala') await calaScene();
     if (Z.id === 'mago') await magoScene();
     if (Z.id === 'mago') jjBar();   // la salida de EL MAGO es desde el muelle del JJ'S
-    if (Z.obj === 'time') { jjBar(); R.time = [14, 11, 10][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [8, 7, 6][S.set.dif] }));   // ajustado: unos 25 s en total en normal
+    if (Z.obj === 'time') { jjBar(); R.time = [16, 14, 11, 10, 9][S.set.dif]; R.cps = [path.L / 3, path.L * 2 / 3].map(s => ({ s, hit: false, add: [9, 8, 7, 6, 5.5][S.set.dif] }));   // ajustado: unos 25 s en total en normal
       for (const c of R.cps) arch('CHECKPOINT', path, c.s, 18, false);
       for (let s = 40; s < path.L - 20; s += 55) for (const sg of [-1, 1]) { const b = makeBuoy(sg > 0 ? '#ff7a1a' : '#ffffff'); place(b, path, s, sg * 20, .05); add(b); solid(b.position.x, b.position.z, .5); } }
     if (Z.obj === 'slalom') { let k = 0; for (let s = 60; s < path.L - 30; s += 46, k++) { const c = (k % 2 ? 1 : -1) * 5.5, gt = { s, c, done: false, b: [] }; R.gates.push(gt);
@@ -573,7 +574,7 @@ export async function createGame(ctx) {
     const unl = ok && zone + 1 < ZONES.length && !S.done[ZONES[zone + 1].id] && !S.done[Z.id] ? ZONES[zone + 1].name : '';
     if (ok) { window.__celebT = P.t; S.cash += prize; S.done[Z.id] = 1; S.unlocked = Math.max(S.unlocked, Math.min(ZONES.length, zone + 2)); if (Snd.ok()) Snd.win(); } else if (Snd.ok()) Snd.fail();
     // medalla y récord
-    let md = -1; if (ok) { if (Z.obj === 'race3') md = R.pos - 1; else { const k = [1.12, 1, .92][S.set.dif]; md = MEDAL_T[Z.id].findIndex(v => t <= v * k); } }
+    let md = -1; if (ok) { if (Z.obj === 'race3') md = R.pos - 1; else { const k = [1.2, 1.12, 1, .92, .86][S.set.dif]; md = MEDAL_T[Z.id].findIndex(v => t <= v * k); } }
     const rec = ok && (S.best[Z.id] == null || t < S.best[Z.id]) && Z.obj !== 'race3'; if (rec) S.best[Z.id] = t;
     if (md >= 0 && (S.medal[Z.id] == null || md < S.medal[Z.id])) S.medal[Z.id] = md;
     const mdE = scr.result.querySelector('.md'); mdE.style.display = md >= 0 || rec ? 'block' : 'none';
