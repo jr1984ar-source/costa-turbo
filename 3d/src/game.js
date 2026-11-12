@@ -126,6 +126,10 @@ const CSS = `
 #rh .fu.low b{background:#ff3b4e}
 #msg3{position:fixed;left:0;right:0;top:34%;z-index:16;text-align:center;pointer-events:none;font-family:"Saira Condensed","Arial Narrow",Arial,sans-serif;font-weight:900;font-style:italic;
   font-size:clamp(60px,12vw,150px);color:#ffe14d;text-shadow:0 6px 0 #0b1630,0 0 30px rgba(0,0,0,.5);display:none}
+#toast{position:fixed;left:50%;top:16px;z-index:40;transform:translate(-50%,-20px);opacity:0;pointer-events:none;font:900 24px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.05em;
+  padding:10px 26px;border-radius:999px;color:#fff;background:#0b1630;border:3px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:opacity .2s,transform .2s;white-space:nowrap}
+#toast.on{opacity:1;transform:translate(-50%,0)}#toast.ok{background:#14833b;border-color:#7be35a}#toast.bad{background:#a3121f;border-color:#ff7a84}
+#toast .ti{margin-right:8px;vertical-align:-2px}
 #msg3.small{font-size:clamp(28px,5vw,52px);top:22%}
 `;
 
@@ -140,6 +144,10 @@ export async function createGame(ctx) {
   const show = id => { for (const k in scr) scr[k].classList.toggle('on', k === id); ui.classList.toggle('on', !!id); const f = id && scr[id].querySelector('.btn.main,.card:not(.lock),.btn'); if (f) setTimeout(() => f.focus(), 30); };
   const flash = (txt, t = 1.2, small = false) => { msg.textContent = txt; msg.className = small ? 'small' : ''; msg.style.display = 'block'; msgT = t; };
   const click = () => { if (Snd.ok()) Snd.click(); };
+  // aviso de compra, equipado o dinero insuficiente (por encima de los menús)
+  const tst = document.createElement('div'); tst.id = 'toast'; document.body.appendChild(tst); let tstT = 0;
+  const toast = (txt, ok) => { tst.className = (ok ? 'ok' : 'bad') + ' on'; tst.innerHTML = `<i class="ti ti-${ok ? 'circle-check' : 'alert-circle'}"></i>` + txt; clearTimeout(tstT); tstT = setTimeout(() => tst.classList.remove('on'), 1800); };
+  const noCash = p => { toast('NO TIENES BASTANTES PTA · TE FALTAN ' + (p - S.cash).toLocaleString('es-ES'), false); if (Snd.ok()) Snd.miss(); };
 
   // ---------- portada ----------
   mk('menu', `<img class="logo" src="assets/logo.png" alt=""><h1>COSTA TURBO<small>JET SKI RACING 3D</small></h1><div class="cash"></div>
@@ -192,8 +200,8 @@ export async function createGame(ctx) {
     for (const it of JJ_ITEMS) { const full = it.id === 'fuel' ? S.fuel >= 99 : it.id === 'life' ? S.lives >= 6 : P.energy >= .99, b = document.createElement('button');
       const now = it.id === 'fuel' ? 'Ahora: ' + Math.ceil(S.fuel) + ' %' : it.id === 'life' ? 'Tienes ' + S.lives + ' corazones' : 'Turbo: ' + Math.round(P.energy * 100) + ' %';
       b.className = 'card' + (full ? ' sel' : ''); b.innerHTML = `<div class="img" style="display:grid;place-items:center;aspect-ratio:1.4;background:radial-gradient(circle at 50% 45%,#3a1220,#05070b 70%)"><i class="ti ti-${it.ic}" style="font-size:56px;color:#ffe14d"></i></div><b>${it.n}</b><i>${it.ef}</i><i>${now}</i><em>${full ? 'LLENO' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
-      b.onclick = () => { if (full) return; if (S.cash < it.p) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; }
-        S.cash -= it.p; if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives++; else P.energy = 1; save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
+      b.onclick = () => { if (full) return; if (S.cash < it.p) return noCash(it.p);
+        S.cash -= it.p; toast('COMPRADO: ' + it.n.toUpperCase(), true); if (it.id === 'fuel') S.fuel = 100; else if (it.id === 'life') S.lives++; else P.energy = 1; save(); if (Snd.ok()) Snd.cash(); refreshCash(); renderJJ(); hud(); };
       L0.appendChild(b); } refreshCash(); }
   function hud() { const hp = rh.querySelector('.hp'), n = Math.max(3, S.lives); hp.innerHTML = Array.from({ length: n }, (_, k) => `<i class="ti ti-heart-filled${k < S.lives ? '' : ' off'}"></i>`).join('');
     const fu = rh.querySelector('.fu'); fu.querySelector('b').style.width = Math.max(0, S.fuel) + '%'; fu.classList.toggle('low', S.fuel < 18); }
@@ -220,7 +228,7 @@ export async function createGame(ctx) {
     PAINTS.forEach(P0 => { const own = S.ownPaint.includes(P0.id), on = S.paint === P0.id, b = document.createElement('button'); b.className = 'card' + (on ? ' sel' : '');
       const c1 = P0.main || '#16b3c7', c2 = P0.acc || '#d6e816';
       b.innerHTML = `<div class="img" style="background:linear-gradient(135deg,${c1} 0 58%,${c2} 58% 70%,#14161b 70%)"></div><b>${P0.n}</b><em>${on ? 'PUESTA' : own ? 'PONER' : P0.p + ' PTA'}</em>`;
-      b.onclick = () => { if (!own) { if (S.cash < P0.p) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; } S.cash -= P0.p; S.ownPaint.push(P0.id); if (Snd.ok()) Snd.cash(); } else click();
+      b.onclick = () => { if (!own) { if (S.cash < P0.p) return noCash(P0.p); S.cash -= P0.p; S.ownPaint.push(P0.id); if (Snd.ok()) Snd.cash(); toast('COMPRADA Y PUESTA: ' + P0.n.toUpperCase(), true); } else { click(); toast('PINTURA PUESTA: ' + P0.n.toUpperCase(), true); }
         S.paint = P0.id; save(); ctx.paintPlayer && ctx.paintPlayer(P0.main, P0.acc); renderPilot(); };
       pt.appendChild(b); });
     const mo = scr.pilot.querySelector('.mo'); mo.innerHTML = '';
@@ -237,16 +245,16 @@ export async function createGame(ctx) {
       PARTS.forEach(pt => { const lv = S.parts[pt.id] | 0, nxt = lv < 3 ? pt.price[lv] : 0, need = lv < 3 ? PART_NEED[lv] : 0, lock = lv < 3 && won < need, b = document.createElement('button');
         b.className = 'card' + (lv ? ' sel' : '');
         b.innerHTML = `<div class="img" style="display:grid;place-items:center;background:radial-gradient(circle at 50% 45%,#1d2b44,#05070b 70%)"><i class="ti ti-${pt.ic}" style="font-size:64px;color:#ffe14d"></i></div><b>${pt.n}</b><i>${pt.ef}</i><i>STAGE ${lv}/3 ${'●'.repeat(lv)}${'○'.repeat(3 - lv)}</i><em>${lv >= 3 ? 'STAGE 3 · MÁX' : lock ? 'Gana ' + need + ' pantalla' + (need > 1 ? 's' : '') : 'STAGE ' + (lv + 1) + ' · ' + nxt.toLocaleString('es-ES') + ' PTA'}</em>`;
-        b.onclick = () => { if (lv >= 3 || lock) { if (Snd.ok()) Snd.miss(); return; } if (S.cash < nxt) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; }
-          S.cash -= nxt; S.parts[pt.id] = lv + 1; window.__parts = S.parts; save(); if (Snd.ok()) Snd.cash(); renderTaller(); };
+        b.onclick = () => { if (lv >= 3) { toast(pt.n.toUpperCase() + ' YA ESTÁ AL MÁXIMO', false); if (Snd.ok()) Snd.miss(); return; } if (lock) { toast('GANA ' + need + ' PANTALLA' + (need > 1 ? 'S' : '') + ' PARA DESBLOQUEARLO', false); if (Snd.ok()) Snd.miss(); return; } if (S.cash < nxt) return noCash(nxt);
+          toast('COMPRADO: ' + pt.n.toUpperCase() + ' STAGE ' + (lv + 1), true); S.cash -= nxt; S.parts[pt.id] = lv + 1; window.__parts = S.parts; save(); if (Snd.ok()) Snd.cash(); renderTaller(); };
         g.appendChild(b); });
       refreshCash(); return; }
     GEAR[tCat].forEach(it => { const own = S.own.includes(it.id), eq = S.eq[tCat] === it.id; const b = document.createElement('button'); b.className = 'card' + (eq ? ' sel' : '');
       const col = it.c || AVATARS[S.pilot].vest;
       b.innerHTML = `<div class="img" style="background-image:url('assets/taller/${it.id}.jpg'),radial-gradient(circle at 50% 45%,${col} 0 30%,#0b0d12 31%,#05070b 70%)"></div><b>${it.n}</b><i>${it.b}</i><em>${eq ? 'EQUIPADO' : own ? 'EQUIPAR' : it.p.toLocaleString('es-ES') + ' PTA'}</em>`;
       b.onclick = async () => {
-        if (!own) { if (S.cash < it.p) { flash('NO TIENES BASTANTES PTA', 1.2, true); if (Snd.ok()) Snd.miss(); return; } S.cash -= it.p; S.own.push(it.id); if (Snd.ok()) Snd.cash(); }
-        else click();
+        if (!own) { if (S.cash < it.p) return noCash(it.p); S.cash -= it.p; S.own.push(it.id); if (Snd.ok()) Snd.cash(); toast('COMPRADO Y EQUIPADO: ' + it.n.toUpperCase(), true); }
+        else { click(); toast(eq ? 'YA LO LLEVAS PUESTO' : 'EQUIPADO: ' + it.n.toUpperCase(), true); }
         S.eq[tCat] = it.id; save(); renderTaller(); await ctx.applyGear(gearLook()); };
       g.appendChild(b); });
     refreshCash();
