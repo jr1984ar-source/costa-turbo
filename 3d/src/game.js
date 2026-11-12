@@ -749,7 +749,7 @@ export async function createGame(ctx) {
       const q = at(R.path, Math.max(0, Math.min(R.path.L, t.s))), x = q.x - q.tz * t.lat, z = q.z + q.tx * t.lat, ry = Math.atan2(q.tx * t.dir, q.tz * t.dir);
       t.o.position.set(x, t.y + (window.__swell ? window.__swell(x, z) * .5 : 0), z); t.o.rotation.y = ry; const fx = Math.sin(ry), fz = Math.cos(ry), L = t.girls ? 8.5 : 3.5;
       t.cols.forEach((c, k) => { c.x = x + fx * (k - 1) * L; c.z = z + fz * (k - 1) * L; }); t.wk.update(dt, x - fx * L * 1.2, z - fz * L * 1.2, Math.min(1, t.v / 12), t.v);
-      if (t.girls && !t.gave && state === 'race' && Math.hypot(x - P.x, z - P.z) < 26) { t.gave = true; P.turboU = Math.min(5, (P.turboU ?? 2) + 1); flash('¡LAS CHICAS DEL YATE TE REGALAN UN REFRESCO! +1 TURBO', 1.8, true, '#ff7ad9'); if (Snd.ok()) Snd.girls(); } }
+      if (t.girls && !t.gave && state === 'race' && Math.hypot(x - P.x, z - P.z) < 26) { t.gave = true; P.turboU = Math.min(5, (P.turboU ?? 2) + 1); flash('¡LAS CHICAS DEL YATE TE SALUDAN! +1 TURBO (Y TE DISTRAES)', 1.8, true, '#ff7ad9'); if (Snd.ok()) Snd.girls(); P._distract = 1.6; } }
     if (R.coins) for (const c of R.coins) { if (c.got) { if (c.m.visible) { c.m.position.y += dt * 6; c.m.scale.multiplyScalar(1 - dt * 5); if (c.m.scale.x < .1) c.m.visible = false; } continue; }
       c.m.rotation.y += dt * 3; c.m.position.y = 1 + Math.sin(P.t * 3 + c.m.position.x) * .12;
       if (state === 'race' && Math.hypot(c.m.position.x - P.x, c.m.position.z - P.z) < 2.3) { c.got = true; R.coinN++; S.cash += 25; if (++S.coinsTot >= 100) award('coins'); if (Snd.ok()) Snd.coin(); pop('+25', '#ffd21a', (Math.random() - .5) * 80); rh.querySelector('.co span').textContent = R.coinN; } }

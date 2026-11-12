@@ -200,7 +200,7 @@ hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(
 // el primer clic o tecla del menú ya activa el sonido: no hace falta aviso
 const clock = new THREE.Clock();
 // ---------- juego: menús, piloto, taller y las 3 pantallas ----------
-import { createGame } from './src/game.js?v=94';
+import { createGame } from './src/game.js?v=95';
 import { paintSki } from './src/paint.js';
 async function applyGear(g) {   // cambia chaleco, casco y neopreno del piloto
   const nr = await makeRider({ vest: g.vest, helmetColor: g.helmet, suit: g.suit, body: g.body, skin: g.skin, gog: g.gog, glove: g.glove, boot: g.boot }); nr.position.copy(rider.position); nr.userData.barY = rider.userData.barY;
@@ -230,7 +230,8 @@ function step(dt) {
   P.v = Math.max(I.brake && !I.acc ? -4.5 : 0, P.v);
   P.steer += (I.steer - P.steer) * Math.min(1, dt * 6);
   const k = Math.min(1, P.v / 9), rate = (I.drift ? 2.3 : 1.25) * [1, 1.12, 1.22, 1.3][L('aletas')] * (0.25 + 0.75 * k) * (P.v > 38 ? 0.85 : 1);
-  P.th += P.steer * rate * dt * (P.air ? 0 : 1);   // en el aire el giro es para el truco
+  P.th += P.steer * rate * dt * (P.air ? 0 : 1);
+  if (P._distract > 0) { P._distract -= dt; P.th += Math.sin(P.t * 3.3) * .6 * dt; }   // las chicas te distraen: la moto se va un poco de lado   // en el aire el giro es para el truco
   const drifting = I.drift && P.v > 9 && Math.abs(P.steer) > 0.2;
   if (drifting) { P.dc = Math.min(1.6, (P.dc || 0) + dt); P.v -= P.v * 0.05 * dt; } else if ((P.dc || 0) > 0) {       // al soltar el derrape: mini-turbo si se cargó
     if (P.dc > 0.7 && P.v > 9) { P.v = Math.min(44, P.v + 4 + P.dc * 4); P.kick = 1; if (Snd.ok()) Snd.boost(); window.__onDrift && window.__onDrift(P.dc); } P.dc = 0; }
