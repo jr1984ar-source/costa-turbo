@@ -151,7 +151,7 @@ function input() {
   if (gp) { const ax = gp.axes[0] || 0; if (Math.abs(ax) > 0.12) steer = -ax;
     const b = i => gp.buttons[i] && gp.buttons[i].value > 0.2;
     if (b(7) || b(1)) acc = Math.max(acc, (gp.buttons[7] && gp.buttons[7].value) || 1); if (b(6)) brake = 1; if (b(2)) turbo = 1; if (b(0)) drift = 1;
-    const st = b(9) ? 1 : 0; if (st && !padStart) paused = !paused; if (!musicOn && (gp.buttons.some(x => x.pressed))) { Snd.init(); musicOn = true; music.play().catch(() => { musicOn = false; }); } padStart = st; const y = b(3) ? 1 : 0; if (y && !padY) toggleCam(); padY = y; }
+    const st = b(9) ? 1 : 0; if (st && !padStart) paused = !paused; if (gp.buttons.some(x => x.pressed)) { Snd.init(); if (MUSIC && !musicOn) { musicOn = true; music.play().catch(() => { musicOn = false; }); } } padStart = st; const y = b(3) ? 1 : 0; if (y && !padY) toggleCam(); padY = y; }
   return { steer, acc, brake, turbo, drift };
 }
 
@@ -165,8 +165,8 @@ const toggleCam = () => { camMode = camMode === 'dron' ? 'onboard' : 'dron'; cam
 camBtn.addEventListener('pointerdown', e => { e.preventDefault(); toggleCam(); });
 const spd = hud.querySelector('.sp');
 // música (Suno, "Jet-Ski Paradise"): empieza con el primer gesto y se pausa con la pausa del juego
-const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false; window.__music = music;
-['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (!musicOn) { musicOn = true; music.play().catch(() => { musicOn = false; }); } }, { passive: true }));
+const music = new Audio('assets/musica/jetski-paradise.mp3'); music.loop = true; music.volume = 0.5; let musicOn = false; window.__music = music; const MUSIC = false;   // música apagada a petición de JRAR (el archivo sigue en assets/musica)
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => { if (MUSIC && !musicOn) { musicOn = true; music.play().catch(() => { musicOn = false; }); } }, { passive: true }));
 const hint = document.createElement('div'); hint.textContent = 'HAZ CLIC O PULSA UNA TECLA PARA ACTIVAR EL SONIDO';
 hint.style.cssText = 'position:fixed;left:50%;bottom:120px;transform:translateX(-50%);padding:10px 18px;border-radius:999px;background:rgba(11,22,48,.55);border:2px solid rgba(255,255,255,.55);color:#fff;font:800 14px "Saira Condensed","Arial Narrow",Arial,sans-serif;letter-spacing:.06em;pointer-events:none;z-index:5';
 document.body.appendChild(hint);
@@ -261,7 +261,7 @@ function step(dt) {
   sun.position.set(cx, 0, cz).addScaledVector(env.sunDir, 150); sun.target.position.set(cx, 0, cz); sun.target.updateMatrixWorld();
   spd.firstChild.nodeValue = Math.round(P.v * 3.6);
 }
-function frame() { const dt = Math.min(0.05, clock.getDelta()); if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running' && musicOn && !music.paused) hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); comp.render(); requestAnimationFrame(frame); }
+function frame() { const dt = Math.min(0.05, clock.getDelta()); if (hint.parentNode && Snd.ctx && Snd.ctx.state === 'running') hint.remove(); if (musicOn) { if (paused && !music.paused) music.pause(); else if (!paused && music.paused) music.play().catch(() => {}); } if (!paused) step(dt); else updateSound(0, 24, 0, 0, 0, 3, true); comp.render(); requestAnimationFrame(frame); }
 step(0.016); comp.render(); window.__done = true; frame();
 
 </script></body></html>
