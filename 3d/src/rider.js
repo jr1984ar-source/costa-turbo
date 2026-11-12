@@ -32,16 +32,17 @@ function ik2(A, B, C, T, pole) {
 }
 
 // recolorea el atlas del cuerpo: camisa blanca/chaleco gris -> color del chaleco; traje negro -> neopreno; piel y pelo igual
-function recolor(mat, vestHex) {
+function recolor(mat, vestHex, suitHex) {
   const img = mat.map && mat.map.image; if (!img) return;
   const w = img.width, h = img.height, cv = document.createElement('canvas'); cv.width = w; cv.height = h;
   const cx = cv.getContext('2d'); cx.drawImage(img, 0, 0); const id = cx.getImageData(0, 0, w, h), d = id.data;
-  const vc = new THREE.Color(vestHex), vr = vc.r * 255, vg = vc.g * 255, vb = vc.b * 255;
+  const vc = new THREE.Color(vestHex), vr = vc.r * 255, vg = vc.g * 255, vb = vc.b * 255, sc = suitHex ? new THREE.Color(suitHex) : null;
   for (let i = 0; i < d.length; i += 4) {
     const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b), lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255, sat = mx ? (mx - mn) / mx : 0;
     if (r >= g && g >= b && r - b > 35 && sat > 0.26) continue;                      // piel, pelo, ojos, boca
     if (lum > 0.5 && sat < 0.25) { const k = Math.min(1.15, lum / 0.82); d[i] = vr * k; d[i + 1] = vg * k; d[i + 2] = vb * k; }   // camisa blanca -> color
     else if (lum > 0.28 && sat < 0.16) { const k = lum / 0.5; d[i] = vr * k; d[i + 1] = vg * k; d[i + 2] = vb * k; }          // gris claro -> color
+    else if (sc) { const k = Math.min(1.4, 0.35 + lum * 2.2); d[i] = sc.r * 255 * k; d[i + 1] = sc.g * 255 * k; d[i + 2] = sc.b * 255 * k; }   // neopreno del color elegido
     else { d[i] = r * 0.8; d[i + 1] = g * 0.82; d[i + 2] = b * 0.9; }                // traje oscuro -> neopreno
   }
   cx.putImageData(id, 0, 0);
@@ -58,11 +59,11 @@ function recolorVest(mat, hex) {
   cx.putImageData(id, 0, 0); const t = new THREE.CanvasTexture(cv); t.flipY = mat.map.flipY; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; mat.map = t; mat.needsUpdate = true;
 }
 
-export async function makeRider({ vest = '#ff7a1a', helmetColor = null, base = 'models/' } = {}) {
+export async function makeRider({ vest = '#ff7a1a', helmetColor = null, suit = null, base = 'models/' } = {}) {
   const gl = new GLTFLoader();
   const [pg, hg, vg] = await Promise.all([gl.loadAsync(base + 'piloto_eric.glb'), gl.loadAsync(base + 'casco_motocross.glb'), gl.loadAsync(base + 'chaleco.glb')]);
   const root = new THREE.Group(), body = pg.scene; root.add(body);
-  const B = {}; body.traverse(o => { if (o.isBone) B[o.name] = o; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material.map) recolor(o.material, vest); } });
+  const B = {}; body.traverse(o => { if (o.isBone) B[o.name] = o; if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; o.frustumCulled = false; if (o.material.map) recolor(o.material, vest, suit); } });
   const bn = p => { const k = Object.keys(B).find(n => n.startsWith(p)); if (!k) throw new Error('hueso ' + p); return B[k]; };
   root.updateMatrixWorld(true);
   // cadera en el origen
