@@ -18,8 +18,9 @@ export async function runAutotest(G) {
       const lat = isl ? 24 : g && g.s - R.s < 40 ? g.c : 0, q = G.dbg.at(R.path, R.s + 18), qx = q.x - q.tz * lat, qz = q.z + q.tx * lat;
       let d = Math.atan2(qx - P.x, qz - P.z) - P.th; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI;
       const l = d > .04, r = d < -.04; if (l !== L) { kd('ArrowLeft', l ? 'keydown' : 'keyup'); L = l; } if (r !== Rt) { kd('ArrowRight', r ? 'keydown' : 'keyup'); Rt = r; }
+      if (((performance.now() - t0) / 1000 | 0) % 6 === 2) kd('ShiftLeft', 'keydown'); else kd('ShiftLeft', 'keyup');   // usa los turbos como un jugador
       await wait(40); }
-    ['ArrowUp', 'ArrowLeft', 'ArrowRight'].forEach(k => kd(k, 'keyup'));
+    ['ArrowUp', 'ArrowLeft', 'ArrowRight', 'ShiftLeft'].forEach(k => kd(k, 'keyup'));
     const t = document.querySelector('.scr.on .rt')?.textContent, s = document.querySelector('.scr.on .rs')?.textContent;
     const ok = G.state() === 'result' && /META|GANADO|^¡PODIO/.test(t || ''); res.push(ok); log(`${ok ? 'OK ' : 'MAL'} pantalla ${z + 1}: ${t} · ${s}`);
   }
